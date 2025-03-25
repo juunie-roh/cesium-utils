@@ -1,6 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2020", "DOM"],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
@@ -13,9 +17,10 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "declaration": true,
-
+    "declarationMap": true,
+    "outDir": "./dist",
     "baseUrl": ".",
-    "rootDir": "."
+    "rootDir": "src"
   },
   "include": [
     "**/*.ts",
@@ -23,5 +28,5 @@
     "**/*.js",
     "**/*.jsx"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist"]
 }

@@ -14,11 +14,7 @@ import type {
   Primitive,
   PrimitiveCollection,
 } from 'cesium';
-import { EntityCollection } from 'cesium';
-import {
-  Cesium3DTileset,
-  Entity,
-} from 'cesium';
+import { Cesium3DTileset, Entity, EntityCollection } from 'cesium';
 
 type CesiumCollection =
   | BillboardCollection
@@ -42,6 +38,13 @@ type CesiumCollectionItem =
   | Cesium3DTileset;
 
 type Tag = string | number;
+
+interface TaggedItem {
+  [key: symbol]: Tag;
+}
+
+// Extend CesiumCollectionItem with the TaggedItem interface
+type TaggableCesiumItem = CesiumCollectionItem & TaggedItem;
 
 /**
  * Abstract class that enhances Cesium collection objects with tagging functionality.
@@ -72,7 +75,10 @@ type Tag = string | number;
  * entities.show('buildings');
  * entities.hide('roads');
  */
-abstract class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
+abstract class Collection<
+  C extends CesiumCollection,
+  I extends TaggableCesiumItem,
+> {
   /**
    * Symbol used as a property key to store tags on collection items.
    * Using a Symbol ensures no property naming conflicts with the item's own properties.
@@ -117,7 +123,9 @@ abstract class Collection<C extends CesiumCollection, I extends CesiumCollection
    *   myItem.show = true;
    * }
    */
-  static hasShow<T extends CesiumCollectionItem>(item: T): item is T & { show: boolean } {
+  static hasShow<T extends CesiumCollectionItem>(
+    item: T,
+  ): item is T & { show: boolean } {
     return 'show' in item && typeof item.show !== 'undefined';
   }
 
@@ -204,7 +212,7 @@ abstract class Collection<C extends CesiumCollection, I extends CesiumCollection
    * const buildings = collection.getByTag('buildings');
    */
   getByTag(tag: Tag): I[] | undefined {
-    return this.values?.filter(item => item[Collection.symbol] === tag);
+    return this.values?.filter((item) => item[Collection.symbol] === tag);
   }
 
   /**
@@ -237,7 +245,7 @@ abstract class Collection<C extends CesiumCollection, I extends CesiumCollection
    * collection.removeByTag('temporary');
    */
   removeByTag(tag: Tag): void {
-    this.getByTag(tag)?.forEach(item => {
+    this.getByTag(tag)?.forEach((item) => {
       this.remove(item);
     });
   }
@@ -253,7 +261,7 @@ abstract class Collection<C extends CesiumCollection, I extends CesiumCollection
    * collection.show('buildings');
    */
   show(tag: Tag): void {
-    this.getByTag(tag)?.forEach(item => {
+    this.getByTag(tag)?.forEach((item) => {
       if (Collection.hasShow(item)) {
         item.show = true;
       }
@@ -271,7 +279,7 @@ abstract class Collection<C extends CesiumCollection, I extends CesiumCollection
    * collection.hide('buildings');
    */
   hide(tag: Tag): void {
-    this.getByTag(tag)?.forEach(item => {
+    this.getByTag(tag)?.forEach((item) => {
       if (Collection.hasShow(item)) {
         item.show = false;
       }
@@ -289,7 +297,7 @@ abstract class Collection<C extends CesiumCollection, I extends CesiumCollection
    * collection.toggle('buildings');
    */
   toggle(tag: Tag): void {
-    this.getByTag(tag)?.forEach(item => {
+    this.getByTag(tag)?.forEach((item) => {
       if (Collection.hasShow(item)) {
         item.show = !item.show;
       }

@@ -1,5 +1,5 @@
 {
-  "name": "@juun_roh/ceisum-utils",
+  "name": "@juun_roh/cesium-utils",
   "version": "0.0.1",
   "description": "Utilities to handle Cesium classes easier.",
   "keywords": [
@@ -11,8 +11,24 @@
   "license": "MIT",
   "author": "Juun",
   "type": "module",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
   "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "prepublishOnly": "lint",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
@@ -30,5 +46,8 @@
   "peerDependencies": {
     "cesium": "^1.127.0"
   },
-  "packageManager": "pnpm@10.6.5"
+  "packageManager": "pnpm@10.6.5",
+  "publishConfig": {
+    "access": "public"
+  }
 }
