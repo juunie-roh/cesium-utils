@@ -30,7 +30,7 @@
     "build:verbose": "tsc -b --verbose",
     "clean": "rimraf dist",
     "lint": "eslint .",
-    "ci:publish": "pnpm publish -r",
+    "ci:publish": "pnpm publish -r --no-git-checks",
     "prebuild": "npm run clean",
     "prepare": "husky",
     "prepublishOnly": "npm run lint",
