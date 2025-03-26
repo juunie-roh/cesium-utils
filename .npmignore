@@ -1,26 +1,7 @@
-# Source files
-src/
+# All files
+*
 
-# Config files
-.vscode/
-.eslintrc.js
-.prettierrc
-eslint.config.js
-tsconfig.json
-
-# Git files
-.git/
-.gitignore
-
-# Development
-node_modules/
-.github/
-test/
-examples/
-
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+!dist/
+!LICENSE
+!README.md
+!package.json

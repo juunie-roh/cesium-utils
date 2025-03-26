@@ -20,8 +20,8 @@
     "declarationMap": true,
     "outDir": "./dist",
     "baseUrl": ".",
-    "rootDir": "."
+    "rootDir": "./src"
   },
-  "include": ["src/**/*.ts", "index.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -1,4 +1,4 @@
-import Collection from './src/Collection.js';
+import Collection from './Collection.js';
 
 export { Collection };
 export default Collection;
