@@ -1,6 +1,6 @@
 {
   "name": "@juun_roh/cesium-utils",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Utilities to handle Cesium classes easier.",
   "keywords": [
     "Cesium",
