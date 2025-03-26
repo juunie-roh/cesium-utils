@@ -4,6 +4,6 @@
 
 ### Patch Changes
 
-- 9d2ea39: \# Test Release
+- 9d2ea39: # Test Release
 
   npm - GitHub link test
