@@ -39,14 +39,6 @@ jobs:
           # Method 1: Replace hooks directory with empty one
           mkdir -p /tmp/empty-hooks
           git config --global core.hooksPath /tmp/empty-hooks
-          
-          # Method 2: Create a .huskyrc that disables husky
-          echo 'HUSKY=0' > .huskyrc
-          
-          # Method 3: Rename .husky directory temporarily
-          if [ -d ".husky" ]; then
-            mv .husky .husky.bak
-          fi
       
       - name: Create and publish versions
         uses: changesets/action@v1
@@ -58,10 +50,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           HUSKY: 0
-      
-      - name: Cleanup
-        if: always()
-        run: |
-          if [ -d ".husky.bak" ]; then
-            mv .husky.bak .husky
-          fi
