@@ -2,6 +2,18 @@
 
 Utilities to handle Cesium classes easier.
 
+This package is published on [npm](https://www.npmjs.com/package/@juun_roh/cesium-utils).
+
+### ES Modules Only
+
+This package is provided as ES Modules only and does not support CommonJS. This means:
+
+* You must use import syntax instead of require()
+* Your project should support ES Modules
+* Node.js users need version 14+ with either:
+  - .mjs file extension
+  - "type": "module" in package.json
+
 ## Installation
 
 ```bash
