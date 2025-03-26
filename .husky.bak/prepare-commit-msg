@@ -1,0 +1,3 @@
+echo "🚦 PREPARE-COMMIT-MSG | Start cz with cz-customizable..."
+
+exec < /dev/tty && pnpm cz --hook || true

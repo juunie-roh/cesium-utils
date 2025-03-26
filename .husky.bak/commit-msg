@@ -1,0 +1,3 @@
+echo "🚦 COMMIT-MSG | commitlint check..."
+
+pnpm commitlint --edit ${1}
