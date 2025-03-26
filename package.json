@@ -1,6 +1,6 @@
 {
   "name": "@juun_roh/cesium-utils",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Utilities to handle Cesium classes easier.",
   "keywords": [
     "Cesium",
@@ -69,8 +69,7 @@
   },
   "packageManager": "pnpm@10.6.5",
   "publishConfig": {
-    "access": "public",
-    "registry": "https://npm.im/@juun_roh/cesium-utils"
+    "access": "public"
   },
   "config": {
     "commitizen": {
