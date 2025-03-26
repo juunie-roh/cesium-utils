@@ -1,5 +1,11 @@
 # @juun_roh/cesium-utils
 
+## 0.0.5
+
+### Patch Changes
+
+- 93f58c6: Revert registry, use npm instead
+
 ## 0.0.4
 
 ### Patch Changes
