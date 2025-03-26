@@ -43,8 +43,8 @@ jobs:
       - name: Create and publish versions
         uses: changesets/action@v1
         with:
-          commit: "chore: update versions"
-          title: "chore: update versions"
+          commit: "chore: Update versions"
+          title: "chore: Update versions"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HUSKY: 0
