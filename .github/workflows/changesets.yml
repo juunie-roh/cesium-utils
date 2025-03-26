@@ -7,6 +7,11 @@ on:
 
 env:
   CI: true
+  CHANGESET: "true"
+
+permissions:
+  contents: write
+  issues: write
 
 jobs:
   version:
@@ -15,6 +20,9 @@ jobs:
     steps:
       - name: Checkout code repository
         uses: actions/checkout@v4
+        with:
+          # This is important for the changesets action to work properly
+          fetch-depth: 0
       
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -27,6 +35,14 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+      
+      # Configure Git to ignore hooks when the action is running
+      - name: Configure Git for Changesets
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          # Skip Husky hooks for Changesets commits
+          git config --global core.hooksPath /dev/null
       
       - name: Create and publish versions
         uses: changesets/action@v1
