@@ -37,5 +37,6 @@ jobs:
         with: 
           publish: pnpm ci:publish
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           HUSKY: 0
