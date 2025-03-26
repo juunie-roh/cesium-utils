@@ -7,11 +7,7 @@ on:
 
 env:
   CI: true
-  CHANGESET: "true"
-
-permissions:
-  contents: write
-  issues: write
+  HUSKY: 0
 
 jobs:
   version:
@@ -21,7 +17,6 @@ jobs:
       - name: Checkout code repository
         uses: actions/checkout@v4
         with:
-          # This is important for the changesets action to work properly
           fetch-depth: 0
       
       - name: Setup pnpm
@@ -36,13 +31,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       
-      # Configure Git to ignore hooks when the action is running
-      - name: Configure Git for Changesets
+      - name: Disable Git hooks
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          # Skip Husky hooks for Changesets commits
-          git config --global core.hooksPath /dev/null
+          
+          # Method 1: Replace hooks directory with empty one
+          mkdir -p /tmp/empty-hooks
+          git config --global core.hooksPath /tmp/empty-hooks
+          
+          # Method 2: Create a .huskyrc that disables husky
+          echo 'HUSKY=0' > .huskyrc
+          
+          # Method 3: Rename .husky directory temporarily
+          if [ -d ".husky" ]; then
+            mv .husky .husky.bak
+          fi
       
       - name: Create and publish versions
         uses: changesets/action@v1
@@ -53,3 +57,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          HUSKY: 0
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          if [ -d ".husky.bak" ]; then
+            mv .husky.bak .husky
+          fi
