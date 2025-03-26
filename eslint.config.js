@@ -57,7 +57,7 @@ export const baseRules = {
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   {
-    files: ['**/*.{js,jsx,ts,tsx}'],
+    files: ['**/*.{ts,tsx}'],
     ...eslint.configs.recommended,
     plugins: {
       jsdoc,
@@ -75,5 +75,6 @@ export default [
       },
     },
     rules: baseRules,
+    ignores: ['dist/**/*', 'node_modules/**/*'],
   },
 ];

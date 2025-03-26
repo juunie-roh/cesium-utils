@@ -11,24 +11,28 @@
   "license": "MIT",
   "author": "Juun",
   "type": "module",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "module": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist"
   ],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js",
+      "default": "./dist/src/index.js"
     }
   },
   "sideEffects": false,
   "scripts": {
-    "build": "tsc",
-    "lint": "eslint .",
-    "prepublishOnly": "lint",
+    "build": "pnpm tsc",
+    "build:verbose": "pnpm tsc -b --verbose",
+    "clean": "pnpm rimraf dist",
+    "lint": "pnpm eslint .",
+    "prebuild": "npm run clean",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run lint",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
@@ -41,6 +45,7 @@
     "eslint-plugin-prettier": "^5.2.4",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-unused-imports": "^4.1.4",
+    "rimraf": "^6.0.1",
     "typescript": "^5.8.2"
   },
   "peerDependencies": {
