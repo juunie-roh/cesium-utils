@@ -8,6 +8,14 @@
     "Collection",
     "Tagged"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/juunie-roh/cesium-utils.git"
+  },
+  "homepage": "https://github.com/juunie-roh/cesium-utils#readme",
+  "bugs": {
+    "url": "https://github.com/juunie-roh/cesium-utils/issues"
+  },
   "license": "MIT",
   "author": "Juun",
   "type": "module",
