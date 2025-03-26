@@ -25,22 +25,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          registry-url: https://npm.pkg.github.com/
           cache: 'pnpm'
       
       - name: Install dependencies
         run: pnpm install
 
-      # Create a fresh .npmrc file with literal token (not using variable expansion)
-      - name: Setup .npmrc file
-        run: |
-          echo "@juun_roh:registry=https://npm.pkg.github.com" > .npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
-
-      # Build the package
-      - name: Build package
-        run: pnpm build
-
-      # Publish using npm directly
-      - name: Publish to GitHub Packages
-        run: npm publish --access public
+      - name: Publish to NPM packages
+        run: pnpm ci:publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          HUSKY: 0
