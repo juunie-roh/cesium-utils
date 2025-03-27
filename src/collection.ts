@@ -16,6 +16,8 @@ import type {
 } from 'cesium';
 import { Cesium3DTileset, Entity, EntityCollection } from 'cesium';
 
+import { TypeGuard } from './utils/type-guard.js';
+
 type CesiumCollection =
   | BillboardCollection
   | DataSourceCollection
@@ -45,6 +47,20 @@ interface TaggedItem {
 
 // Extend CesiumCollectionItem with the TaggedItem interface
 type TaggableCesiumItem = CesiumCollectionItem & TaggedItem;
+
+/**
+ * Collection event types
+ */
+export type CollectionEventType = 'add' | 'remove' | 'update' | 'clear';
+
+/**
+ * Event handler function type
+ */
+type EventHandler<I> = (event: {
+  type: CollectionEventType;
+  items?: I[];
+  tag?: Tag;
+}) => void;
 
 /**
  * Abstract class that enhances Cesium collection objects with tagging functionality.
@@ -99,6 +115,27 @@ abstract class Collection<
   protected collection: C;
 
   /**
+   * Cache for values array to improve performance
+   * @private
+   */
+  private _valuesCache: I[] | null = null;
+
+  /**
+   * Tag to items map for faster lookups
+   * @private
+   */
+  private _tagMap = new Map<Tag, Set<I>>();
+
+  /**
+   * Event listeners
+   * @private
+   */
+  private _eventListeners = new Map<
+    CollectionEventType,
+    Set<EventHandler<I>>
+  >();
+
+  /**
    * Creates a new Collection instance.
    *
    * @param options - Configuration options
@@ -111,23 +148,96 @@ abstract class Collection<
   }
 
   /**
-   * Type guard to determine if an item has the 'show' property.
-   * This helps ensure type safety when toggling visibility.
+   * Emits an event to all registered listeners.
    *
-   * @static
-   * @param item - The item to check
-   * @returns True if the item has a show property that can be toggled
-   *
-   * @example
-   * if (Collection.hasShow(myItem)) {
-   *   myItem.show = true;
-   * }
+   * @private
+   * @param type - The event type
+   * @param data - Additional event data
    */
-  static hasShow<T extends CesiumCollectionItem>(
-    item: T,
-  ): item is T & { show: boolean } {
-    return 'show' in item && typeof item.show !== 'undefined';
+  private _emit(
+    type: CollectionEventType,
+    data?: { items?: I[]; tag?: Tag },
+  ): void {
+    const listeners = this._eventListeners.get(type);
+    if (listeners) {
+      const event = { type, ...data };
+      listeners.forEach((handler) => handler(event));
+    }
   }
+
+  /**
+   * Adds an item to the internal tag map for quick lookups.
+   *
+   * @private
+   * @param item - The item to add
+   * @param tag - The tag to associate with the item
+   */
+  private _addToTagMap(item: I, tag: Tag): void {
+    if (!this._tagMap.has(tag)) {
+      this._tagMap.set(tag, new Set());
+    }
+    this._tagMap.get(tag)?.add(item);
+  }
+
+  /**
+   * Removes an item from the internal tag map.
+   *
+   * @private
+   * @param item - The item to remove
+   */
+  private _removeFromTagMap(item: I): void {
+    const tag = item[Collection.symbol];
+    const itemSet = this._tagMap.get(tag);
+    if (itemSet) {
+      itemSet.delete(item);
+      // Clean up empty sets
+      if (itemSet.size === 0) {
+        this._tagMap.delete(tag);
+      }
+    }
+  }
+
+  /**
+   * Invalidates the values cache when collection changes.
+   *
+   * @private
+   */
+  private _invalidateCache(): void {
+    this._valuesCache = null;
+  }
+
+  /**
+   * Registers an event listener for collection events.
+   *
+   * @param type - The event type to listen for
+   * @param handler - The callback function
+   * @returns The collection instance for method chaining
+   */
+  addEventListener(type: CollectionEventType, handler: EventHandler<I>): this {
+    if (!this._eventListeners.has(type)) {
+      this._eventListeners.set(type, new Set());
+    }
+    this._eventListeners.get(type)?.add(handler);
+    return this;
+  }
+
+  /**
+   * Removes an event listener.
+   *
+   * @param type - The event type
+   * @param handler - The callback function to remove
+   * @returns The collection instance for method chaining
+   */
+  removeEventListener(
+    type: CollectionEventType,
+    handler: EventHandler<I>,
+  ): this {
+    this._eventListeners.get(type)?.delete(handler);
+    return this;
+  }
+
+  add(item: I, tag?: Tag, index?: number): I;
+  add(items: I[], tag?: Tag): I[];
 
   /**
    * Adds an item with a tag to the collection.
@@ -140,9 +250,23 @@ abstract class Collection<
    * @example
    * const entity = collection.add(new Entity({ ... }), 'landmarks');
    */
-  add(item: I, tag: Tag = this.tag, index?: number): I {
-    item[Collection.symbol] = tag;
-    this.collection.add(item, index);
+  add(item: I | I[], tag: Tag = this.tag, index?: number): I | I[] {
+    if (Array.isArray(item)) {
+      item.forEach((i) => {
+        i[Collection.symbol] = tag;
+        this.collection.add(i);
+        this._addToTagMap(i, tag);
+      });
+      this._invalidateCache();
+      this._emit('add', { items: item, tag });
+    } else {
+      item[Collection.symbol] = tag;
+      this.collection.add(item, index);
+      this._addToTagMap(item, tag);
+      this._invalidateCache();
+      this._emit('add', { items: [item], tag });
+    }
+
     return item;
   }
 
@@ -163,14 +287,23 @@ abstract class Collection<
    * @returns True if the item was removed, false if it wasn't found
    */
   remove(item: I): boolean {
-    return this.collection.remove(item);
+    const result = this.collection.remove(item);
+    if (result) {
+      this._removeFromTagMap(item);
+      this._invalidateCache();
+      this._emit('remove', { items: [item] });
+    }
+    return result;
   }
 
   /**
    * Removes all items from the collection.
    */
   removeAll(): void {
+    this._tagMap.clear();
     this.collection.removeAll();
+    this._invalidateCache();
+    this._emit('clear');
   }
 
   /**
@@ -180,16 +313,21 @@ abstract class Collection<
    * @returns An array of all items in the collection
    */
   get values(): I[] {
+    if (this._valuesCache) {
+      return this._valuesCache;
+    }
+
     if (this.collection instanceof EntityCollection) {
-      return (this.collection.values as I[]) || [];
+      this._valuesCache = (this.collection.values as I[]) || [];
     } else {
       const arr: I[] = [];
       for (let i = 0; i < this.collection.length; i++) {
         arr.push(this.collection.get(i) as I);
       }
-
-      return arr;
+      this._valuesCache = arr;
     }
+
+    return this._valuesCache;
   }
 
   /**
@@ -203,16 +341,18 @@ abstract class Collection<
 
   /**
    * Gets all items with the specified tag from the collection.
+   * Uses an optimized internal map for faster lookups.
    *
    * @param tag - The tag to filter by
-   * @returns An array of items with the specified tag, or undefined if none found
+   * @returns An array of items with the specified tag, or an empty array if none found
    *
    * @example
    * // Get all buildings
    * const buildings = collection.getByTag('buildings');
    */
-  getByTag(tag: Tag): I[] | undefined {
-    return this.values?.filter((item) => item[Collection.symbol] === tag);
+  getByTag(tag: Tag): I[] {
+    const items = this._tagMap.get(tag);
+    return items ? Array.from(items) : [];
   }
 
   /**
@@ -227,27 +367,98 @@ abstract class Collection<
    * const firstBuilding = collection.getFirstByTag('buildings');
    */
   getFirstByTag(tag: Tag): I | undefined {
-    for (const item of this.values) {
-      if (item[Collection.symbol] === tag) {
-        return item;
-      }
+    const items = this._tagMap.get(tag);
+    if (items && items.size > 0) {
+      return items.values().next().value;
     }
     return undefined;
+  }
+
+  /**
+   * Gets all unique tags currently in use in the collection.
+   *
+   * @returns An array of all unique tags
+   *
+   * @example
+   * // Get all tags
+   * const tags = collection.getTags();
+   * console.log(`Collection has these tags: ${tags.join(', ')}`);
+   */
+  getTags(): Tag[] {
+    return Array.from(this._tagMap.keys());
+  }
+
+  /**
+   * Checks if the collection has any items with the specified tag.
+   *
+   * @param tag - The tag to check for
+   * @returns True if items with the tag exist, false otherwise
+   *
+   * @example
+   * if (collection.hasTag('temporary')) {
+   *   console.log('Temporary items exist');
+   * }
+   */
+  hasTag(tag: Tag): boolean {
+    const items = this._tagMap.get(tag);
+    return !!items && items.size > 0;
+  }
+
+  /**
+   * Updates the tag for all items with the specified tag.
+   *
+   * @param oldTag - The tag to replace
+   * @param newTag - The new tag to assign
+   * @returns The number of items updated
+   *
+   * @example
+   * // Rename a tag
+   * const count = collection.updateTag('temp', 'temporary');
+   * console.log(`Updated ${count} items`);
+   */
+  updateTag(oldTag: Tag, newTag: Tag): number {
+    const items = this.getByTag(oldTag);
+
+    for (const item of items) {
+      // Remove from old tag map
+      this._removeFromTagMap(item);
+
+      // Update tag
+      item[Collection.symbol] = newTag;
+
+      // Add to new tag map
+      this._addToTagMap(item, newTag);
+    }
+
+    if (items.length > 0) {
+      this._emit('update', { items, tag: newTag });
+    }
+
+    return items.length;
   }
 
   /**
    * Removes all items with the specified tag from the collection.
    *
    * @param tag - The tag identifying which items to remove
+   * @returns The number of items removed
    *
    * @example
    * // Remove all temporary markers
-   * collection.removeByTag('temporary');
+   * const count = collection.removeByTag('temporary');
+   * console.log(`Removed ${count} items`);
    */
-  removeByTag(tag: Tag): void {
-    this.getByTag(tag)?.forEach((item) => {
-      this.remove(item);
-    });
+  removeByTag(tag: Tag): number {
+    const items = this.getByTag(tag);
+    let count = 0;
+
+    for (const item of items) {
+      if (this.remove(item)) {
+        count++;
+      }
+    }
+
+    return count;
   }
 
   /**
@@ -255,17 +466,24 @@ abstract class Collection<
    * Only affects items that have a 'show' property.
    *
    * @param tag - The tag identifying which items to show
+   * @returns The number of items affected
    *
    * @example
    * // Show all buildings
    * collection.show('buildings');
    */
-  show(tag: Tag): void {
-    this.getByTag(tag)?.forEach((item) => {
-      if (Collection.hasShow(item)) {
+  show(tag: Tag): number {
+    const items = this.getByTag(tag);
+    let count = 0;
+
+    for (const item of items) {
+      if (TypeGuard.hasProperty(item, 'show')) {
         item.show = true;
+        count++;
       }
-    });
+    }
+
+    return count;
   }
 
   /**
@@ -273,17 +491,24 @@ abstract class Collection<
    * Only affects items that have a 'show' property.
    *
    * @param tag - The tag identifying which items to hide
+   * @returns The number of items affected
    *
    * @example
    * // Hide all buildings
    * collection.hide('buildings');
    */
-  hide(tag: Tag): void {
-    this.getByTag(tag)?.forEach((item) => {
-      if (Collection.hasShow(item)) {
+  hide(tag: Tag): number {
+    const items = this.getByTag(tag);
+    let count = 0;
+
+    for (const item of items) {
+      if (TypeGuard.hasProperty(item, 'show')) {
         item.show = false;
+        count++;
       }
-    });
+    }
+
+    return count;
   }
 
   /**
@@ -291,17 +516,73 @@ abstract class Collection<
    * Only affects items that have a 'show' property.
    *
    * @param tag - The tag identifying which items to toggle
+   * @returns The number of items affected
    *
    * @example
    * // Toggle visibility of all buildings
    * collection.toggle('buildings');
    */
-  toggle(tag: Tag): void {
-    this.getByTag(tag)?.forEach((item) => {
-      if (Collection.hasShow(item)) {
+  toggle(tag: Tag): number {
+    const items = this.getByTag(tag);
+    let count = 0;
+
+    for (const item of items) {
+      if (TypeGuard.hasProperty(item, 'show')) {
         item.show = !item.show;
+        count++;
       }
-    });
+    }
+
+    return count;
+  }
+
+  /**
+   * Sets a property value on all items with the specified tag.
+   *
+   * @param tag - The tag identifying which items to update
+   * @param property - The property name to set
+   * @param value - The value to set
+   * @returns The number of items updated
+   *
+   * @example
+   * // Change color of all buildings to red
+   * collection.setProperty('buildings', 'color', Color.RED);
+   */
+  setProperty<K extends string, V>(tag: Tag, property: K, value: V): number {
+    const items = this.getByTag(tag);
+    let count = 0;
+
+    for (const item of items) {
+      if (property in item) {
+        // Using type assertion since we've verified the property exists
+        (item as unknown as Record<K, V>)[property] = value;
+        count++;
+      } else {
+        console.warn(`${property} does not exists in ${item}`);
+      }
+    }
+
+    return count;
+  }
+
+  /**
+   * Filters items in the collection based on a predicate function.
+   * Optionally only filters items with a specific tag.
+   *
+   * @param predicate - Function that tests each item
+   * @param tag - Optional tag to filter by before applying the predicate
+   * @returns Array of items that pass the test
+   *
+   * @example
+   * // Get all buildings taller than 100 meters
+   * const tallBuildings = collection.filter(
+   *   entity => entity.properties?.height?.getValue() > 100,
+   *   'buildings'
+   * );
+   */
+  filter(predicate: (item: I) => boolean, tag?: Tag): I[] {
+    const items = tag ? this.getByTag(tag) : this.values;
+    return items.filter(predicate);
   }
 
   /**
@@ -321,7 +602,7 @@ abstract class Collection<
    */
   forEach(callback: (item: I, index: number) => void, tag?: Tag): void {
     const items = tag ? this.getByTag(tag) : this.values;
-    items?.forEach((item, index) => callback(item, index));
+    items.forEach((item, index) => callback(item, index));
   }
 }
 

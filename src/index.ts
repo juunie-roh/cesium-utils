@@ -1,4 +1,5 @@
 import Collection from './collection.js';
+import TypeGuard from './utils/type-guard.js';
 
-export { Collection };
+export { Collection, TypeGuard };
 export default Collection;
