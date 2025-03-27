@@ -4,13 +4,13 @@
 
 ### Patch Changes
 
-- 93f58c6: Revert registry, use npm instead
+- 93f58c6: Revert github registry, return to npm.
 
 ## 0.0.4
 
 ### Patch Changes
 
-- abdcbcf: # Update package registry
+- abdcbcf: Update package registry
 
   - The package registry has specified to [GitHub Packages](https://npm.pkg.github.com/)
 
