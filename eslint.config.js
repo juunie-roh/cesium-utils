@@ -75,6 +75,6 @@ export default [
       },
     },
     rules: baseRules,
-    ignores: ['dist/**/*', 'node_modules/**/*'],
+    ignores: ['dist/**/*', 'node_modules/**/*', '@types/**/*', '.tsup/**/*'],
   },
 ];
