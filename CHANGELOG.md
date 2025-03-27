@@ -1,5 +1,17 @@
 # @juun_roh/cesium-utils
 
+## 0.0.7
+
+### Patch Changes
+
+- Change build stage
+
+  - Update pnpm version to 10.7.0
+  - Update build stages:   
+    Use tsup   
+    Create delcaration files under @types
+  - Update ignore settings
+
 ## 0.0.6
 
 ### Patch Changes
