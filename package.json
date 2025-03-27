@@ -21,25 +21,25 @@
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "@types/index.d.ts",
   "files": [
     "dist"
   ],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./@types/index.d.ts",
       "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
       "default": "./dist/index.js"
     }
   },
   "sideEffects": false,
   "scripts": {
-    "build": "tsc",
-    "build:verbose": "tsc -b --verbose",
-    "clean": "rimraf dist",
+    "build": "tsup src/index.ts --format cjs,esm",
+    "clean": "rimraf dist @types",
     "lint": "eslint .",
     "ci:publish": "pnpm build && pnpm publish -r --no-git-checks",
-    "prebuild": "npm run clean",
+    "prebuild": "npm run clean && tsc --emitDeclarationOnly --outDir @types",
     "prepare": "husky",
     "prepublishOnly": "npm run lint",
     "test": "echo \"Temporary: no test specified!\""
@@ -62,12 +62,13 @@
     "eslint-plugin-unused-imports": "^4.1.4",
     "husky": "^9.1.7",
     "rimraf": "^6.0.1",
+    "tsup": "^8.4.0",
     "typescript": "^5.8.2"
   },
   "peerDependencies": {
     "cesium": "^1.127.0"
   },
-  "packageManager": "pnpm@10.6.5",
+  "packageManager": "pnpm@10.7.0+sha512.6b865ad4b62a1d9842b61d674a393903b871d9244954f652b8842c2b553c72176b278f64c463e52d40fff8aba385c235c8c9ecf5cc7de4fd78b8bb6d49633ab6",
   "publishConfig": {
     "access": "public"
   },
