@@ -1,10 +1,13 @@
 # Cesium Utils
 
+[![npm version](https://img.shields.io/npm/v/@juun_roh/cesium-utils.svg)](https://www.npmjs.com/package/@juun_roh/cesium-utils)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Documentation](https://img.shields.io/badge/docs-typedoc-blue)](https://juunie-roh.github.io/cesium-utils/)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/juunie-roh/cesium-utils/npm-publish.yml)](https://github.com/juunie-roh/cesium-utils/actions)
+
 Utilities to handle Cesium classes easier.
 
-This package is published on [npm](https://www.npmjs.com/package/@juun_roh/cesium-utils).
-
-You can see type documentations [here](https://juunie-roh.github.io/cesium-utils/).
+[📚 API Documentation](https://juunie-roh.github.io/cesium-utils/) | [📦 NPM Package](https://www.npmjs.com/package/@juun_roh/cesium-utils)
 
 ## Installation
 

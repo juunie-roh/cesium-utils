@@ -1,0 +1,17 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "docs",
+  "name": "Cesium Utils",
+  "includeVersion": true,
+  "excludePrivate": false,
+  "excludeProtected": false,
+  "excludeExternals": true,
+  "readme": "README.md",
+  "githubPages": true,
+  "categorizeByGroup": true,
+  "navigationLinks": {
+    "GitHub": "https://github.com/juunie-roh/cesium-utils",
+    "NPM": "https://www.npmjs.com/package/@juun_roh/cesium-utils"
+  }
+}
