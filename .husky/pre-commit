@@ -1,1 +1,5 @@
 pnpm test
+
+pnpm document
+
+git add docs
