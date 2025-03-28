@@ -1,5 +1,15 @@
 # @juun_roh/cesium-utils
 
+## 0.0.9
+
+### Patch Changes
+
+- 71fb02c: Documentation Updates
+
+  - Add typedoc.json for typedoc configuration
+  - Add badges on readme
+  - Change commit comments on changeset update action.
+
 ## 0.0.8
 
 ### Patch Changes
