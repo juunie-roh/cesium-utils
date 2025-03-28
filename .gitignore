@@ -1,4 +1,7 @@
+# module
 node_modules
+
+# build
 dist
 @types
 .tsup
