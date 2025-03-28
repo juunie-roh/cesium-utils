@@ -1,5 +1,11 @@
 # @juun_roh/cesium-utils
 
+## 0.0.8
+
+### Patch Changes
+
+- 470ec59: Integrate Typedoc
+
 ## 0.0.7
 
 ### Patch Changes
@@ -7,8 +13,8 @@
 - Change build stage
 
   - Update pnpm version to 10.7.0
-  - Update build stages:   
-    Use tsup   
+  - Update build stages:  
+    Use tsup  
     Create delcaration files under @types
   - Update ignore settings
 
