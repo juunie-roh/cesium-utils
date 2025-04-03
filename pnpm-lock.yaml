@@ -47,6 +47,9 @@ importers:
       '@eslint/js':
         specifier: ^9.23.0
         version: 9.23.0
+      '@juun_roh/cesium-utils':
+        specifier: ^0.0.12
+        version: 0.0.12(cesium@1.128.0)
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.29.0
         version: 8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
@@ -484,6 +487,12 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
+
+  '@juun_roh/cesium-utils@0.0.12':
+    resolution: {integrity: sha512-KaoCnh6jXNGolK5BHRJqPsHRdLhUAM7Sx9PhNO9y2Swj9CJBbau1qbI/ad98oJg8tiPkjzTg8TuZD/9qxovjJg==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      cesium: ^1
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -2838,6 +2847,10 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
+
+  '@juun_roh/cesium-utils@0.0.12(cesium@1.128.0)':
+    dependencies:
+      cesium: 1.128.0
 
   '@manypkg/find-root@1.1.0':
     dependencies:
