@@ -1,5 +1,11 @@
 # @juun_roh/cesium-utils
 
+## 0.0.11
+
+### Patch Changes
+
+- 702a15b: File Entry Update
+
 ## 0.0.10
 
 ### Patch Changes
