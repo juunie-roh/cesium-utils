@@ -35,10 +35,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs",
       "default": "./dist/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm",
+    "build": "tsup",
     "clean": "rimraf dist @types docs",
     "lint": "eslint .",
     "ci:publish": "pnpm build && pnpm publish -r --no-git-checks",
