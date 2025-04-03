@@ -3,6 +3,7 @@ import type {
   BillboardCollection,
   DataSource,
   DataSourceCollection,
+  GroundPrimitive,
   ImageryLayer,
   ImageryLayerCollection,
   Label,
@@ -28,6 +29,8 @@ type CesiumCollection =
   | PolylineCollection
   | PrimitiveCollection;
 
+type Primitives = Primitive | Cesium3DTileset | GroundPrimitive;
+
 type CesiumCollectionItem =
   | Billboard
   | DataSource
@@ -36,18 +39,13 @@ type CesiumCollectionItem =
   | Label
   | PointPrimitive
   | Polyline
-  | Primitive
-  | Cesium3DTileset;
+  | Primitives;
 
 type Tag = string | number;
 
-interface TaggedItem {
+interface WithTag {
   [key: symbol]: Tag;
 }
-
-// Extend CesiumCollectionItem with the TaggedItem interface
-type TaggableCesiumItem = CesiumCollectionItem & TaggedItem;
-
 /**
  * Collection event types
  */
@@ -93,7 +91,7 @@ type EventHandler<I> = (event: {
  */
 abstract class Collection<
   C extends CesiumCollection,
-  I extends TaggableCesiumItem,
+  I extends CesiumCollectionItem,
 > {
   /**
    * Symbol used as a property key to store tags on collection items.
@@ -185,7 +183,7 @@ abstract class Collection<
    * @private
    * @param item - The item to remove
    */
-  private _removeFromTagMap(item: I): void {
+  private _removeFromTagMap(item: I & WithTag): void {
     const tag = item[Collection.symbol];
     const itemSet = this._tagMap.get(tag);
     if (itemSet) {
@@ -253,14 +251,10 @@ abstract class Collection<
   add(item: I | I[], tag: Tag = this.tag, index?: number): I | I[] {
     if (Array.isArray(item)) {
       item.forEach((i) => {
-        i[Collection.symbol] = tag;
-        this.collection.add(i);
-        this._addToTagMap(i, tag);
+        this.add(i);
       });
-      this._invalidateCache();
-      this._emit('add', { items: item, tag });
     } else {
-      item[Collection.symbol] = tag;
+      Object.defineProperty(item, Collection.symbol, tag);
       this.collection.add(item, index);
       this._addToTagMap(item, tag);
       this._invalidateCache();
@@ -286,7 +280,7 @@ abstract class Collection<
    * @param item - The item to remove
    * @returns True if the item was removed, false if it wasn't found
    */
-  remove(item: I): boolean {
+  remove(item: I & WithTag): boolean {
     const result = this.collection.remove(item);
     if (result) {
       this._removeFromTagMap(item);
@@ -421,10 +415,10 @@ abstract class Collection<
 
     for (const item of items) {
       // Remove from old tag map
-      this._removeFromTagMap(item);
+      this._removeFromTagMap(item as I & WithTag);
 
       // Update tag
-      item[Collection.symbol] = newTag;
+      Object.defineProperty(item, Collection.symbol, newTag);
 
       // Add to new tag map
       this._addToTagMap(item, newTag);
@@ -448,12 +442,36 @@ abstract class Collection<
    * const count = collection.removeByTag('temporary');
    * console.log(`Removed ${count} items`);
    */
-  removeByTag(tag: Tag): number {
-    const items = this.getByTag(tag);
+  removeByTag(tag: Tag): number;
+  /**
+   * Removes all items with the array of tags from the collection.
+   *
+   * @param tag - The tags identifying which items to remove
+   * @returns The number of items removed
+   *
+   * @example
+   * // Remove all items containing tags
+   * const count = collection.removeByTag('temporary', 'default', 'tag');
+   * console.log(`Removed ${count} items`);
+   */
+  removeByTag(tag: Tag[]): number;
+
+  removeByTag(tag: Tag | Tag[]): number {
     let count = 0;
 
+    if (Array.isArray(tag)) {
+      tag.forEach((t) => {
+        this.removeByTag(t);
+        count++;
+      });
+
+      return count;
+    }
+
+    const items = this.getByTag(tag);
+
     for (const item of items) {
-      if (this.remove(item)) {
+      if (this.remove(item as I & WithTag)) {
         count++;
       }
     }
