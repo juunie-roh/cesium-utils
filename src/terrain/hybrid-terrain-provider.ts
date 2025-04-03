@@ -46,7 +46,7 @@ export class HybridTerrainProvider implements TerrainProvider {
   private _fallbackProvider!: TerrainProvider;
   private _tilingScheme!: TilingScheme;
   private _ready: boolean | Promise<boolean> = false;
-  private _availability!: TileAvailability;
+  private _availability?: TileAvailability;
 
   /**
    * Creates a new `HybridTerrainProvider`. Use the static `create()` method
@@ -134,14 +134,11 @@ export class HybridTerrainProvider implements TerrainProvider {
    * Ensures the provider is ready for use.
    * @returns A promise that resolves when the provider is ready.
    */
-  async ensureReady() {
+  async ensureReady(): Promise<boolean> {
     if (this._ready === true) return true;
     return this._ready;
   }
 
-  get credit(): any {
-    return this._defaultProvider?.credit;
-  }
   /**
    * Gets the tiling scheme used by this provider.
    */
@@ -151,7 +148,7 @@ export class HybridTerrainProvider implements TerrainProvider {
   /**
    * Gets an object that can be used to determine availability of terrain from this provider.
    */
-  get availability(): TileAvailability {
+  get availability(): TileAvailability | undefined {
     return this._availability;
   }
   /**
@@ -172,17 +169,42 @@ export class HybridTerrainProvider implements TerrainProvider {
   get fallbackProvider(): TerrainProvider {
     return this._fallbackProvider;
   }
+
+  /**
+   * @see {@link TerrainProvider.credit}
+   */
+  get credit(): any {
+    return this._defaultProvider?.credit;
+  }
+  /**
+   * @see {@link TerrainProvider.errorEvent}
+   */
   get errorEvent(): any {
     return this._defaultProvider.errorEvent;
   }
+  /**
+   * @see {@link TerrainProvider.hasWaterMask}
+   */
   get hasWaterMask(): boolean {
     return this._defaultProvider.hasWaterMask;
   }
+  /**
+   * @see {@link TerrainProvider.hasVertexNormals}
+   */
   get hasVertexNormals(): boolean {
     return this._defaultProvider.hasVertexNormals;
   }
+  /**
+   * @see {@link TerrainProvider.loadTileDataAvailability}
+   */
   loadTileDataAvailability(x: number, y: number, level: number) {
     return this._defaultProvider.loadTileDataAvailability(x, y, level);
+  }
+  /**
+   * @see {@link TerrainProvider.getLevelMaximumGeometricError}
+   */
+  getLevelMaximumGeometricError(level: number): number {
+    return this._defaultProvider.getLevelMaximumGeometricError(level);
   }
 
   /**
@@ -240,13 +262,6 @@ export class HybridTerrainProvider implements TerrainProvider {
       console.error('Error requesting terrain from fallback provider:', error);
       throw error;
     }
-  }
-
-  /**
-   * @see {@link TerrainProvider.getLevelMaximumGeometricError}
-   */
-  getLevelMaximumGeometricError(level: number): number {
-    return this._defaultProvider.getLevelMaximumGeometricError(level);
   }
 
   /**
