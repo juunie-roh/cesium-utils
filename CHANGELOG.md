@@ -1,5 +1,13 @@
 # @juun_roh/cesium-utils
 
+## 0.0.12
+
+### Patch Changes
+
+- 4abf787: Build configuration updates
+
+  - Add `tsup.config.js` that specifies build configuration.
+
 ## 0.0.11
 
 ### Patch Changes
