@@ -73,7 +73,7 @@
     "@commitlint/format": "catalog:commitlint19",
     "@commitlint/types": "catalog:commitlint19",
     "@eslint/js": "^9.23.0",
-    "@juun_roh/cesium-utils": "^0.0.13",
+    "@juun_roh/cesium-utils": "*",
     "@typescript-eslint/eslint-plugin": "^8.29.0",
     "@typescript-eslint/parser": "^8.29.0",
     "cesium": "^1.128.0",

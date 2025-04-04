@@ -48,7 +48,7 @@ importers:
         specifier: ^9.23.0
         version: 9.23.0
       '@juun_roh/cesium-utils':
-        specifier: ^0.0.12
+        specifier: '*'
         version: 0.0.12(cesium@1.128.0)
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.29.0
