@@ -43,8 +43,8 @@ jobs:
       - name: Create and publish versions
         uses: changesets/action@v1
         with:
-          commit: "build: Release version updates"
-          title: "build: Update version updates"
+          commit: "build: Bump version updates"
+          title: "Release version updates"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HUSKY: 0
