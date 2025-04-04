@@ -117,7 +117,7 @@ export class TerrainBounds {
   /**
    * Gets the tiling scheme used by these bounds.
    */
-  get tilinghScheme(): TilingScheme {
+  get tilingScheme(): TilingScheme {
     return this._tilingScheme;
   }
 
