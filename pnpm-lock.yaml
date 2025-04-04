@@ -21,6 +21,10 @@ catalogs:
     '@commitlint/types':
       specifier: ^19
       version: 19.8.0
+  this:
+    '@juun_roh/cesium-utils':
+      specifier: '*'
+      version: 0.0.14
 
 importers:
 
@@ -48,8 +52,8 @@ importers:
         specifier: ^9.23.0
         version: 9.23.0
       '@juun_roh/cesium-utils':
-        specifier: '*'
-        version: 0.0.13(cesium@1.128.0)
+        specifier: catalog:this
+        version: 0.0.14(cesium@1.128.0)
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.29.0
         version: 8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
@@ -488,8 +492,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
-  '@juun_roh/cesium-utils@0.0.13':
-    resolution: {integrity: sha512-ofgEzf8OEal/O+5RDNqYrN6P0qds/qCqj/vUFM+1puz0C3t0YqYAiK5YKIaKVsjcTvdk6ip+aSsFUNGLjDj90w==}
+  '@juun_roh/cesium-utils@0.0.14':
+    resolution: {integrity: sha512-Mi2xQPqaKFN2fLDf3JvTo62YpJiQ3+A+TnkjhTVuMyPNQKf0ENblsxM/aKELkyLExP61JETEDLwaRNmRzIyRNA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       cesium: ^1
@@ -2848,7 +2852,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@juun_roh/cesium-utils@0.0.13(cesium@1.128.0)':
+  '@juun_roh/cesium-utils@0.0.14(cesium@1.128.0)':
     dependencies:
       cesium: 1.128.0
 
