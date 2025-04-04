@@ -1,5 +1,4 @@
 import {
-  Cartesian3,
   Color,
   Entity,
   EntityCollection,
@@ -7,6 +6,8 @@ import {
   Rectangle,
   Viewer,
 } from 'cesium';
+import { TerrainArea } from 'src/terrain/terrain-area.js';
+import { TerrainBounds } from 'src/terrain/terrain-bounds.js';
 
 import Collection from '../collection.js';
 import { HybridTerrainProvider } from '../terrain/hybrid-terrain-provider.js';
@@ -21,8 +22,8 @@ export class TerrainVisualizer {
   private _viewer: Viewer;
   private _collection: TerrainEntities;
   private _hybridTerrain?: HybridTerrainProvider;
-  private _showBoundaries: boolean = false;
-  private _showTileGrid: boolean = false;
+  private _boundaries: boolean = false;
+  private _grid: boolean = false;
   private _activeLevel: number = 15;
   private _colors: Map<string, Color> = new Map([
     ['custom', Color.RED],
@@ -31,6 +32,11 @@ export class TerrainVisualizer {
     ['grid', Color.YELLOW],
   ]);
 
+  /**
+   * Creates a new `TerrainVisualizer`.
+   * @param viewer The Cesium viewer instance
+   * @param options {@link TerrainVisualizer.ConstructorOptions}
+   */
   constructor(viewer: Viewer, options?: TerrainVisualizer.ConstructorOptions) {
     this._viewer = viewer;
     this._collection = new TerrainEntities({
@@ -45,12 +51,12 @@ export class TerrainVisualizer {
         });
       }
 
-      if (options.showBoundaries !== undefined) {
-        this._showBoundaries = options.showBoundaries;
+      if (options.boundaries !== undefined) {
+        this._boundaries = options.boundaries;
       }
 
-      if (options.showTileGrid !== undefined) {
-        this._showTileGrid = options.showTileGrid;
+      if (options.tile !== undefined) {
+        this._grid = options.tile;
       }
 
       if (options.activeLevel !== undefined) {
@@ -63,30 +69,40 @@ export class TerrainVisualizer {
     }
   }
 
+  /**
+   * Sets the terrain provider to visualize.
+   * @param terrainProvider The terrain provider to visualize.
+   */
   setTerrainProvider(terrainProvider: HybridTerrainProvider): void {
     this._hybridTerrain = terrainProvider;
     this.update();
   }
+
+  /**
+   * Updates all active visualizations.
+   */
   update(): void {
     this.clear();
 
-    if (this._showBoundaries) {
+    if (this._boundaries) {
       this.showBoundaries();
     }
 
-    if (this._showTileGrid) {
-      this.showTileGrid(this._activeLevel);
+    if (this._grid) {
+      this.showGrid(this._activeLevel);
     }
   }
 
+  /**
+   * Clears all visualizations.
+   */
   clear(): void {
-    this._collection.removeByTag([
-      TerrainVisualizer.tag.default,
-      TerrainVisualizer.tag.boundary,
-      TerrainVisualizer.tag.grid,
-    ]);
+    this._collection.removeByTag(this._collection.getTags());
   }
 
+  /**
+   * Visualizes the boundaries of all terrain areas.
+   */
   showBoundaries(): void {
     if (!this._hybridTerrain) return;
 
@@ -99,21 +115,27 @@ export class TerrainVisualizer {
         : this._colors.get('default') || Color.BLUE;
 
       this._collection.add(
-        this._createRectangleEntity(rectangle, color),
+        TerrainVisualizer.createRectangle(rectangle, color),
         TerrainVisualizer.tag.boundary,
       );
-      this._addRectangleCornerMarkers(rectangle, color);
     });
 
-    this._showBoundaries = true;
+    this._boundaries = true;
   }
 
+  /**
+   * Hides the terrain area boundaries.
+   */
   hideBoundaries(): void {
     this._collection.removeByTag(TerrainVisualizer.tag.boundary);
-    this._showBoundaries = false;
+    this._boundaries = false;
   }
 
-  showTileGrid(level: number): void {
+  /**
+   * Shows a grid of tiles at the specified level.
+   * @param level The zoom level to visualize
+   */
+  showGrid(level: number): void {
     if (!this._hybridTerrain) return;
 
     this._collection.removeByTag(TerrainVisualizer.tag.grid);
@@ -160,7 +182,10 @@ export class TerrainVisualizer {
       for (let y = start.y; y <= start.y + yCount + 1; y++) {
         const rect = tilingScheme.tileXYToRectangle(x, y, level);
         const color = getTileColor(x, y, level);
-        const entity = this._createRectangleEntity(rect, color.withAlpha(0.3));
+        const entity = TerrainVisualizer.createRectangle(
+          rect,
+          color.withAlpha(0.3),
+        );
         entity.properties?.addProperty('tileX', x);
         entity.properties?.addProperty('tileY', y);
         entity.properties?.addProperty('tileLevel', level);
@@ -169,15 +194,119 @@ export class TerrainVisualizer {
       }
     }
 
-    this._showTileGrid = true;
+    this._grid = true;
   }
 
-  hideTileGrid(): void {
+  /**
+   * Hides the tile grid.
+   */
+  hideGrid(): void {
     this._collection.removeByTag(TerrainVisualizer.tag.grid);
-    this._showTileGrid = false;
+    this._grid = false;
   }
 
-  private _createRectangleEntity(rectangle: Rectangle, color: Color) {
+  /**
+   * Sets the colors used for visualization.
+   * @param colors Map of role names to colors
+   */
+  setColors(colors: Record<string, Color>): void {
+    Object.entries(colors).forEach(([key, color]) => {
+      this._colors.set(key, color);
+    });
+
+    this.update();
+  }
+
+  /**
+   * Flies the camera to focus on a terrain area.
+   * @param area The terrain area to focus on.
+   * @param options {@link Viewer.flyTo}
+   */
+  flyToTerrainArea(area: TerrainArea, options?: { duration?: number }): void {
+    const { rectangle } = area.bounds;
+    this._viewer.camera.flyTo({
+      destination: rectangle,
+      ...options,
+      complete: () => {
+        if (this._boundaries) this.update();
+      },
+    });
+  }
+
+  /**
+   * Gets the rectangle representing the current view.
+   * @returns The current view rectangle or undefined.
+   * @private
+   */
+  private _getVisibleRectangle(): Rectangle | undefined {
+    const camera = this._viewer.camera;
+    const visibleArea = camera.computeViewRectangle();
+    return visibleArea;
+  }
+
+  /** The current zoom level set on the visualizer. */
+  get activeLevel(): number {
+    return this._activeLevel;
+  }
+  /** Set zoom level on the visualizer. */
+  set activeLevel(level: number) {
+    this._activeLevel = level;
+    if (this._grid) {
+      this.hideGrid();
+      this.showGrid(level);
+    }
+  }
+  /** Whether the boundaries are currently visible. */
+  get boundaries(): boolean {
+    return this._boundaries;
+  }
+  /** Whether the grid is currently visible. */
+  get grid(): boolean {
+    return this._grid;
+  }
+  /** The collection used in the visualizer. */
+  get collection(): TerrainEntities {
+    return this._collection;
+  }
+  /** The viewer used in the visualizer */
+  get viewer(): Viewer {
+    return this._viewer;
+  }
+}
+
+/**
+ * @namespace
+ * Contains types, utility functions, and constants for terrain visualization.
+ */
+export namespace TerrainVisualizer {
+  /** Initialization options for `TerrainVisualizer` constructor. */
+  export interface ConstructorOptions {
+    /** Colors to use for different visualization elements */
+    colors?: Record<string, Color>;
+    /** Whether to show boundaries initially. */
+    boundaries?: boolean;
+    /** Whether to show tile grid initially. */
+    tile?: boolean;
+    /** Initial zoom level to use for visualizations. */
+    activeLevel?: number;
+    /** Terrain provider to visualize. */
+    terrainProvider?: HybridTerrainProvider;
+  }
+
+  /** Tag constants for entity collection management. */
+  export const tag = {
+    default: 'Terrain Visualizer',
+    boundary: 'Terrain Visualizer Boundary',
+    grid: 'Terrain Visualizer Tile Grid',
+  };
+
+  /**
+   * Creates a rectangle entity fo r visualization.
+   * @param rectangle The rectangle to visualize
+   * @param color The color to use
+   * @returns A new entity
+   */
+  export function createRectangle(rectangle: Rectangle, color: Color) {
     return new Entity({
       rectangle: {
         coordinates: rectangle,
@@ -189,58 +318,81 @@ export class TerrainVisualizer {
     });
   }
 
-  private _addRectangleCornerMarkers(
-    rectangle: Rectangle,
-    color: Color,
-    tag: string = TerrainVisualizer.tag.boundary,
-  ): void {
-    const corners = [
-      Rectangle.northwest(rectangle),
-      Rectangle.northeast(rectangle),
-      Rectangle.southwest(rectangle),
-      Rectangle.southeast(rectangle),
-    ];
+  /** Options for {@link TerrainVisualizer.visualize} */
+  export interface Options {
+    color?: Color;
+    show?: boolean;
+    maxTilesToShow?: number;
+    levels?: number[];
+    tag?: string;
+    alpha?: number;
+    tileAlpha?: number;
+  }
 
-    corners.forEach((corner) => {
-      const position = Cartesian3.fromRadians(
-        corner.longitude,
-        corner.latitude,
-      );
-      this._collection.add(
-        new Entity({
-          position,
-          point: {
-            color: color,
-            pixelSize: 10,
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            outlineColor: Color.WHITE,
-            outlineWidth: 2,
-          },
-        }),
-        tag,
-      );
+  /**
+   * Visualizes a specific terrain area in a viewer.
+   * @param terrain The terrain area to visualize.
+   * @param viewer The Cesium viewer.
+   * @param options Visualization options.
+   * @returns Collection of created entities.
+   */
+  export function visualize(
+    terrain: TerrainArea | TerrainBounds,
+    viewer: Viewer,
+    options?: Options,
+  ): Collection<EntityCollection, Entity> {
+    const tag = options?.tag || 'terrain_area_visualization';
+    const color = options?.color || Color.RED;
+    const maxTilesToShow = options?.maxTilesToShow || 100;
+    const show = options?.show !== undefined ? options.show : true;
+    const alpha = options?.alpha || 0.7;
+    const tileAlpha = options?.tileAlpha || 0.2;
+
+    const bounds = 'provider' in terrain ? terrain.bounds : terrain;
+
+    const collection = new TerrainEntities({
+      collection: viewer.entities,
+      tag,
     });
-  }
 
-  private _getVisibleRectangle(): Rectangle | undefined {
-    const camera = this._viewer.camera;
-    const visibleArea = camera.computeViewRectangle();
-    return visibleArea;
-  }
-}
+    const { rectangle } = bounds;
+    collection.add(
+      TerrainVisualizer.createRectangle(rectangle, color.withAlpha(alpha)),
+      tag,
+    );
 
-export namespace TerrainVisualizer {
-  export interface ConstructorOptions {
-    colors?: Record<string, Color>;
-    showBoundaries?: boolean;
-    showTileGrid?: boolean;
-    activeLevel?: number;
-    terrainProvider?: HybridTerrainProvider;
-  }
+    if (show && bounds.levels.size > 0) {
+      const { tilingScheme } = bounds;
+      bounds.levels.forEach((level) => {
+        let count = 0;
 
-  export const tag = {
-    default: 'Terrain Visualizer',
-    boundary: 'Terrain Visualizer Boundary',
-    grid: 'Terrain Visualizer Tile Grid',
-  };
+        const { tileRanges } = bounds;
+        for (const [rangeLevel, range] of tileRanges.entries()) {
+          if (rangeLevel !== level) continue;
+
+          for (
+            let x = range.start.x;
+            x <= range.end.x && count < maxTilesToShow;
+            x++
+          ) {
+            for (
+              let y = range.start.y;
+              y <= range.end.y && count < maxTilesToShow;
+              y++
+            ) {
+              const rect = tilingScheme.tileXYToRectangle(x, y, level);
+              collection.add(
+                createRectangle(rect, color.withAlpha(tileAlpha)),
+                `${tag}_tile`,
+              );
+
+              count++;
+            }
+          }
+        }
+      });
+    }
+
+    return collection;
+  }
 }
