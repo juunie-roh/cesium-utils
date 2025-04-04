@@ -5,15 +5,15 @@ import {
   TilingScheme,
 } from 'cesium';
 
-export type TileRange = Record<
-  number,
-  {
-    /** Top Left tile coordinates */
-    start: { x: number; y: number };
-    /** Bottom Right tile coordinates */
-    end: { x: number; y: number };
-  }
->;
+/** A range of tiles from `start` to `end` */
+export type TileRange = {
+  /** Top Left tile coordinates */
+  start: { x: number; y: number };
+  /** Bottom Right tile coordinates */
+  end: { x: number; y: number };
+};
+/** A `TileRange` map with specific levels as their keys. */
+export type TileRanges = Map<number, TileRange>;
 
 /**
  * Defines the geographic boundaries for a terrain area and handles tile availability checks.
@@ -22,10 +22,7 @@ export type TileRange = Record<
 export class TerrainBounds {
   private _rectangle: Rectangle;
   private _tilingScheme: TilingScheme;
-  private _tileRanges: Map<
-    number,
-    { start: { x: number; y: number }; end: { x: number; y: number } }
-  >;
+  private _tileRanges: TileRanges;
   private _levels: Set<number>;
 
   /**
@@ -124,10 +121,7 @@ export class TerrainBounds {
   /**
    * Gets the tile ranges defined for these bounds.
    */
-  get tileRanges(): Map<
-    number,
-    { start: { x: number; y: number }; end: { x: number; y: number } }
-  > {
+  get tileRanges(): TileRanges {
     return this._tileRanges;
   }
 
@@ -190,7 +184,7 @@ export namespace TerrainBounds {
      * Tile ranges by level when using tileRange type.
      * Keys are zoom levels, values define the range of tiles at that level.
      */
-    tileRanges?: TileRange;
+    tileRanges?: TileRanges;
     /** Rectangle bounds when using rectangle type. */
     rectangle?: Rectangle;
   }
@@ -209,8 +203,8 @@ export namespace TerrainBounds {
     level: number,
     tilingScheme: TilingScheme = new GeographicTilingScheme(),
   ): TerrainBounds {
-    const tileRanges: Record<number, any> = {};
-    tileRanges[level] = { start: { x, y }, end: { x, y } };
+    const tileRanges: TileRanges = new Map();
+    tileRanges.set(level, { start: { x, y }, end: { x, y } });
 
     return new TerrainBounds(
       {

@@ -10,6 +10,7 @@ import {
 } from 'cesium';
 
 import { TerrainArea } from './terrain-area.js';
+import { TileRanges } from './terrain-bounds.js';
 
 /**
  * @class
@@ -350,10 +351,7 @@ export namespace HybridTerrainProvider {
   export async function createOverlay(
     customTerrainUrl: string,
     baseTerrainUrl: string,
-    tileRanges: Record<
-      number,
-      { start: { x: number; y: number }; end: { x: number; y: number } }
-    >,
+    tileRanges: TileRanges,
     levels?: number[],
   ): Promise<HybridTerrainProvider> {
     return HybridTerrainProvider.create({

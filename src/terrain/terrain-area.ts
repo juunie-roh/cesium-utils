@@ -6,7 +6,7 @@ import {
   TerrainProvider,
 } from 'cesium';
 
-import { TerrainBounds } from './terrain-bounds.js';
+import { TerrainBounds, TileRanges } from './terrain-bounds.js';
 
 /**
  * @class
@@ -178,10 +178,7 @@ export namespace TerrainArea {
    */
   export async function fromUrl(
     url: string,
-    tileRanges: Record<
-      number,
-      { start: { x: number; y: number }; end: { x: number; y: number } }
-    >,
+    tileRanges: TileRanges,
     levels?: number[],
     credit: string | Credit = 'custom',
   ) {
