@@ -234,34 +234,46 @@ abstract class Collection<
     return this;
   }
 
-  add(item: I, tag?: Tag, index?: number): I;
-  add(items: I[], tag?: Tag): I[];
-
   /**
-   * Adds an item with a tag to the collection.
+   * Adds a single item with a tag to the collection.
    *
    * @param item - The item to add to the collection
    * @param tag - Tag to associate with this item (defaults to the collection's default tag)
    * @param index - The index to add the item at (if supported by the collection)
-   * @returns The added item for method chaining
+   * @returns The added item for chaining
    *
    * @example
    * const entity = collection.add(new Entity({ ... }), 'landmarks');
    */
-  add(item: I | I[], tag: Tag = this.tag, index?: number): I | I[] {
-    if (Array.isArray(item)) {
-      item.forEach((i) => {
+  add(item: I, tag?: Tag, index?: number): I;
+  /**
+   * Adds multiple items with the same tag to the collection.
+   *
+   * @param items - The array of items to add to the collection
+   * @param tag - Tag to associate with this item (defaults to the collection's default tag)
+   * @returns The array of added items
+   *
+   * @example
+   * // Add multiple entities with the same tag
+   * const entities = [new Entity({ ... }), new Entity({ ... })];
+   * const addedEntities = collection.add(entities, 'buildings');
+   */
+  add(items: I[], tag?: Tag): I[];
+
+  add(i: I | I[], t: Tag = this.tag, idx?: number): I | I[] {
+    if (Array.isArray(i)) {
+      i.forEach((i) => {
         this.add(i);
       });
     } else {
-      Object.defineProperty(item, Collection.symbol, tag);
-      this.collection.add(item, index);
-      this._addToTagMap(item, tag);
+      Object.defineProperty(i, Collection.symbol, t);
+      this.collection.add(i, idx);
+      this._addToTagMap(i, t);
       this._invalidateCache();
-      this._emit('add', { items: [item], tag });
+      this._emit('add', { items: [i], tag: t });
     }
 
-    return item;
+    return i;
   }
 
   /**
@@ -456,24 +468,19 @@ abstract class Collection<
    */
   removeByTag(tag: Tag[]): number;
 
-  removeByTag(tag: Tag | Tag[]): number {
+  removeByTag(t: Tag | Tag[]): number {
     let count = 0;
 
-    if (Array.isArray(tag)) {
-      tag.forEach((t) => {
+    if (Array.isArray(t)) {
+      t.forEach((t) => {
         this.removeByTag(t);
-        count++;
       });
-
-      return count;
-    }
-
-    const items = this.getByTag(tag);
-
-    for (const item of items) {
-      if (this.remove(item as I & WithTag)) {
-        count++;
-      }
+    } else {
+      this.getByTag(t).forEach((item) => {
+        if (this.remove(item as I & WithTag)) {
+          count++;
+        }
+      });
     }
 
     return count;
