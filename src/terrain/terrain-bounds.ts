@@ -143,7 +143,8 @@ export class TerrainBounds {
     let north = Number.NEGATIVE_INFINITY;
 
     // Use the highest available level for the most precise rectangle.
-    const highestLevel = Math.max(...this._levels);
+    const levels = Array.from(this._levels);
+    const highestLevel = levels.length > 0 ? Math.max(...levels) : 0;
     const tileRange = this._tileRanges.get(highestLevel);
 
     if (tileRange) {

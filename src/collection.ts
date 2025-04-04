@@ -266,7 +266,12 @@ abstract class Collection<
         this.add(i);
       });
     } else {
-      Object.defineProperty(i, Collection.symbol, t);
+      Object.defineProperty(i, Collection.symbol, {
+        value: t,
+        enumerable: false,
+        writable: true,
+        configurable: true,
+      });
       this.collection.add(i, idx);
       this._addToTagMap(i, t);
       this._invalidateCache();
