@@ -1,4 +1,13 @@
 {
+  "cSpell.enabledFileTypes": {
+    "*": true,
+    ".gitignore": false,
+    "pnpm-lock.yaml": false,
+  },
+  "cSpell.words": [
+    "commitlint",
+    "Tileset"
+  ],
   "editor.formatOnSave": false,
   "eslint.enable": true,
   "eslint.format.enable": true,
@@ -31,5 +40,21 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint",
     "editor.formatOnSave": true
+  },
+  "[markdown]":{
+    "editor.unicodeHighlight.ambiguousCharacters": false,
+    "editor.unicodeHighlight.invisibleCharacters": false,
+    "diffEditor.ignoreTrimWhitespace": false,
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint",
+    "editor.formatOnSave": true,
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "off"
+    },
+    "cSpell.fixSpellingWithRenameProvider": true,
+    "cSpell.advanced.feature.useReferenceProviderWithRename": true,
+    "cSpell.advanced.feature.useReferenceProviderRemove": "/^#+\\s/"
   }
 }

@@ -27,7 +27,7 @@ export class TerrainBounds {
 
   /**
    * Creates a new instance of TerrainBounds.
-   * @param options Object describing initialization options.
+   * @param options {@link TerrainBounds.ConstructorOptions}
    * @param tilingScheme (optional) The tiling scheme to use for coordinate calculations.
    */
   constructor(

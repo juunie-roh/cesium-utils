@@ -1,8 +1,7 @@
 {
   "recommendations": [
-    "arcanis.vscode-zipfs", // ZipFS for yarn berry
     "dbaeumer.vscode-eslint", // ESLint for code formatting
     "esbenp.prettier-vscode", // Prettier for code formatting
-    "bradlc.vscode-tailwindcss" // intellisense for tailwind css
+    "DavidAnson.vscode-markdownlint", // Markdown Linter
   ]
 }

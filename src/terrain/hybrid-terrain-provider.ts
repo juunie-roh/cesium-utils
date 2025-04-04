@@ -325,7 +325,7 @@ export class HybridTerrainProvider implements TerrainProvider {
 
 /**
  * @namespace
- * Contains types and factory methods for creating `HybrindTerrainProvider` instance.
+ * Contains types and factory methods for creating `HybridTerrainProvider` instance.
  */
 export namespace HybridTerrainProvider {
   /**
@@ -346,7 +346,7 @@ export namespace HybridTerrainProvider {
    * @param baseTerrainUrl URL to the base terrain.
    * @param tileRanges Tile ranges defining the custom terrain area.
    * @param levels Levels to apply the custom terrain.
-   * @returns A promise resolveing to a new `HybridTerrainProvider`.
+   * @returns A promise resolving to a new `HybridTerrainProvider`.
    */
   export async function createOverlay(
     customTerrainUrl: string,

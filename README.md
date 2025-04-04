@@ -26,9 +26,9 @@ pnpm add @juun_roh/cesium-utils
 
 * [Collection](#collection)
 * [Terrain Utilities](#terrain-utilities)
-  - [HybridTerrainProvider](#hybridterrainprovider)
-  - [TerrainArea](#terrainarea)
-  - [TerrainVisualizer](#terrainvisualizer)
+  * [HybridTerrainProvider](#hybridterrainprovider)
+  * [TerrainArea](#terrainarea)
+  * [TerrainVisualizer](#terrainvisualizer)
 * [Type Utilities](#typeguard)
 
 ### Collection
@@ -72,6 +72,7 @@ entities.forEach((entity) => {
   // Do something with each entity
 }, 'buildings');
 ```
+
 </details>
 
 ### Terrain Utilities
@@ -112,6 +113,7 @@ const hybridTerrain = await HybridTerrainProvider.create({
 const viewer = new Viewer('cesiumContainer');
 viewer.terrainProvider = hybridTerrain;
 ```
+
 </details>
 
 #### TerrainArea
@@ -143,6 +145,7 @@ const terrainArea = new TerrainArea({
 // Check if a tile is covered by this area
 const contains = terrainArea.contains(1235, 5680, 12);
 ```
+
 </details>
 
 #### TerrainVisualizer
@@ -177,6 +180,7 @@ visualizer.showTileGrid(12);
 visualizer.hideBoundaries();
 visualizer.hideTileGrid();
 ```
+
 </details>
 
 ### Type Utilities
@@ -196,14 +200,15 @@ if (TypeGuard.hasProperty(entity, 'show')) {
   entity.show = true;
 }
 ```
+
 </details>
 
 ## Browser Compatibility
 
 This library works in both modern browsers and Node.js environments. It supports:
 
-- ESM (ECMAScript modules)
-- CommonJS (via a bundled .cjs file)
+* ESM (ECMAScript modules)
+* CommonJS (via a bundled .cjs file)
 
 ## Development
 

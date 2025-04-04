@@ -45,8 +45,8 @@
 - 685caac: feat: Redefine types, add overload for `removeByTag` function
 
   - Fix types, now adds tag into the item using `Object.defineProperty`.
-  - Fix `add` function to recursively call itself, simplifying the code sturcture.
-  - Add overloads for `removeByTag` method. It now support mutiple tags removal.
+  - Fix `add` function to recursively call itself, simplifying the code structure.
+  - Add overloads for `removeByTag` method. It now support multiple tags removal.
 
   feat: Add hybrid terrain provider feature
 
@@ -88,7 +88,7 @@
   - Update pnpm version to 10.7.0
   - Update build stages:  
     Use tsup  
-    Create delcaration files under @types
+    Create declaration files under @types
   - Update ignore settings
 
 ## 0.0.6
@@ -101,7 +101,7 @@
 
     - `hasProperty`: Supports type guard to determine if an item has a specific property that is not undefined.
 
-  - Event Subscribtion
+  - Event Subscription
 
     - add and remove events: Further enhancement is needed.
 
