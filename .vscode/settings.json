@@ -1,9 +1,10 @@
 {
-  "cSpell.enabledFileTypes": {
-    "*": true,
-    ".gitignore": false,
-    "pnpm-lock.yaml": false,
-  },
+  "cSpell.files": [
+    "**/*.js",
+    "**/*.ts",
+    "**/*.json",
+    "**/*.md",
+  ],
   "cSpell.words": [
     "commitlint",
     "Tileset"
