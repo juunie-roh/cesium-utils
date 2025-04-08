@@ -4,7 +4,6 @@ window.CESIUM_BASE_URL = window.CESIUM_BASE_URL
 
 import {
   Cartesian3,
-  Color,
   defined,
   formatError,
   Math as CesiumMath,
@@ -24,7 +23,7 @@ import {
   KeyboardEventModifier,
 } from "cesium";
 
-import { TerrainBounds, TerrainVisualizer } from 'dist';
+import { testTerrain } from './terrain';
 
 async function main() {
   /*
@@ -259,42 +258,7 @@ async function main() {
   loadingIndicator.style.display = "none";
 
   // Terrain visualizer
-  const tileRanges = new Map();
-
-  tileRanges.set(15, {
-    start: { x: 55852, y: 9556 },
-    end: { x: 55871, y: 9575 },
-  });
-
-  tileRanges.set(14, { 
-    start: { x: 27926, y: 4778 },
-    end: { x: 27935, y: 4787 },
-  });
-
-  tileRanges.set(13, {
-    start: { x: 13963, y: 2389 },
-    end: { x: 13967, y: 2393 },
-  });
-
-  const terrainBounds = new TerrainBounds({
-    type: 'tileRange',
-    tileRanges,
-  });
-
-  const entityCollection = TerrainVisualizer.visualize(
-    terrainBounds,
-    viewer,
-    {
-      color: Color.RED.withAlpha(0.7),
-      show: true,
-      levels: [13, 14, 15],
-      tag: 'my_terrain_visualization',
-      alpha: 0.7,
-      tileAlpha: 0.3,
-    },
-  );
-
-  console.log(`Created ${entityCollection.length} entities.`, entityCollection);
+  testTerrain(viewer);
 }
 
 main();
