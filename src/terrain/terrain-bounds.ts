@@ -153,7 +153,7 @@ export class TerrainBounds {
       return;
     }
 
-    const highestLevel = Math.max(...levels);
+    const highestLevel = Math.min(...levels);
     const tileRange = this._tileRanges.get(highestLevel);
 
     if (tileRange) {
