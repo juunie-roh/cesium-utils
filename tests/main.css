@@ -37,5 +37,5 @@ body {
   height: 66px;
   background-position: center;
   background-repeat: no-repeat;
-  background-image: url(images/ajax-loader.gif);
+  background-image: url(/images/ajax-loader.gif);
 }
