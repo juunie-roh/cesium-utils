@@ -131,14 +131,6 @@ export class HybridTerrainProvider implements TerrainProvider {
   get ready(): boolean | Promise<boolean> {
     return this._ready;
   }
-  /**
-   * Ensures the provider is ready for use.
-   * @returns A promise that resolves when the provider is ready.
-   */
-  async ensureReady(): Promise<boolean> {
-    if (this._ready === true) return true;
-    return this._ready;
-  }
 
   /**
    * Gets the tiling scheme used by this provider.
@@ -221,8 +213,8 @@ export class HybridTerrainProvider implements TerrainProvider {
     y: number,
     level: number,
     request?: Request,
-  ): Promise<TerrainData> {
-    await this.ensureReady();
+  ): Promise<Awaited<TerrainData>> {
+    await this._ready;
 
     let terrainData: TerrainData | undefined;
     for (const area of this._terrainAreas) {
@@ -353,7 +345,7 @@ export namespace HybridTerrainProvider {
     baseTerrainUrl: string,
     tileRanges: TileRanges,
     levels?: number[],
-  ): Promise<HybridTerrainProvider> {
+  ): Promise<Awaited<HybridTerrainProvider>> {
     return HybridTerrainProvider.create({
       terrainAreas: [
         {

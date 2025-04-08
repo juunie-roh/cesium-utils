@@ -14,7 +14,7 @@ import { TerrainBounds, TileRanges } from './terrain-bounds.js';
  * `TerrainArea` pairs a provider with geographic bounds and level constraints.
  */
 export class TerrainArea {
-  private _provider!: TerrainProvider;
+  private _provider: TerrainProvider | undefined;
   private _bounds: TerrainBounds;
   private _levels: Set<number>;
   private _ready: boolean | Promise<boolean> = false;
@@ -80,19 +80,14 @@ export class TerrainArea {
     return this._bounds.contains(x, y, level);
   }
 
-  async ensureReady(): Promise<boolean> {
-    if (this._ready === true) return true;
-    return this._ready;
-  }
-
   async requestTileGeometry(
     x: number,
     y: number,
     level: number,
     request?: Request,
-  ): Promise<TerrainData | undefined> {
+  ): Promise<Awaited<TerrainData> | undefined> {
     // Ensure the provider is ready
-    await this.ensureReady();
+    await this._ready;
     // Check if this tile is available from this provider.
     if (
       !this.contains(x, y, level) ||
@@ -181,7 +176,7 @@ export namespace TerrainArea {
     tileRanges: TileRanges,
     levels?: number[],
     credit: string | Credit = 'custom',
-  ) {
+  ): Promise<Awaited<TerrainArea>> {
     const bounds = new TerrainBounds({
       type: 'tileRange',
       tileRanges,
