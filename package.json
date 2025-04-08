@@ -41,6 +41,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "build:dev": "tsup --watch",
     "clean": "rimraf dist @types docs",
     "lint": "eslint .",
     "ci:publish": "pnpm build && pnpm publish -r --no-git-checks",
@@ -49,7 +50,7 @@
     "prepublishOnly": "npm run lint",
     "test": "node tests/cjs-require.cjs && node tests/cjs-with-cesium.cjs && node tests/esm-import.mjs && node tests/esm-with-cesium.mjs",
     "document": "typedoc --out docs src/index.ts",
-    "dev": "tsup src/index.ts --format cjs,esm --watch"
+    "dev": "vite"
   },
   "engines": {
     "node": ">=18.0.0"
