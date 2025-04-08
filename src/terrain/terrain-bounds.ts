@@ -37,16 +37,21 @@ export class TerrainBounds {
     this._tilingScheme = tilingScheme || new GeographicTilingScheme();
     this._rectangle = new Rectangle();
     this._tileRanges = new Map();
+    this._levels = new Set();
 
     if (options.type === 'rectangle' && options.rectangle) {
       this._rectangle = Rectangle.clone(options.rectangle);
     } else if (options.type === 'tileRange' && options.tileRanges) {
-      this._tileRanges = new Map(
-        Object.entries(options.tileRanges).map(([level, range]) => [
-          parseInt(level),
-          range,
-        ]),
-      );
+      if (options.tileRanges instanceof Map) {
+        this._tileRanges = new Map(options.tileRanges);
+      } else {
+        this._tileRanges = new Map(
+          Object.entries(options.tileRanges).map(([level, range]) => [
+            parseInt(level),
+            range,
+          ]),
+        );
+      }
 
       this._calculateRectangleFromTileRanges();
     } else {
@@ -188,8 +193,9 @@ export namespace TerrainBounds {
     /**
      * Tile ranges by level when using tileRange type.
      * Keys are zoom levels, values define the range of tiles at that level.
+     * Can be provided either as a Map or as a plain object with numeric keys.
      */
-    tileRanges?: TileRanges;
+    tileRanges?: Map<number, TileRange> | Record<string | number, TileRange>;
     /** Rectangle bounds when using rectangle type. */
     rectangle?: Rectangle;
   }
