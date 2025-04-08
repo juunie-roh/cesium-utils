@@ -1,5 +1,19 @@
 # @juun_roh/cesium-utils
 
+## 0.0.15
+
+### Patch Changes
+
+- 8005e50: Testing environment updates
+
+  fix: Fix not iterable problem
+
+  test: Add cesium viewer testing environment with vite
+
+  test: Remove self-dependency, refer dist directory instead
+
+  - Removed Self reference from npm, now it tests from `dist` directly
+
 ## 0.0.14
 
 ### Patch Changes
