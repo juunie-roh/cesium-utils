@@ -1,6 +1,4 @@
 catalogs:
-  this:
-    "@juun_roh/cesium-utils": "*"
   commitlint19:
     "@commitlint/cli": ^19
     "@commitlint/config-conventional": ^19

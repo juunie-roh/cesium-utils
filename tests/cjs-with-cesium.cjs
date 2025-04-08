@@ -1,4 +1,4 @@
 const { Viewer } = require('cesium');
-const { Collection } = require('@juun_roh/cesium-utils');
+const { Collection } = require('../dist/index.cjs');
 
 console.log('Require test with Cesium:', !!Viewer, !!Collection);

@@ -1,4 +1,4 @@
 import { Viewer } from 'cesium';
-import { Collection } from '@juun_roh/cesium-utils';
+import { Collection } from '../dist/index.js';
 
 console.log('Import test with Cesium:', !!Viewer, !!Collection);
