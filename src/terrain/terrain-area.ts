@@ -17,18 +17,19 @@ export class TerrainArea {
   private _provider: TerrainProvider | undefined;
   private _bounds: TerrainBounds;
   private _levels: Set<number>;
-  private _ready: boolean | Promise<boolean> = false;
+  private _ready: boolean = false;
   private _credit: string | Credit;
   private _isCustom: boolean;
 
   /**
    * Creates a new instance of `TerrainArea`.
    * @param options Object describing initialization options
+   * @private Use {@link TerrainArea.create} instead.
    */
-  constructor(options: TerrainArea.ConstructorOptions) {
-    if (!options.bounds)
-      throw new Error('TerrainArea requires bounds to be specified.');
-
+  private constructor(
+    options: TerrainArea.ConstructorOptions,
+    provider: TerrainProvider,
+  ) {
     this._bounds =
       options.bounds instanceof TerrainBounds
         ? options.bounds
@@ -37,36 +38,32 @@ export class TerrainArea {
     this._levels = new Set(options.levels || []);
     this._credit = options.credit || 'custom';
     this._isCustom = options.isCustom !== undefined ? options.isCustom : true;
+    this._provider = provider;
+    this._ready = true;
 
-    this._ready = this._initializeProvider(options.provider);
+    this._bounds.configureAvailability(this._provider);
   }
 
-  private async _initializeProvider(
-    provider: TerrainProvider | string,
-  ): Promise<boolean> {
-    try {
-      if (typeof provider === 'string') {
-        this._provider = await CesiumTerrainProvider.fromUrl(provider, {
-          requestVertexNormals: true,
-          credit: this._credit,
-        });
-      } else {
-        this._provider = provider;
+  /**
+   * Asynchronously creates a new instance of `TerrainArea`.
+   * @param options {@link TerrainArea.ConstructorOptions}
+   * @returns A promise that resolves to a new `TerrainArea` instance.
+   */
+  static async create(
+    options: TerrainArea.ConstructorOptions,
+  ): Promise<TerrainArea> {
+    let provider: TerrainProvider;
 
-        if (this._isCustom && typeof this._credit === 'string') {
-          // Handle setting credit on existing provider.
-          // Note: This may not be directly possible.
-        }
-      }
-
-      this._bounds.configureAvailability(this._provider);
-      this._ready = true;
-      return true;
-    } catch (error: any) {
-      console.error('Failed to initialize terrain provider:', error);
-      this._ready = false;
-      throw error;
+    if (typeof options.provider === 'string') {
+      provider = await CesiumTerrainProvider.fromUrl(options.provider, {
+        requestVertexNormals: true,
+        credit: options.credit || 'custom',
+      });
+    } else {
+      provider = options.provider;
     }
+
+    return new TerrainArea(options, provider);
   }
 
   /**
@@ -80,22 +77,28 @@ export class TerrainArea {
     return this._bounds.contains(x, y, level);
   }
 
-  async requestTileGeometry(
+  /**
+   * Requests the terrain for a given tile coordinate.
+   * @param x The X coordinate of the tile.
+   * @param y The Y coordinate of the tile.
+   * @param level The zoom level of the tile.
+   * @param request The request.
+   * @returns A promise for the requested terrain.
+   */
+  requestTileGeometry(
     x: number,
     y: number,
     level: number,
     request?: Request,
-  ): Promise<Awaited<TerrainData> | undefined> {
-    // Ensure the provider is ready
-    await this._ready;
-    // Check if this tile is available from this provider.
+  ): Promise<Awaited<TerrainData>> | undefined {
     if (
+      !this._ready ||
       !this.contains(x, y, level) ||
       !this._provider?.getTileDataAvailable(x, y, level)
-    )
+    ) {
       return undefined;
+    }
 
-    // Request the tile from the provider.
     return this._provider.requestTileGeometry(x, y, level, request);
   }
 
@@ -104,20 +107,17 @@ export class TerrainArea {
     return this._provider?.getTileDataAvailable(x, y, level) ?? false;
   }
 
-  /**
-   * Checks if this terrain provider is marked as a custom provider.
-   */
+  /** Checks if this terrain provider is marked as a custom provider. */
   get isCustom(): boolean {
     return this._isCustom;
   }
 
-  /**
-   * Gets the credit associated with this terrain area.
-   */
+  /** Gets the credit associated with this terrain area. */
   get credit(): string | Credit {
     return this._credit;
   }
 
+  /** Gets the terrain provider for this terrain area. */
   get provider(): TerrainProvider | undefined {
     return this._provider;
   }
@@ -130,13 +130,14 @@ export class TerrainArea {
     return this._levels;
   }
 
-  get ready(): boolean | Promise<boolean> {
+  get ready(): boolean {
     return this._ready;
   }
 }
 
 /**
- * @namespace `TerrainArea` Contains types and factory methods for creating `TerrainArea` instances.
+ * @namespace
+ * Contains types and factory methods for creating `TerrainArea` instances.
  */
 export namespace TerrainArea {
   /** Initialization options for `TerrainArea` constructor. */
@@ -182,14 +183,12 @@ export namespace TerrainArea {
       tileRanges,
     });
 
-    const terrainArea = new TerrainArea({
+    const terrainArea = await TerrainArea.create({
       provider: url,
       bounds,
       levels: levels || Object.keys(tileRanges).map((k) => parseInt(k)),
       credit,
     });
-
-    await terrainArea.ready;
 
     return terrainArea;
   }
