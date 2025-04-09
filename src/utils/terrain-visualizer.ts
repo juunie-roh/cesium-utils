@@ -25,7 +25,7 @@ export class TerrainVisualizer {
   private _collection: TerrainEntities;
   private _hybridTerrain?: HybridTerrainProvider;
   private _visible: boolean = false;
-  private _activeLevel: number = 15;
+  private _level: number = 15;
   private _tileCoordinatesLayer: ImageryLayer | undefined;
   private _colors: Map<string, Color> = new Map([
     ['custom', Color.RED],
@@ -58,7 +58,7 @@ export class TerrainVisualizer {
       }
 
       if (options.activeLevel !== undefined) {
-        this._activeLevel = options.activeLevel;
+        this._level = options.activeLevel;
       }
 
       if (options.terrainProvider) {
@@ -83,7 +83,7 @@ export class TerrainVisualizer {
     this.clear();
 
     if (this._visible) {
-      this.show(this._activeLevel);
+      this.show(this._level);
     }
   }
 
@@ -98,12 +98,12 @@ export class TerrainVisualizer {
    * Shows a grid of tiles at the specified level.
    * @param level The zoom level to visualize
    */
-  show(level: number): void {
+  show(level: number = 15): void {
     if (!this._hybridTerrain) return;
 
     this._collection.removeByTag(TerrainVisualizer.tag.grid);
 
-    this._activeLevel = level;
+    this._level = level;
     const tilingScheme = this._hybridTerrain.tilingScheme;
 
     if (!this._tileCoordinatesLayer) {
@@ -273,12 +273,12 @@ export class TerrainVisualizer {
   }
 
   /** The current zoom level set on the visualizer. */
-  get activeLevel(): number {
-    return this._activeLevel;
+  get level(): number {
+    return this._level;
   }
   /** Set zoom level on the visualizer. */
-  set activeLevel(level: number) {
-    this._activeLevel = level;
+  set level(level: number) {
+    this._level = level;
     if (this._visible) {
       this.update();
     }
