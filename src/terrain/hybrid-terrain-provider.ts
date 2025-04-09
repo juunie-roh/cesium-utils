@@ -12,6 +12,39 @@ import {
 import { TerrainArea } from './terrain-area.js';
 import { TileRanges } from './terrain-bounds.js';
 
+class TerrainAreaCollection extends Array<TerrainArea> {
+  /**
+   * Adds a new terrain area to the collection.
+   */
+  add(area: TerrainArea | TerrainArea.ConstructorOptions): number {
+    const terrainArea =
+      area instanceof TerrainArea ? area : new TerrainArea(area);
+    if (terrainArea.ready instanceof Promise) {
+      terrainArea.ready.then(() => this.add(area));
+    }
+    return this.push(terrainArea);
+  }
+
+  /**
+   * Removes a terrain area from the collection.
+   */
+  remove(area: TerrainArea): boolean {
+    const index = this.indexOf(area);
+    if (index >= 0) {
+      this.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Clears all terrain areas.
+   */
+  clear(): void {
+    this.length = 0;
+  }
+}
+
 /**
  * @class
  * Provides terrain by delegating requests to different terrain providers
@@ -31,10 +64,10 @@ import { TileRanges } from './terrain-bounds.js';
  *           end: { x: 55871, y: 9575 },
  *         },
  *       },
- *       levels: [13, 14, 15],
+ *       levels: [15],
  *     }
  *   ],
- *   defaultProvider: 'default-terrain-url',
+ *   terrainProvider: 'default-terrain-url',
  *   fallbackProvider: new EllipsoidTerrainProvider(),
  * });
  *
@@ -42,8 +75,8 @@ import { TileRanges } from './terrain-bounds.js';
  * ```
  */
 export class HybridTerrainProvider implements TerrainProvider {
-  private _terrainAreas: TerrainArea[] = [];
-  private _defaultProvider!: TerrainProvider;
+  private _terrainAreas = new TerrainAreaCollection();
+  private _terrainProvider!: TerrainProvider;
   private _fallbackProvider!: TerrainProvider;
   private _tilingScheme!: TilingScheme;
   private _ready: boolean | Promise<boolean> = false;
@@ -69,13 +102,15 @@ export class HybridTerrainProvider implements TerrainProvider {
   ): Promise<boolean> {
     try {
       // Default provider
-      if (typeof options.defaultProvider === 'string') {
-        this._defaultProvider = await CesiumTerrainProvider.fromUrl(
-          options.defaultProvider,
-          { requestVertexNormals: true },
+      if (typeof options.terrainProvider === 'string') {
+        this._terrainProvider = await CesiumTerrainProvider.fromUrl(
+          options.terrainProvider,
+          {
+            requestVertexNormals: true,
+          },
         );
       } else {
-        this._defaultProvider = options.defaultProvider;
+        this._terrainProvider = options.terrainProvider;
       }
 
       if (options.fallbackProvider) {
@@ -93,7 +128,7 @@ export class HybridTerrainProvider implements TerrainProvider {
       }
 
       this._tilingScheme =
-        this._defaultProvider.tilingScheme || new GeographicTilingScheme();
+        this._terrainProvider.tilingScheme || new GeographicTilingScheme();
 
       for (const opt of options.terrainAreas) {
         const area = new TerrainArea(opt);
@@ -101,7 +136,7 @@ export class HybridTerrainProvider implements TerrainProvider {
         this._terrainAreas.push(area);
       }
 
-      this._availability = this._defaultProvider.availability;
+      this._availability = this._terrainProvider.availability;
       this._ready = true;
       return true;
     } catch (error: any) {
@@ -154,7 +189,7 @@ export class HybridTerrainProvider implements TerrainProvider {
    * Gets the default terrain provider.
    */
   get defaultProvider(): TerrainProvider {
-    return this._defaultProvider;
+    return this._terrainProvider;
   }
   /**
    * Gets the fallback terrain provider.
@@ -167,37 +202,37 @@ export class HybridTerrainProvider implements TerrainProvider {
    * @see {@link TerrainProvider.credit}
    */
   get credit(): any {
-    return this._defaultProvider?.credit;
+    return this._terrainProvider?.credit;
   }
   /**
    * @see {@link TerrainProvider.errorEvent}
    */
   get errorEvent(): any {
-    return this._defaultProvider.errorEvent;
+    return this._terrainProvider.errorEvent;
   }
   /**
    * @see {@link TerrainProvider.hasWaterMask}
    */
   get hasWaterMask(): boolean {
-    return this._defaultProvider.hasWaterMask;
+    return this._terrainProvider.hasWaterMask;
   }
   /**
    * @see {@link TerrainProvider.hasVertexNormals}
    */
   get hasVertexNormals(): boolean {
-    return this._defaultProvider.hasVertexNormals;
+    return this._terrainProvider.hasVertexNormals;
   }
   /**
    * @see {@link TerrainProvider.loadTileDataAvailability}
    */
   loadTileDataAvailability(x: number, y: number, level: number) {
-    return this._defaultProvider.loadTileDataAvailability(x, y, level);
+    return this._terrainProvider.loadTileDataAvailability(x, y, level);
   }
   /**
    * @see {@link TerrainProvider.getLevelMaximumGeometricError}
    */
   getLevelMaximumGeometricError(level: number): number {
-    return this._defaultProvider.getLevelMaximumGeometricError(level);
+    return this._terrainProvider.getLevelMaximumGeometricError(level);
   }
 
   /**
@@ -208,53 +243,26 @@ export class HybridTerrainProvider implements TerrainProvider {
    * @param request The request.
    * @returns A promise for the requested terrain.
    */
+  // @ts-expect-error
   async requestTileGeometry(
     x: number,
     y: number,
     level: number,
     request?: Request,
-  ): Promise<Awaited<TerrainData>> {
+  ): Promise<Awaited<TerrainData> | undefined> {
     await this._ready;
 
-    let terrainData: TerrainData | undefined;
     for (const area of this._terrainAreas) {
       if (area.contains(x, y, level)) {
-        try {
-          terrainData = await area.requestTileGeometry(x, y, level, request);
-          if (terrainData) return terrainData;
-        } catch (error) {
-          console.warn('Error requesting terrain from area:', error);
-        }
+        return area.requestTileGeometry(x, y, level, request);
       }
     }
 
-    try {
-      if (this._defaultProvider.getTileDataAvailable(x, y, level)) {
-        terrainData = await this._defaultProvider.requestTileGeometry(
-          x,
-          y,
-          level,
-          request,
-        );
-        if (terrainData) return terrainData;
-      }
-    } catch (error) {
-      console.warn('Error requesting terrain from default provider:', error);
+    if (this._terrainProvider.getTileDataAvailable(x, y, level)) {
+      return this._terrainProvider.requestTileGeometry(x, y, level, request);
     }
 
-    try {
-      return (
-        (await this._fallbackProvider.requestTileGeometry(
-          x,
-          y,
-          level,
-          request,
-        )) || (undefined as unknown as TerrainData)
-      );
-    } catch (error) {
-      console.error('Error requesting terrain from fallback provider:', error);
-      throw error;
-    }
+    return this._fallbackProvider.requestTileGeometry(x, y, level, request);
   }
 
   /**
@@ -278,40 +286,7 @@ export class HybridTerrainProvider implements TerrainProvider {
       }
     });
 
-    return this._defaultProvider.getTileDataAvailable(x, y, level) || true;
-  }
-
-  /**
-   * Adds a new terrain area to the hybrid provider.
-   * @param area The terrain area to add.
-   */
-  async addTerrainArea(
-    area: TerrainArea | TerrainArea.ConstructorOptions,
-  ): Promise<void> {
-    const terrainArea =
-      area instanceof TerrainArea ? area : new TerrainArea(area);
-
-    await terrainArea.ready;
-    this._terrainAreas.push(terrainArea);
-  }
-
-  /**
-   * Removes a terrain area from the hybrid provider.
-   * @param area The terrain area to remove
-   * @returns `true` if the area was removed, `false` if not found.
-   */
-  removeTerrainArea(area: TerrainArea): boolean {
-    const index = this._terrainAreas.indexOf(area);
-    if (index >= 0) {
-      this._terrainAreas.splice(index, 1);
-      return true;
-    }
-
-    return false;
-  }
-  /** Clears all terrain areas. */
-  clearTerrainArea(): void {
-    this._terrainAreas = [];
+    return this._terrainProvider.getTileDataAvailable(x, y, level) || true;
   }
 }
 
@@ -327,7 +302,7 @@ export namespace HybridTerrainProvider {
     /** An array of terrain areas to include in the hybrid terrain. */
     terrainAreas: TerrainArea.ConstructorOptions[];
     /** Default provider to use outside of specified terrain areas.  */
-    defaultProvider: TerrainProvider | string;
+    terrainProvider: TerrainProvider | string;
     /** Optional fallback provider when data is not available from default provider. @default EllipsoidTerrainProvider */
     fallbackProvider?: TerrainProvider | string;
   }
@@ -355,7 +330,7 @@ export namespace HybridTerrainProvider {
           credit: 'custom',
         },
       ],
-      defaultProvider: baseTerrainUrl,
+      terrainProvider: baseTerrainUrl,
       fallbackProvider: new EllipsoidTerrainProvider(),
     });
   }
