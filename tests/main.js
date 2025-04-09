@@ -1,7 +1,3 @@
-window.CESIUM_BASE_URL = window.CESIUM_BASE_URL
-  ? window.CESIUM_BASE_URL
-  : "../node_modules/cesium/Build/Cesium/";
-
 import {
   Cartesian3,
   defined,
@@ -24,6 +20,10 @@ import {
 } from "cesium";
 
 import { testTerrain } from './terrain';
+
+window.CESIUM_BASE_URL = window.CESIUM_BASE_URL
+  ? window.CESIUM_BASE_URL
+  : "../node_modules/cesium/Build/Cesium/";
 
 async function main() {
   /*

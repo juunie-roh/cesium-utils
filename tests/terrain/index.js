@@ -7,15 +7,15 @@ import { HybridTerrainProvider, TerrainBounds, TerrainVisualizer } from 'dist';
 export function testTerrain(viewer) {
   const tileRanges = new Map();
   
-  tileRanges.set(15, {
-    start: { x: 55852, y: 9556 },
-    end: { x: 55871, y: 9575 },
-  });
+  // tileRanges.set(15, {
+  //   start: { x: 55852, y: 9556 },
+  //   end: { x: 55871, y: 9575 },
+  // });
   
-  tileRanges.set(14, { 
-    start: { x: 27926, y: 4778 },
-    end: { x: 27935, y: 4787 },
-  });
+  // tileRanges.set(14, { 
+  //   start: { x: 27926, y: 4778 },
+  //   end: { x: 27935, y: 4787 },
+  // });
   
   tileRanges.set(13, {
     start: { x: 13963, y: 2389 },
@@ -27,20 +27,20 @@ export function testTerrain(viewer) {
     tileRanges,
   });
   
-  const entityCollection = TerrainVisualizer.visualize(
-    bounds,
-    viewer,
-    {
-      color: Color.RED.withAlpha(0.7),
-      show: true,
-      levels: [13],
-      tag: 'my_terrain_visualization',
-      alpha: 0.7,
-      tileAlpha: 0.3,
-    },
-  );
+  // const entityCollection = TerrainVisualizer.visualize(
+  //   bounds,
+  //   viewer,
+  //   {
+  //     // color: Color.RED.withAlpha(0.7),
+  //     show: true,
+  //     levels: [13],
+  //     tag: 'my_terrain_visualization',
+  //     alpha: 0.7,
+  //     tileAlpha: 0.3,
+  //   },
+  // );
   
-  console.log(`Created ${entityCollection.length} entities.`, entityCollection);
+  // console.log(`Created ${entityCollection.length} entities.`, entityCollection);
 
   const terrain = Terrain.fromWorldTerrain({
     requestVertexNormals: true,
@@ -51,12 +51,16 @@ export function testTerrain(viewer) {
       terrainAreas: [{
         provider,
         bounds,
-        levels: [13, 14, 15],
         isCustom: true,
       }],
-      defaultProvider: new EllipsoidTerrainProvider(),
+      terrainProvider: new EllipsoidTerrainProvider(),
     });
     console.log('🚀 ~ terrain.readyEvent.addEventListener ~ hybrid:', hybrid);
     viewer.terrainProvider = hybrid;
-  })
+    const visualizer = new TerrainVisualizer(viewer, {
+      terrainProvider: hybrid,
+    });
+
+    window.visualizer = visualizer;
+  });
 }
