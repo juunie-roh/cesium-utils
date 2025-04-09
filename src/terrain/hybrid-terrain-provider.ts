@@ -15,13 +15,22 @@ import { TileRanges } from './terrain-bounds.js';
 class TerrainAreaCollection extends Array<TerrainArea> {
   /**
    * Adds a new terrain area to the collection.
+   * @param area A TerrainArea instance or constructor options
+   * @returns A promise that resolves to the index of the added item
    */
-  add(area: TerrainArea | TerrainArea.ConstructorOptions): number {
-    const terrainArea =
-      area instanceof TerrainArea ? area : new TerrainArea(area);
-    if (terrainArea.ready instanceof Promise) {
-      terrainArea.ready.then(() => this.add(area));
+  async add(
+    area: TerrainArea | TerrainArea.ConstructorOptions,
+  ): Promise<number> {
+    let terrainArea: TerrainArea;
+
+    if (area instanceof TerrainArea) {
+      terrainArea = area;
+    } else {
+      // Use the factory method instead of constructor
+      terrainArea = await TerrainArea.create(area);
     }
+
+    // Add to collection after terrain area is ready
     return this.push(terrainArea);
   }
 
@@ -79,71 +88,29 @@ export class HybridTerrainProvider implements TerrainProvider {
   private _terrainProvider!: TerrainProvider;
   private _fallbackProvider!: TerrainProvider;
   private _tilingScheme!: TilingScheme;
-  private _ready: boolean | Promise<boolean> = false;
+  private _ready: boolean = false;
   private _availability?: TileAvailability;
 
   /**
-   * Creates a new `HybridTerrainProvider`. Use the static `create()` method
+   * Creates a new `HybridTerrainProvider`. Use the {@link HybridTerrainProvider.create}
    * instead of the constructor for async initialization.
-   * @param options {@link HybridTerrainProvider.ConstructorOptions}
-   * @private - Use static `create()` method instead.
+   * @param terrainProvider The initialized default terrain provider
+   * @param fallbackProvider The initialized fallback terrain provider
+   * @param terrainAreas The array of initialized terrain areas
+   * @private - Use {@link HybridTerrainProvider.create} instead.
    */
-  private constructor(options: HybridTerrainProvider.ConstructorOptions) {
-    this._ready = this._initialize(options);
-  }
-
-  /**
-   * Initializes the hybrid terrain provider and all its components.
-   * @param options {@link HybridTerrainProvider.ConstructorOptions}
-   * @private
-   */
-  private async _initialize(
-    options: HybridTerrainProvider.ConstructorOptions,
-  ): Promise<boolean> {
-    try {
-      // Default provider
-      if (typeof options.terrainProvider === 'string') {
-        this._terrainProvider = await CesiumTerrainProvider.fromUrl(
-          options.terrainProvider,
-          {
-            requestVertexNormals: true,
-          },
-        );
-      } else {
-        this._terrainProvider = options.terrainProvider;
-      }
-
-      if (options.fallbackProvider) {
-        if (typeof options.fallbackProvider === 'string') {
-          this._fallbackProvider = await CesiumTerrainProvider.fromUrl(
-            options.fallbackProvider,
-            { requestVertexNormals: true },
-          );
-        } else {
-          this._fallbackProvider = options.fallbackProvider;
-        }
-      } else {
-        // Default fallback is an ellipsoid (flat terrain)
-        this._fallbackProvider = new EllipsoidTerrainProvider();
-      }
-
-      this._tilingScheme =
-        this._terrainProvider.tilingScheme || new GeographicTilingScheme();
-
-      for (const opt of options.terrainAreas) {
-        const area = new TerrainArea(opt);
-        await area.ready;
-        this._terrainAreas.push(area);
-      }
-
-      this._availability = this._terrainProvider.availability;
-      this._ready = true;
-      return true;
-    } catch (error: any) {
-      console.error('Failed to initialize HybridTerrainProvider:', error);
-      this._ready = false;
-      throw error;
-    }
+  private constructor(
+    terrainProvider: TerrainProvider,
+    fallbackProvider: TerrainProvider,
+    terrainAreas: TerrainArea[],
+  ) {
+    this._terrainProvider = terrainProvider;
+    this._fallbackProvider = fallbackProvider;
+    this._tilingScheme =
+      terrainProvider.tilingScheme || new GeographicTilingScheme();
+    this._terrainAreas = new TerrainAreaCollection(...terrainAreas);
+    this._availability = terrainProvider.availability;
+    this._ready = true;
   }
 
   /**
@@ -154,16 +121,60 @@ export class HybridTerrainProvider implements TerrainProvider {
   static async create(
     options: HybridTerrainProvider.ConstructorOptions,
   ): Promise<HybridTerrainProvider> {
-    const provider = new HybridTerrainProvider(options);
-    await provider.ready;
-    return provider;
+    try {
+      // Initialize default provider
+      let terrainProvider: TerrainProvider;
+      if (typeof options.terrainProvider === 'string') {
+        terrainProvider = await CesiumTerrainProvider.fromUrl(
+          options.terrainProvider,
+          {
+            requestVertexNormals: true,
+          },
+        );
+      } else {
+        terrainProvider = options.terrainProvider;
+      }
+
+      // Initialize fallback provider
+      let fallbackProvider: TerrainProvider;
+      if (options.fallbackProvider) {
+        if (typeof options.fallbackProvider === 'string') {
+          fallbackProvider = await CesiumTerrainProvider.fromUrl(
+            options.fallbackProvider,
+            { requestVertexNormals: true },
+          );
+        } else {
+          fallbackProvider = options.fallbackProvider;
+        }
+      } else {
+        // Default fallback is an ellipsoid (flat terrain)
+        fallbackProvider = new EllipsoidTerrainProvider();
+      }
+
+      // Initialize terrain areas
+      const terrainAreas: TerrainArea[] = [];
+      for (const opt of options.terrainAreas) {
+        const area = await TerrainArea.create(opt);
+        terrainAreas.push(area);
+      }
+
+      // Create the fully initialized provider
+      return new HybridTerrainProvider(
+        terrainProvider,
+        fallbackProvider,
+        terrainAreas,
+      );
+    } catch (error: any) {
+      console.error('Failed to initialize HybridTerrainProvider:', error);
+      throw error;
+    }
   }
 
   /**
    * Gets a value indicating whether or not the provider is ready for use,
    * or a promise that resolves when the provider becomes ready.
    */
-  get ready(): boolean | Promise<boolean> {
+  get ready(): boolean {
     return this._ready;
   }
 
@@ -243,14 +254,13 @@ export class HybridTerrainProvider implements TerrainProvider {
    * @param request The request.
    * @returns A promise for the requested terrain.
    */
-  // @ts-expect-error
-  async requestTileGeometry(
+  requestTileGeometry(
     x: number,
     y: number,
     level: number,
     request?: Request,
-  ): Promise<Awaited<TerrainData> | undefined> {
-    await this._ready;
+  ): Promise<Awaited<TerrainData>> | undefined {
+    if (!this._ready) return undefined;
 
     for (const area of this._terrainAreas) {
       if (area.contains(x, y, level)) {
