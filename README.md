@@ -92,7 +92,7 @@ import { Viewer } from 'cesium';
 const hybridTerrain = await HybridTerrainProvider.create({
   terrainAreas: [
     {
-      provider: 'https://url-to-custom-terrain.com',
+      provider: 'url-to-terrain',
       bounds: {
         type: 'tileRange',
         tileRanges: {
@@ -106,7 +106,7 @@ const hybridTerrain = await HybridTerrainProvider.create({
       credit: 'Custom Terrain Provider',
     }
   ],
-  defaultProvider: 'https://url-to-default-terrain.com',
+  terrainProvider: 'url-to-terrain',
 });
 
 // Apply to viewer
@@ -128,7 +128,7 @@ import { TerrainArea, TerrainBounds } from '@juun_roh/cesium-utils';
 
 // Create a terrain area for a specific region
 const terrainArea = new TerrainArea({
-  provider: 'https://url-to-terrain.com',
+  provider: 'url-to-terrain',
   bounds: new TerrainBounds({
     type: 'tileRange',
     tileRanges: {
@@ -174,11 +174,13 @@ const visualizer = new TerrainVisualizer(viewer, {
 });
 
 // Show tile grid at a specific level
-visualizer.showTileGrid(12);
-
+visualizer.show(12);
 // Hide when not needed
-visualizer.hideBoundaries();
-visualizer.hideTileGrid();
+visualizer.hide();
+// Update tiles
+visualizer.update();
+// Change zoom level
+visualizer.activeLevel = 13;
 ```
 
 </details>
