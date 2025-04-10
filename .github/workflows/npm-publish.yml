@@ -4,12 +4,14 @@ on:
   release:
     types:
       - created
+      - published
 
 permissions:
-  contents: write
+  contents: read
+  packages: write
 
 jobs:
-  publish-github-registry:
+  publish-npm:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code repository
@@ -25,18 +27,16 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
       
       - name: Install dependencies
         run: pnpm install
 
       - name: Build package
-        run: pnpm build
+        run: pnpm build:skip-doc
 
       - name: Publish to NPM registry
-        uses: changesets/action@v1
-        with: 
-          publish: pnpm ci:publish
+        run: pnpm publish --no-git-checks
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           HUSKY: 0

@@ -25,31 +25,29 @@
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
-  "types": "@types/index.d.ts",
   "files": [
-    "dist",
-    "@types"
+    "dist"
   ],
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./@types/index.d.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs",
       "default": "./dist/index.js"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && typedoc",
+    "build:skip-doc": "tsup",
     "build:dev": "tsup --watch",
-    "clean": "rimraf dist @types docs",
+    "clean": "rimraf dist docs",
     "lint": "eslint .",
     "ci:publish": "pnpm build && pnpm publish -r --no-git-checks",
-    "prebuild": "npm run clean && tsc --emitDeclarationOnly --outDir @types && pnpm document",
+    "prebuild": "pnpm clean",
     "prepare": "husky",
-    "prepublishOnly": "npm run lint",
+    "prepublishOnly": "pnpm lint",
     "test": "node tests/cjs-require.cjs && node tests/cjs-with-cesium.cjs && node tests/esm-import.mjs && node tests/esm-with-cesium.mjs",
-    "document": "typedoc --out docs src/index.ts",
     "dev": "vite"
   },
   "engines": {

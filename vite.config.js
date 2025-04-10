@@ -11,14 +11,8 @@ export default defineConfig({
       },
     },
   },
-
   server: {
     port: 3000,
     open: 'tests/index.html',
-  },
-  resolve: {
-    alias: {
-      'dist': path.resolve(__dirname, 'dist'),
-    },
   },
 });

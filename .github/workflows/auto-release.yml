@@ -1,0 +1,71 @@
+name: Auto Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'CHANGELOG.md'
+
+jobs:
+  auto-release:
+    runs-on: ubuntu-latest
+    # Only run if the commit message contains "Bump version updates"
+    if: contains(github.event.head_commit.message, 'Bump version')
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+      
+      - name: Setup node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Get package version
+        id: package-version
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Generate documentation
+        run: pnpm document
+      
+      - name: Commit updated documentation
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add docs/
+          git commit -m "docs: Update documentation for v${{ steps.package-version.outputs.version }}" || echo "No changes to commit"
+          git push
+          
+      - name: Get latest changes from CHANGELOG
+        id: changelog
+        run: |
+          # Extract the changes for the latest version
+          LATEST_CHANGES=$(sed -n "/## ${{ steps.package-version.outputs.version }}/,/## [0-9]/p" CHANGELOG.md | sed '$d' | sed '1d')
+          # Store the changes in a file to preserve newlines
+          echo "$LATEST_CHANGES" > latest_changes.txt
+          echo "changes_file=latest_changes.txt" >> $GITHUB_OUTPUT
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.package-version.outputs.version }}
+          name: Release v${{ steps.package-version.outputs.version }}
+          body_path: ${{ steps.changelog.outputs.changes_file }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

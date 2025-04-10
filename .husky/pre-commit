@@ -1,5 +1,5 @@
 pnpm test
 
-pnpm document
+pnpm typedoc
 
 git add docs
