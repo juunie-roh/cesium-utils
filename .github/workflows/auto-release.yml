@@ -39,7 +39,7 @@ jobs:
           echo "version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
       
       - name: Generate documentation
-        run: pnpm document
+        run: pnpm typedoc
       
       - name: Commit updated documentation
         run: |
