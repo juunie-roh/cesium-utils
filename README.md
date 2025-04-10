@@ -180,7 +180,7 @@ visualizer.hide();
 // Update tiles
 visualizer.update();
 // Change zoom level
-visualizer.activeLevel = 13;
+visualizer.level = 13;
 ```
 
 </details>
