@@ -1,5 +1,1 @@
 pnpm test
-
-pnpm typedoc
-
-git add docs
