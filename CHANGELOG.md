@@ -1,20 +1,5 @@
 # @juun_roh/cesium-utils
 
-## 0.0.18
-
-### Patch Changes
-
-- 0664b69: Build configurations update
-
-  build: Update configurations and workflows
-
-  - No longer exports separated @types.
-    types are integrated in dist instead.
-
-  - Documentation now occurs after the build.
-
-  - Automate workflows to create release notes from changlog.
-
 ## 0.0.17
 
 ### Patch Changes
@@ -34,7 +19,7 @@
 
   fix: Fix initializing method
 
-  - Reconstructure initializing method of this class.
+  - Reconstruct initializing method of this class.
     The member `_ready` will always be `true` when the constructor is called.
     The static method `create` now handles all the asynchronous functions.
 

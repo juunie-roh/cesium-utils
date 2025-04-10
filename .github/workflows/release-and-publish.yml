@@ -1,4 +1,4 @@
-name: Auto Release
+name: Release and Publish
 
 on:
   push:
@@ -8,12 +8,13 @@ on:
       - 'CHANGELOG.md'
 
 jobs:
-  auto-release:
+  release-and-publish:
     runs-on: ubuntu-latest
-    # Only run if the commit message contains "Bump version updates"
+    # Only run if the commit message contains "Release version"
     if: contains(github.event.head_commit.message, 'Release version')
     permissions:
       contents: write
+      id-token: write
     steps:
       - name: Checkout code repository
         uses: actions/checkout@v4
@@ -27,7 +28,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
           
       - name: Install dependencies
         run: pnpm install
@@ -39,7 +40,7 @@ jobs:
           echo "version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
       
       - name: Generate documentation
-        run: pnpm typedoc
+        run: pnpm document
       
       - name: Commit updated documentation
         run: |
@@ -59,7 +60,7 @@ jobs:
           echo "$LATEST_CHANGES" > latest_changes.txt
           echo "changes_file=latest_changes.txt" >> $GITHUB_OUTPUT
       
-      - name: Create Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.package-version.outputs.version }}
@@ -67,5 +68,15 @@ jobs:
           body_path: ${{ steps.changelog.outputs.changes_file }}
           draft: false
           prerelease: false
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build package for publishing
+        run: pnpm build:skip-doc
+      
+      - name: Publish to NPM registry
+        run: pnpm publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          HUSKY: 0
