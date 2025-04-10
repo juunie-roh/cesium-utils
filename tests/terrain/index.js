@@ -1,5 +1,5 @@
-import { Color, EllipsoidTerrainProvider, Terrain } from 'cesium';
-import { HybridTerrainProvider, TerrainBounds, TerrainVisualizer } from '../../dist/index';
+import { Color, defined, EllipsoidTerrainProvider, Terrain } from 'cesium';
+import { cloneViewer, HybridTerrainProvider, syncCameraState, TerrainBounds, TerrainVisualizer } from '../../dist/index';
 
 /**
  * @param {import('cesium').Viewer} viewer 
@@ -37,5 +37,10 @@ export function testTerrain(viewer) {
     });
 
     window.visualizer = visualizer;
+
+    const viewer2 = cloneViewer(viewer, 'cloneContainer');
+    window.viewer2 = viewer2;
+    viewer.camera.percentageChanged = 0.01;
+    viewer.camera.changed.addEventListener(() => syncCameraState(viewer, viewer2));
   });
 }

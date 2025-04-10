@@ -1,3 +1,3 @@
-const { Collection, TypeGuard, HybridTerrainProvider } = require('../dist/index.cjs');
+const { Collection, HybridTerrainProvider } = require('../dist/index.cjs');
 
-console.log('CJS require successful:', !!Collection, !!TypeGuard, !!HybridTerrainProvider);
+console.log('CJS require successful:', !!Collection, !!HybridTerrainProvider);
