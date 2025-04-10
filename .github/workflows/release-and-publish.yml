@@ -7,6 +7,9 @@ on:
     paths:
       - 'CHANGELOG.md'
 
+env:
+  HUSKY: 0
+
 jobs:
   release-and-publish:
     runs-on: ubuntu-latest
@@ -41,12 +44,17 @@ jobs:
       
       - name: Generate documentation
         run: pnpm typedoc
-      
-      - name: Commit updated documentation
+
+      - name: Disable Git hooks
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
+          mkdir -p /tmp/empty-hooks
+          git config --global core.hooksPath /tmp/empty-hooks
+      
+      - name: Commit updated documentation
+        run: |
           git add docs/
           git commit -m "docs: Update documentation for v${{ steps.package-version.outputs.version }}" || echo "No changes to commit"
           git push

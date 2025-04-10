@@ -4,7 +4,7 @@
   "out": "docs",
   "name": "Cesium Utils",
   "includeVersion": true,
-  "excludePrivate": true,
+  "excludePrivate": false,
   "excludeProtected": false,
   "excludeExternals": true,
   "readme": "README.md",
