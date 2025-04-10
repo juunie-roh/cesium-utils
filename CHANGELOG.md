@@ -1,5 +1,20 @@
 # @juun_roh/cesium-utils
 
+## 0.0.18
+
+### Patch Changes
+
+- 10a2de1: Build Configurations Update
+
+  build: Update configurations and workflows
+
+  - No longer exports separated @types.
+    types are integrated in dist instead.
+
+  - Documentation now occurs after the build.
+
+  - Automate workflows to create release notes from changlog.
+
 ## 0.0.17
 
 ### Patch Changes
