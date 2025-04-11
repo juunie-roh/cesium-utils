@@ -15,9 +15,7 @@ import type {
   Primitive,
   PrimitiveCollection,
 } from 'cesium';
-import { Cesium3DTileset, Entity, EntityCollection } from 'cesium';
-
-import { TypeGuard } from './utils/type-guard.js';
+import { Cesium3DTileset, defined, Entity, EntityCollection } from 'cesium';
 
 type CesiumCollection =
   | BillboardCollection
@@ -507,7 +505,7 @@ abstract class Collection<
     let count = 0;
 
     for (const item of items) {
-      if (TypeGuard.hasProperty(item, 'show')) {
+      if (defined(item.show)) {
         item.show = true;
         count++;
       }
@@ -532,7 +530,7 @@ abstract class Collection<
     let count = 0;
 
     for (const item of items) {
-      if (TypeGuard.hasProperty(item, 'show')) {
+      if (defined(item.show)) {
         item.show = false;
         count++;
       }
@@ -557,7 +555,7 @@ abstract class Collection<
     let count = 0;
 
     for (const item of items) {
-      if (TypeGuard.hasProperty(item, 'show')) {
+      if (defined(item.show)) {
         item.show = !item.show;
         count++;
       }

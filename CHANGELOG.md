@@ -13,7 +13,7 @@
 
   - Documentation now occurs after the build.
 
-  - Automate workflows to create release notes from changlog.
+  - Automate workflows to create release notes from changelog.
 
 ## 0.0.17
 
@@ -101,7 +101,7 @@
 
 - e3fae44: Bug Fixes
 
-  fix: Fix errors occured from test
+  fix: Fix errors occurred from test
 
   - Fix invalid `Object.defineProperty` to use proper property descriptor object. (Collection.add)
   - Fix failure using spread operator against Set, use Array instead. (TerrainBounds.\_calculateRectangleFromTileRanges)
