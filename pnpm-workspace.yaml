@@ -1,7 +1,0 @@
-catalogs:
-  commitlint19:
-    "@commitlint/cli": ^19
-    "@commitlint/config-conventional": ^19
-    "@commitlint/cz-commitlint": ^19
-    "@commitlint/format": ^19
-    "@commitlint/types": ^19
