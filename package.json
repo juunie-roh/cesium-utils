@@ -1,6 +1,6 @@
 {
   "name": "@juun_roh/cesium-utils",
-  "version": "0.0.19",
+  "version": "0.0.18",
   "description": "Utilities to handle Cesium classes easier.",
   "keywords": [
     "Cesium",
@@ -40,10 +40,9 @@
   "scripts": {
     "build": "tsup",
     "build:dev": "tsup --watch",
-    "build:with-doc": "tsup && typedoc",
     "clean": "rimraf dist docs",
     "lint": "eslint .",
-    "ci:publish": "pnpm build && pnpm publish --no-git-checks",
+    "ci:publish": "pnpm build && pnpm typedoc && pnpm publish --no-git-checks",
     "prebuild": "pnpm clean",
     "prepare": "husky",
     "prepublishOnly": "pnpm lint",

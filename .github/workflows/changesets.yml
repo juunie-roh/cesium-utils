@@ -48,7 +48,8 @@ jobs:
         with:
           commit: "build: Bump version updates"
           title: "Release version updates"
-          publish: pnpm build:with-doc
+          publish: pnpm ci:publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           HUSKY: 0

@@ -1,4 +1,4 @@
-name: Release and Publish
+name: Release
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
       - 'CHANGELOG.md'
 
 jobs:
-  release-and-publish:
+  release:
     runs-on: ubuntu-latest
     # Only run if the commit message contains "Release version"
     if: contains(github.event.head_commit.message, 'Release version')
@@ -59,14 +59,4 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Build package for publishing
-        run: pnpm build
-      
-      - name: Publish to NPM registry
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
-          pnpm publish --access public --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          HUSKY: 0
+
