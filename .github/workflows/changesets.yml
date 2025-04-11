@@ -16,6 +16,9 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    outputs:
+      has_changes: ${{ steps.changesets.outputs.hasChangesets }}
+      pr_number: ${{ steps.changesets.outputs.pullRequestNumber }}
     steps:
       - name: Checkout code repository
         uses: actions/checkout@v4
@@ -44,12 +47,35 @@ jobs:
           git config --global core.hooksPath /tmp/empty-hooks
       
       - name: Create and publish versions
+        id: changesets
         uses: changesets/action@v1
         with:
           commit: "build: Bump version updates"
           title: "Release version updates"
-          publish: pnpm ci:publish
+          publish: "pnpm build"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           HUSKY: 0
+      
+      - name: Generate documentation for PR
+        if: steps.changesets.outputs.hasChangesets == 'true'
+        run: |
+          echo "Changesets created a PR #${{ steps.changesets.outputs.pullRequestNumber }}"
+          
+          # Get the branch name that changesets created
+          CHANGESET_BRANCH=$(gh pr view ${{ steps.changesets.outputs.pullRequestNumber }} --json headRefName -q .headRefName)
+          echo "Changesets branch: $CHANGESET_BRANCH"
+          
+          # Checkout that branch
+          git fetch origin $CHANGESET_BRANCH
+          git checkout $CHANGESET_BRANCH
+          
+          # Generate documentation
+          pnpm document
+          
+          # Commit and push the documentation changes
+          git add docs/
+          git commit -m "docs: Update documentation for release" || echo "No documentation changes to commit"
+          git push origin $CHANGESET_BRANCH
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
