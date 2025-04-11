@@ -81,7 +81,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Build package for publishing
-        run: pnpm build:skip-doc
+        run: pnpm build
       
       - name: Publish to NPM registry
         run: pnpm publish --no-git-checks

@@ -48,7 +48,7 @@ jobs:
         with:
           commit: "build: Bump version updates"
           title: "Release version updates"
-          publish: pnpm build:skip-doc # Just build without docs, don't publish
+          publish: pnpm build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HUSKY: 0
