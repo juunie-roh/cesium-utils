@@ -42,7 +42,7 @@
     "build:dev": "tsup --watch",
     "clean": "rimraf dist docs",
     "lint": "eslint .",
-    "ci:publish": "pnpm build && pnpm typedoc && pnpm publish --no-git-checks",
+    "ci:publish": "pnpm build && pnpm publish --no-git-checks",
     "prebuild": "pnpm clean",
     "prepare": "husky",
     "prepublishOnly": "pnpm lint",

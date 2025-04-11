@@ -6,12 +6,13 @@ on:
       - main
     paths:
       - 'CHANGELOG.md'
+      - 'package.json'
+  workflow_dispatch:
 
 jobs:
   release-and-publish:
     runs-on: ubuntu-latest
-    # Only run if the commit message contains "Release version"
-    if: contains(github.event.head_commit.message, 'Release version')
+    if: contains(github.event.head_commit.message, '[trigger]')
     permissions:
       contents: write
       id-token: write

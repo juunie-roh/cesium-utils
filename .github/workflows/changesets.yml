@@ -50,8 +50,8 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          commit: "build: Bump version updates"
-          title: "Release version updates"
+          commit: "Release version %s [trigger]"
+          title: "Release version updates [trigger]"
           publish: "pnpm build"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -72,6 +72,12 @@ jobs:
           
           # Generate documentation
           pnpm typedoc
+
+          # Verify docs were generated properly
+          if [ ! -f "./docs/index.html" ]; then
+            echo "Documentation generation failed!"
+            exit 1
+          fi
           
           # Commit and push the documentation changes
           git add docs/
