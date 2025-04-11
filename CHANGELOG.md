@@ -1,9 +1,5 @@
 # @juun_roh/cesium-utils
 
-## 0.0.19
-
-### Patch Changes
-
 - 3328661: Viewer Utilities Update
 
   feat: Add viewer utility functions
@@ -27,10 +23,6 @@
 
   - Test required if automated workflow is valid.
 
-## 0.0.18
-
-### Patch Changes
-
 - 10a2de1: Build Configurations Update
 
   build: Update configurations and workflows
@@ -41,10 +33,6 @@
   - Documentation now occurs after the build.
 
   - Automate workflows to create release notes from changelog.
-
-## 0.0.17
-
-### Patch Changes
 
 - 4c55a60: Type compatibility updates
 
@@ -72,10 +60,6 @@
 
   - Rename `activeLevel` as `level`
   - Set default parameter value to 15 in method `show`
-
-## 0.0.16
-
-### Patch Changes
 
 - 700c2a6: Updates
 
@@ -108,10 +92,6 @@
 
   refactor: Calculate the largest rectangle from max to min levels
 
-## 0.0.15
-
-### Patch Changes
-
 - 8005e50: Testing environment updates
 
   fix: Fix not iterable problem
@@ -122,20 +102,12 @@
 
   - Removed Self reference from npm, now it tests from `dist` directly
 
-## 0.0.14
-
-### Patch Changes
-
 - e3fae44: Bug Fixes
 
   fix: Fix errors occurred from test
 
   - Fix invalid `Object.defineProperty` to use proper property descriptor object. (Collection.add)
   - Fix failure using spread operator against Set, use Array instead. (TerrainBounds.\_calculateRectangleFromTileRanges)
-
-## 0.0.13
-
-### Patch Changes
 
 - 58a8376: Refactor and bug fixes
 
@@ -157,23 +129,13 @@
 
   chore: Fix typo (tilinghScheme)
 
-## 0.0.12
-
-### Patch Changes
-
 - 4abf787: Build configuration updates
 
   - Add `tsup.config.js` that specifies build configuration.
 
-## 0.0.11
-
-### Patch Changes
+## 0.0.1
 
 - 702a15b: File Entry Update
-
-## 0.0.10
-
-### Patch Changes
 
 - 685caac: feat: Redefine types, add overload for `removeByTag` function
 
@@ -196,25 +158,13 @@
   - `TerrainVisualizer` class:
     A class for debugging `HybridTerrainProvider`. It shows which area is provided by which provider.
 
-## 0.0.9
-
-### Patch Changes
-
 - 71fb02c: Documentation Updates
 
   - Add typedoc.json for typedoc configuration
   - Add badges on readme
   - Change commit comments on changeset update action.
 
-## 0.0.8
-
-### Patch Changes
-
 - 470ec59: Integrate Typedoc
-
-## 0.0.7
-
-### Patch Changes
 
 - Change build stage
 
@@ -223,10 +173,6 @@
     Use tsup  
     Create declaration files under @types
   - Update ignore settings
-
-## 0.0.6
-
-### Patch Changes
 
 - c91f81a: Performance improvements and refactoring
 
@@ -245,22 +191,10 @@
   - Mapped Tags
     - Controls tagged items internally for faster lookups.
 
-## 0.0.5
-
-### Patch Changes
-
 - 93f58c6: Revert github registry, return to npm.
-
-## 0.0.4
-
-### Patch Changes
 
 - abdcbcf: Update package registry
 
   - The package registry has specified to [GitHub Packages](https://npm.pkg.github.com/)
-
-## 0.0.2
-
-### Patch Changes
 
 - 71242df: Initial Release
