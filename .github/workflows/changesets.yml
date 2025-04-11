@@ -50,8 +50,8 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          commit: "Release version %s [trigger]"
-          title: "Release version updates [trigger]"
+          commit: "Release version update [trigger]"
+          title: "Release version update [trigger]"
           publish: "pnpm build"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
