@@ -1,5 +1,13 @@
 # @juun_roh/cesium-utils
 
+## 0.0.20
+
+### Patch Changes
+
+- a986743: Workflow Test
+
+  ci: Testing improved workflow
+
 ## 0.0.19
 
 ### Patch Changes
