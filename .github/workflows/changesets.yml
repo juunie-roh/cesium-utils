@@ -71,7 +71,7 @@ jobs:
           git checkout $CHANGESET_BRANCH
           
           # Generate documentation
-          pnpm document
+          pnpm typedoc
           
           # Commit and push the documentation changes
           git add docs/
