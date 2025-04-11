@@ -7,9 +7,6 @@ on:
     paths:
       - 'CHANGELOG.md'
 
-env:
-  HUSKY: 0
-
 jobs:
   release-and-publish:
     runs-on: ubuntu-latest
@@ -41,7 +38,7 @@ jobs:
         run: |
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
           echo "version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
-          
+      
       - name: Get latest changes from CHANGELOG
         id: changelog
         run: |
@@ -67,7 +64,9 @@ jobs:
         run: pnpm build
       
       - name: Publish to NPM registry
-        run: pnpm publish --no-git-checks
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
+          pnpm publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           HUSKY: 0
