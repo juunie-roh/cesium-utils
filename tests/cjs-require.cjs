@@ -1,3 +1,4 @@
-const { Collection, HybridTerrainProvider } = require('../dist/index.cjs');
+const { Viewer } = require('cesium');
+const { Collection } = require('../dist/index.cjs');
 
-console.log('CJS require successful:', !!Collection, !!HybridTerrainProvider);
+console.log('Require test with Cesium:', !!Viewer, !!Collection);

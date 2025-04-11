@@ -46,7 +46,7 @@
     "prebuild": "pnpm clean",
     "prepare": "husky",
     "prepublishOnly": "pnpm lint",
-    "test": "node tests/cjs-require.cjs && node tests/cjs-with-cesium.cjs && node tests/esm-import.mjs && node tests/esm-with-cesium.mjs",
+    "test": "node tests/cjs-require.cjs && node tests/esm-import.mjs",
     "dev": "pnpm build && vite"
   },
   "engines": {

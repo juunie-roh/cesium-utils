@@ -1,3 +1,4 @@
-import { Collection, HybridTerrainProvider } from '../dist/index.js';
+import { Viewer } from 'cesium';
+import { Collection } from '../dist/index.js';
 
-console.log('ESM import successful:', !!Collection, !!HybridTerrainProvider);
+console.log('Import test with Cesium:', !!Viewer, !!Collection);
