@@ -13,8 +13,6 @@ jobs:
       - uses: pnpm/action-setup@v4
       - name: Update dependencies
         run: pnpm up -r
-      - name: Execute Dedupe
-        run: pnpm dedupe
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
