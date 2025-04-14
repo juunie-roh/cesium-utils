@@ -9,6 +9,7 @@
   "excludeExternals": true,
   "readme": "README.md",
   "githubPages": true,
+  "plugin": ["typedoc-material-theme"],
   "categorizeByGroup": true,
   "navigationLinks": {
     "GitHub": "https://github.com/juunie-roh/cesium-utils",
