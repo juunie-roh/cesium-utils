@@ -1,0 +1,23 @@
+name: Lockfile Maintenance
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sundays
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - name: Update dependencies
+        run: pnpm up -r
+      - name: Execute Dedupe
+        run: pnpm dedupe
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          title: 'ci: Weekly dependency updates'
+          body: 'Automated dependency updates'
+          branch: 'deps/weekly-updates'
