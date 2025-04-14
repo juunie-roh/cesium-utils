@@ -6,7 +6,8 @@ import {
   TerrainProvider,
 } from 'cesium';
 
-import { TerrainBounds, TileRanges } from './terrain-bounds.js';
+import { TileRanges } from './terrain.types.js';
+import { TerrainBounds } from './terrain-bounds.js';
 
 /**
  * @class

@@ -11,7 +11,7 @@ import {
 import { TerrainArea } from 'src/terrain/terrain-area.js';
 import { TerrainBounds } from 'src/terrain/terrain-bounds.js';
 
-import Collection from '@/collection.js';
+import Collection from '@/collection/collection.js';
 import { HybridTerrainProvider } from '@/terrain/hybrid-terrain-provider.js';
 
 /**
