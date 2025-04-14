@@ -16,8 +16,8 @@ export type TileRange = {
 export type TileRanges = Map<number, TileRange>;
 
 /**
- * Defines the geographic boundaries for a terrain area and handles tile availability checks.
  * @class
+ * Defines the geographic boundaries for a terrain area and handles tile availability checks.
  */
 export class TerrainBounds {
   private _rectangle: Rectangle;
@@ -116,23 +116,17 @@ export class TerrainBounds {
     return this._rectangle;
   }
 
-  /**
-   * Gets the tiling scheme used by these bounds.
-   */
+  /** Gets the tiling scheme used by these bounds. */
   get tilingScheme(): TilingScheme {
     return this._tilingScheme;
   }
 
-  /**
-   * Gets the tile ranges defined for these bounds.
-   */
+  /** Gets the tile ranges defined for these bounds. */
   get tileRanges(): TileRanges {
     return this._tileRanges;
   }
 
-  /**
-   * Gets the levels for which tile ranges are defined.
-   */
+  /** Gets the levels for which tile ranges are defined. */
   get levels(): Set<number> {
     return this._levels;
   }
@@ -182,8 +176,8 @@ export class TerrainBounds {
 }
 
 /**
- * Contains types and factory methods for creating `TerrainBounds` instances.
  * @namespace
+ * Contains types and factory methods for creating `TerrainBounds` instances.
  */
 export namespace TerrainBounds {
   /** Initialization options for Terrain Bounds constructor */
