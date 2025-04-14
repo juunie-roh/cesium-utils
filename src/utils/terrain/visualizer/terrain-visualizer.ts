@@ -11,7 +11,7 @@ import {
 import { TerrainArea } from 'src/terrain/terrain-area.js';
 import { TerrainBounds } from 'src/terrain/terrain-bounds.js';
 
-import Collection from '@/collection.js';
+import Collection from '@/collection/collection.js';
 import { HybridTerrainProvider } from '@/terrain/hybrid-terrain-provider.js';
 
 /**
@@ -363,7 +363,7 @@ export namespace TerrainVisualizer {
     const tag = options?.tag || 'terrain_area_visualization';
     const color = options?.color || Color.RED;
     const maxTilesToShow = options?.maxTilesToShow || 100;
-    const show = options?.show !== undefined ? options.show : true;
+    const show = options?.show ?? true;
     const alpha = options?.alpha || 0.7;
     const tileAlpha = options?.tileAlpha || 0.2;
 

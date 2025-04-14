@@ -1,62 +1,13 @@
-import type {
-  Billboard,
-  BillboardCollection,
-  DataSource,
-  DataSourceCollection,
-  GroundPrimitive,
-  ImageryLayer,
-  ImageryLayerCollection,
-  Label,
-  LabelCollection,
-  PointPrimitive,
-  PointPrimitiveCollection,
-  Polyline,
-  PolylineCollection,
-  Primitive,
-  PrimitiveCollection,
-} from 'cesium';
-import { Cesium3DTileset, defined, Entity, EntityCollection } from 'cesium';
+import { defined, EntityCollection } from 'cesium';
 
-type CesiumCollection =
-  | BillboardCollection
-  | DataSourceCollection
-  | EntityCollection
-  | ImageryLayerCollection
-  | LabelCollection
-  | PointPrimitiveCollection
-  | PolylineCollection
-  | PrimitiveCollection;
-
-type Primitives = Primitive | Cesium3DTileset | GroundPrimitive;
-
-type CesiumCollectionItem =
-  | Billboard
-  | DataSource
-  | Entity
-  | ImageryLayer
-  | Label
-  | PointPrimitive
-  | Polyline
-  | Primitives;
-
-type Tag = string | number;
-
-interface WithTag {
-  [key: symbol]: Tag;
-}
-/**
- * Collection event types
- */
-export type CollectionEventType = 'add' | 'remove' | 'update' | 'clear';
-
-/**
- * Event handler function type
- */
-type EventHandler<I> = (event: {
-  type: CollectionEventType;
-  items?: I[];
-  tag?: Tag;
-}) => void;
+import {
+  CesiumCollection,
+  CesiumCollectionItem,
+  CollectionEventType,
+  EventHandler,
+  Tag,
+  WithTag,
+} from './collection.types.js';
 
 /**
  * @class
