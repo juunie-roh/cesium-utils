@@ -59,11 +59,11 @@ type EventHandler<I> = (event: {
 }) => void;
 
 /**
+ * @class
  * Abstract class that enhances Cesium collection objects with tagging functionality.
  * This class provides a consistent API for working with different types of Cesium collections
  * and allows grouping and manipulating collection items by custom tags.
  *
- * @abstract
  * @template C - The type of Cesium collection (e.g., EntityCollection, PrimitiveCollection)
  * @template I - The type of items in the collection (e.g., Entity, Primitive)
  *
@@ -87,10 +87,7 @@ type EventHandler<I> = (event: {
  * entities.show('buildings');
  * entities.hide('roads');
  */
-abstract class Collection<
-  C extends CesiumCollection,
-  I extends CesiumCollectionItem,
-> {
+class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
   /**
    * Symbol used as a property key to store tags on collection items.
    * Using a Symbol ensures no property naming conflicts with the item's own properties.

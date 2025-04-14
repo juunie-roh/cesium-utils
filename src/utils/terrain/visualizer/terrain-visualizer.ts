@@ -11,10 +11,8 @@ import {
 import { TerrainArea } from 'src/terrain/terrain-area.js';
 import { TerrainBounds } from 'src/terrain/terrain-bounds.js';
 
-import Collection from '../collection.js';
-import { HybridTerrainProvider } from '../terrain/hybrid-terrain-provider.js';
-
-class TerrainEntities extends Collection<EntityCollection, Entity> {}
+import Collection from '@/collection.js';
+import { HybridTerrainProvider } from '@/terrain/hybrid-terrain-provider.js';
 
 /**
  * @class
@@ -22,7 +20,7 @@ class TerrainEntities extends Collection<EntityCollection, Entity> {}
  */
 export class TerrainVisualizer {
   private _viewer: Viewer;
-  private _collection: TerrainEntities;
+  private _collection: Collection<EntityCollection, Entity>;
   private _hybridTerrain?: HybridTerrainProvider;
   private _visible: boolean = false;
   private _level: number = 15;
@@ -41,7 +39,7 @@ export class TerrainVisualizer {
    */
   constructor(viewer: Viewer, options?: TerrainVisualizer.ConstructorOptions) {
     this._viewer = viewer;
-    this._collection = new TerrainEntities({
+    this._collection = new Collection<EntityCollection, Entity>({
       collection: viewer.entities,
       tag: TerrainVisualizer.tag.default,
     });
@@ -288,7 +286,7 @@ export class TerrainVisualizer {
     return this._visible;
   }
   /** The collection used in the visualizer. */
-  get collection(): TerrainEntities {
+  get collection(): Collection<EntityCollection, Entity> {
     return this._collection;
   }
   /** The viewer used in the visualizer */
@@ -324,7 +322,7 @@ export namespace TerrainVisualizer {
   };
 
   /**
-   * Creates a rectangle entity fo r visualization.
+   * Creates a ground-clamped rectangle entity for visualization.
    * @param rectangle The rectangle to visualize
    * @param color The color to use
    * @returns A new entity
@@ -371,7 +369,7 @@ export namespace TerrainVisualizer {
 
     const bounds = 'provider' in terrain ? terrain.bounds : terrain;
 
-    const collection = new TerrainEntities({
+    const collection = new Collection<EntityCollection, Entity>({
       collection: viewer.entities,
       tag,
     });
