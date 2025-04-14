@@ -13,13 +13,13 @@ A utility library for Cesium.js that simplifies working with collections and ter
 
 ```bash
 # npm
-npm install @juun_roh/cesium-utils
+npm install @juun-roh/cesium-utils
 
 # yarn
-yarn add @juun_roh/cesium-utils
+yarn add @juun-roh/cesium-utils
 
 # pnpm
-pnpm add @juun_roh/cesium-utils
+pnpm add @juun-roh/cesium-utils
 ```
 
 ## Browser Compatibility
