@@ -78,12 +78,15 @@ export class TerrainArea {
   }
 
   /**
-   * Requests the terrain for a given tile coordinate.
-   * @param x The X coordinate of the tile.
-   * @param y The Y coordinate of the tile.
-   * @param level The zoom level of the tile.
-   * @param request The request.
-   * @returns A promise for the requested terrain.
+   * Requests the geometry for a given tile. The result must include terrain data and
+   * may optionally include a water mask and an indication of which child tiles are available.
+   * @param x - The X coordinate of the tile for which to request geometry.
+   * @param y - The Y coordinate of the tile for which to request geometry.
+   * @param level - The level of the tile for which to request geometry.
+   * @param [request] - The request object. Intended for internal use only.
+   * @returns A promise for the requested geometry.  If this method
+   *          returns undefined instead of a promise, it is an indication that too many requests are already
+   *          pending and the request will be retried later.
    */
   requestTileGeometry(
     x: number,
@@ -102,6 +105,13 @@ export class TerrainArea {
     return this._provider.requestTileGeometry(x, y, level, request);
   }
 
+  /**
+   * Determines whether data for a tile is available to be loaded.
+   * @param x - The X coordinate of the tile for which to request geometry.
+   * @param y - The Y coordinate of the tile for which to request geometry.
+   * @param level - The level of the tile for which to request geometry.
+   * @returns Undefined if not supported by the terrain provider, otherwise true or false.
+   * @see {@link TerrainProvider.getTileDataAvailable} */
   getTileDataAvailable(x: number, y: number, level: number): boolean {
     if (!this.contains(x, y, level) || !this._ready) return false;
     return this._provider?.getTileDataAvailable(x, y, level) ?? false;
@@ -122,14 +132,17 @@ export class TerrainArea {
     return this._provider;
   }
 
+  /** Gets the terrain bounds for this terrain area. */
   get bounds(): TerrainBounds {
     return this._bounds;
   }
 
+  /** Gets available zoom levels set with this terrain area. */
   get levels(): Set<number> {
     return this._levels;
   }
 
+  /** Gets if this terrain area is ready. */
   get ready(): boolean {
     return this._ready;
   }
