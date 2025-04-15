@@ -16,7 +16,7 @@
 
 - 5fb3f07: Restructure entries
 
-  refactor: Resturcture entries
+  refactor: Restructure entries
 
   - Fix entries (index files)
     Use named exports instead of wildcard exports (`*`).
@@ -46,7 +46,7 @@
     Now the `Collection` class is not abstract.
     A class does not need further implementation should use the class directly.
 
-  - Restructure organiztion of `utils` directory.
+  - Restructure organization of `utils` directory.
     Add several depths.
 
 - ac3767a: Documentation Updates
