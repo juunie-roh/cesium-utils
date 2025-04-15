@@ -1,6 +1,12 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["src/index.ts"],
+  "entryPoints": [
+    "src/index.ts",
+    "src/collection/index.ts",
+    "src/terrain/index.ts",
+    "src/utils/index.ts",
+    "src/viewer/index.ts"
+  ],
   "out": "docs",
   "name": "Cesium Utils",
   "includeVersion": true,

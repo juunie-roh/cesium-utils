@@ -1,1 +1,3 @@
-export { syncCamera } from './camera/index.js';
+import { syncCamera } from './camera/sync-camera.js';
+
+export { syncCamera };
