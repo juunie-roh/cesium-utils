@@ -1,2 +1,4 @@
-export { default as Collection } from './collection.js';
-export * from './collection.types.js';
+import Collection from './collection.js';
+
+export { Collection };
+export type * from './collection.types.js';

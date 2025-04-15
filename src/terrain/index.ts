@@ -1,4 +1,8 @@
-export { HybridTerrainProvider } from './hybrid-terrain-provider.js';
-export { TerrainArea } from './terrain-area.js';
-export { default as TerrainAreas } from './terrain-areas.js';
-export { TerrainBounds } from './terrain-bounds.js';
+import { HybridTerrainProvider } from './hybrid-terrain-provider.js';
+import { TerrainArea } from './terrain-area.js';
+import TerrainAreas from './terrain-areas.js';
+import { TerrainBounds } from './terrain-bounds.js';
+
+export { HybridTerrainProvider, TerrainArea, TerrainAreas, TerrainBounds };
+
+export type * from './terrain.types.js';

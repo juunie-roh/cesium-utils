@@ -1,5 +1,25 @@
-export * from '@/collection/index.js';
-export * from '@/terrain/index.js';
-export * from '@/utils/terrain/index.js';
-export * from '@/utils/viewer/index.js';
-export * from '@/viewer/index.js';
+import Collection from './collection/collection.js';
+import { HybridTerrainProvider } from './terrain/hybrid-terrain-provider.js';
+import { TerrainArea } from './terrain/terrain-area.js';
+import TerrainAreas from './terrain/terrain-areas.js';
+import { TerrainBounds } from './terrain/terrain-bounds.js';
+import { TerrainVisualizer } from './utils/terrain/index.js';
+import { syncCamera } from './utils/viewer/index.js';
+import { cloneViewer } from './viewer/clone.js';
+
+// Classes
+export {
+  Collection,
+  HybridTerrainProvider,
+  TerrainArea,
+  TerrainAreas,
+  TerrainBounds,
+  TerrainVisualizer,
+};
+
+// Functions
+export { cloneViewer, syncCamera };
+
+// Types
+export type * from './collection/collection.types.js';
+export type * from './terrain/terrain.types.js';
