@@ -3,16 +3,29 @@ import path from 'path';
 
 export default defineConfig({
   base: './',
-  publicDir: path.resolve(__dirname, 'tests/public'),
+  publicDir: path.resolve(__dirname, 'src/demo/public'),
   build: {
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'tests/index.html'),
+        main: path.resolve(__dirname, 'src/demo/index.html'),
       },
     },
   },
   server: {
     port: 3000,
-    open: 'tests/index.html',
+    open: 'src/demo/index.html',
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  test: {
+    include: ['src/**/*.test.*'],
+    exclude: ['**/node_modules/**', '**/docs/**'],
+    coverage: {
+      include: ['src/**'],
+      exclude: ['**/index.*', '**/demo/**', '**/*.types.*'],
+    }
   },
 });

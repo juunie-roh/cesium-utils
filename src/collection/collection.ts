@@ -209,7 +209,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
   add(i: I | I[], t: Tag = this.tag, idx?: number): I | I[] {
     if (Array.isArray(i)) {
       i.forEach((i) => {
-        this.add(i);
+        this.add(i, t);
       });
     } else {
       Object.defineProperty(i, Collection.symbol, {
@@ -243,10 +243,10 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * @param item - The item to remove
    * @returns True if the item was removed, false if it wasn't found
    */
-  remove(item: I & WithTag): boolean {
+  remove(item: I): boolean {
     const result = this.collection.remove(item);
     if (result) {
-      this._removeFromTagMap(item);
+      this._removeFromTagMap(item as I & WithTag);
       this._invalidateCache();
       this._emit('remove', { items: [item] });
     }
@@ -381,7 +381,12 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
       this._removeFromTagMap(item as I & WithTag);
 
       // Update tag
-      Object.defineProperty(item, Collection.symbol, newTag);
+      Object.defineProperty(item, Collection.symbol, {
+        value: newTag,
+        enumerable: false,
+        writable: true,
+        configurable: true,
+      });
 
       // Add to new tag map
       this._addToTagMap(item, newTag);

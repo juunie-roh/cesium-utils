@@ -1,6 +1,6 @@
 import eslint from '@eslint/js';
 import tseslint from '@typescript-eslint/eslint-plugin';
-import tsparser from '@typescript-eslint/parser';
+import tsParser from '@typescript-eslint/parser';
 import jsdoc from 'eslint-plugin-jsdoc';
 import prettier from 'eslint-plugin-prettier';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
@@ -67,7 +67,7 @@ export default [
       'simple-import-sort': simpleImportSort,
     },
     languageOptions: {
-      parser: tsparser,
+      parser: tsParser,
       parserOptions: {
         project: './tsconfig.json',
         ecmaVersion: 'latest',
