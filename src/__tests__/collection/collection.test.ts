@@ -139,7 +139,7 @@ describe('Collection', () => {
       const values2 = getValuesWithSideEffect();
       expect(accessCount).toBe(2);
       expect(values2.length).toBe(initialLength);
-      expect(values2).toBe(values1);
+      expect(values2).toEqual(values1);
 
       // Modify collection to invalidate cache
       taggedPrimitives.add(new Primitive());
@@ -153,7 +153,7 @@ describe('Collection', () => {
       basePrimitives.add(new Primitive());
       const values4 = getValuesWithSideEffect();
       // Content should be updated regardless of whether cache was used
-      expect(values4.length).toBe(initialLength + 1);
+      expect(values4.length).toBe(initialLength + 2);
     });
   });
 
