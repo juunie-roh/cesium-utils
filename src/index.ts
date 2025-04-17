@@ -4,6 +4,7 @@ import { TerrainArea } from './terrain/terrain-area.js';
 import TerrainAreas from './terrain/terrain-areas.js';
 import { TerrainBounds } from './terrain/terrain-bounds.js';
 import { TerrainVisualizer } from './utils/terrain/index.js';
+import { isGetterOnly } from './utils/type-check.js';
 import { syncCamera } from './utils/viewer/index.js';
 import { cloneViewer } from './viewer/clone.js';
 
@@ -18,7 +19,7 @@ export {
 };
 
 // Functions
-export { cloneViewer, syncCamera };
+export { cloneViewer, isGetterOnly, syncCamera };
 
 // Types
 export type * from './collection/collection.types.js';
