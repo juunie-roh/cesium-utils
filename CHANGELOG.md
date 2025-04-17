@@ -1,5 +1,44 @@
 # @juun-roh/cesium-utils
 
+## 0.0.7
+
+### Patch Changes
+
+- e4965c3: Type Check Utility Test
+
+  test: Add test for `isGetterOnly` utility function.
+
+- 4b17141: Establish New Test
+
+  test: Add test for syncCamera utility function.
+
+- 1163dae: Fix Package Exports
+
+  fix: Add missing export from the latest release
+
+  - Include `isGetterOnly`.
+
+- 11d2782: Refactor Collection
+
+  refactor: Simplify names of collection methods
+
+  - New Functionality
+
+  1. Iterator Support
+     Now supports iterator protocol.
+
+  2. Expand Standard Array API
+     Add `map`, `find`.
+
+  - API Streamlining:
+    Shorter, more intuitive method names. (`contains`, `get`, `first`, `update`)
+    Consistent parameter naming with `by` for tag-based operations.
+    Naming consistency with `from`/`to` in update().
+
+  - Consistant return type to support chaining
+    Visibility operations (show, hide, toggle) now return this for chaining.
+    setProperty returns this instead of count for consistent pattern.
+
 ## 0.0.6
 
 ### Patch Changes
