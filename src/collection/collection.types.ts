@@ -17,7 +17,7 @@ import type {
 } from 'cesium';
 import { Cesium3DTileset, Entity, EntityCollection } from 'cesium';
 
-export type CesiumCollection =
+type CesiumCollection =
   | BillboardCollection
   | DataSourceCollection
   | EntityCollection
@@ -27,9 +27,9 @@ export type CesiumCollection =
   | PolylineCollection
   | PrimitiveCollection;
 
-export type Primitives = Primitive | Cesium3DTileset | GroundPrimitive;
+type Primitives = Primitive | Cesium3DTileset | GroundPrimitive;
 
-export type CesiumCollectionItem =
+type CesiumCollectionItem =
   | Billboard
   | DataSource
   | Entity
@@ -39,21 +39,36 @@ export type CesiumCollectionItem =
   | Polyline
   | Primitives;
 
-export type Tag = string | number;
+type Tag = string | number;
 
-export interface WithTag {
+interface WithTag {
   [key: symbol]: Tag;
 }
 /**
  * Collection event types
  */
-export type CollectionEventType = 'add' | 'remove' | 'update' | 'clear';
+type CollectionEventType = 'add' | 'remove' | 'update' | 'clear';
 
 /**
  * Event handler function type
  */
-export type EventHandler<I> = (event: {
+type EventHandler<I> = (event: {
   type: CollectionEventType;
   items?: I[];
   tag?: Tag;
 }) => void;
+
+// Helper type to exclude function types
+type NonFunction<T> = {
+  [K in keyof T]: T[K] extends Function ? never : K;
+}[keyof T];
+
+export type {
+  CesiumCollection,
+  CesiumCollectionItem,
+  CollectionEventType,
+  EventHandler,
+  NonFunction,
+  Tag,
+  WithTag,
+};

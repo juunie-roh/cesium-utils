@@ -1,10 +1,13 @@
 import { defined, EntityCollection } from 'cesium';
 
-import {
+import { isGetterOnly } from '@/utils/index.js';
+
+import type {
   CesiumCollection,
   CesiumCollectionItem,
   CollectionEventType,
   EventHandler,
+  NonFunction,
   Tag,
   WithTag,
 } from './collection.types.js';
@@ -270,21 +273,15 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * @returns An array of all items in the collection
    */
   get values(): I[] {
-    if (this._valuesCache) {
-      return this._valuesCache;
-    }
-
     if (this.collection instanceof EntityCollection) {
-      this._valuesCache = (this.collection.values as I[]) || [];
+      return this.collection.values as I[];
     } else {
       const arr: I[] = [];
       for (let i = 0; i < this.collection.length; i++) {
         arr.push(this.collection.get(i) as I);
       }
-      this._valuesCache = arr;
+      return arr;
     }
-
-    return this._valuesCache;
   }
 
   /**
@@ -429,7 +426,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
 
     if (Array.isArray(t)) {
       t.forEach((t) => {
-        this.removeByTag(t);
+        count += this.removeByTag(t);
       });
     } else {
       this.getByTag(t).forEach((item) => {
@@ -529,17 +526,24 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * // Change color of all buildings to red
    * collection.setProperty('buildings', 'color', Color.RED);
    */
-  setProperty<K extends string, V>(tag: Tag, property: K, value: V): number {
+  setProperty<K extends NonFunction<I>, V extends Exclude<I[K], Function>>(
+    property: K,
+    value: V,
+    tag: Tag = this.tag,
+  ): number {
     const items = this.getByTag(tag);
     let count = 0;
 
     for (const item of items) {
-      if (property in item) {
-        // Using type assertion since we've verified the property exists
-        (item as unknown as Record<K, V>)[property] = value;
+      if (property in item && typeof item[property] !== 'function') {
+        if (isGetterOnly(item, property)) {
+          throw Error(
+            `setProperty(${item}, ${property as string}) failed; The property is readonly.`,
+          );
+        }
+
+        item[property] = value;
         count++;
-      } else {
-        console.warn(`${property} does not exists in ${item}`);
       }
     }
 
