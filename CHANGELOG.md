@@ -1,5 +1,45 @@
 # @juun-roh/cesium-utils
 
+## 0.0.6
+
+### Patch Changes
+
+- 8899394: Fix Collection
+
+  fix: Fix bugs found by newly established test
+
+  - `values`:
+    The Collection class cannot invalidate cache when the base collection has changed.
+    `values` now returns values directly, not referring cache.
+
+  - `removeByTag`:
+    Fix inconsistent return value.
+
+  - `setProperty`:
+    Fix invalid type inference using new utility function `isGetterOnly`.
+    It now throws an error on accessing readonly value.
+
+  refactor: Restructure exports and add new utility type
+
+  - Group exports, and export with `type`.
+    as is: `export { ... }`
+    to be: `export type { ... }`
+
+  - New utility type `NonFunction`.
+
+- 8899394: Update Utility Function
+
+  feat: Add new utility function for type-checks
+
+  - New utility function `isGetterOnly`.
+    A runtime readonly property detector for an object.
+
+- 8899394: Update Collection Test
+
+  test: Expand coverage for collection class
+
+  - Now the test covers all of the collection class.
+
 ## 0.0.5
 
 ### Patch Changes
