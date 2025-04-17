@@ -21,11 +21,11 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['src/**/*.test.*'],
+    include: ['src/**/*.(test|spec).*'],
     exclude: ['**/node_modules/**', '**/docs/**'],
     coverage: {
       include: ['src/**'],
-      exclude: ['**/index.*', '**/demo/**', '**/*.types.*'],
+      exclude: ['**/index.*', 'src/demo/**', '**/*.types.*', 'src/__tests__/**'],
     }
   },
 });
