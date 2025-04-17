@@ -35,7 +35,7 @@
     Consistent parameter naming with `by` for tag-based operations.
     Naming consistency with `from`/`to` in update().
 
-  - Consistant return type to support chaining
+  - Consistent return type to support chaining
     Visibility operations (show, hide, toggle) now return this for chaining.
     setProperty returns this instead of count for consistent pattern.
 
@@ -128,7 +128,7 @@
 
 - a030a76: Move demonstration files
 
-  chore: Move files for demontration
+  chore: Move files for demonstration
 
   - Move serve targets of vite for demonstration.
     Move from under tests to demo.
