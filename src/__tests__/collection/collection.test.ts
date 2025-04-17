@@ -78,8 +78,8 @@ describe('Collection', () => {
 
   it('should support numeric tags', () => {
     taggedEntities.add(single_entity, 123);
-    expect(taggedEntities.hasTag(123)).toBeTruthy();
-    expect(taggedEntities.getByTag(123)).toHaveLength(1);
+    expect(taggedEntities.contains(123)).toBeTruthy();
+    expect(taggedEntities.get(123)).toHaveLength(1);
   });
 
   describe('should properly cache and invalidate values', () => {
@@ -189,7 +189,7 @@ describe('Collection', () => {
 
       // Test update event
       taggedEntities.add(multiple_entities, 'oldTag');
-      taggedEntities.updateTag('oldTag', 'newTag');
+      taggedEntities.update('oldTag', 'newTag');
       expect(updateHandler).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'update',
@@ -205,6 +205,27 @@ describe('Collection', () => {
           type: 'clear',
         }),
       );
+    });
+
+    describe('supports iterator protocol', () => {
+      it('should be iterable with for...of loops', () => {
+        taggedEntities.add(multiple_entities);
+        const ids = [];
+        for (const entity of taggedEntities) {
+          ids.push(entity.id);
+        }
+        expect(ids).toHaveLength(3);
+        expect(ids).toContain('multi-add-test1');
+        expect(ids).toContain('multi-add-test2');
+        expect(ids).toContain('multi-add-test3');
+      });
+
+      it('should work with spread operator', () => {
+        taggedEntities.add(multiple_entities);
+        const entitiesArray = [...taggedEntities];
+        expect(entitiesArray).toHaveLength(3);
+        expect(entitiesArray[0].id).toBe('multi-add-test1');
+      });
     });
 
     it('should remove event listeners', () => {
@@ -277,15 +298,69 @@ describe('Collection', () => {
     expect(mockBaseCollection.add).toHaveBeenCalledWith(mockItem, 2);
   });
 
-  describe('.remove() should remove an item with a tag', () => {
-    it('and return true if it succeeds', () => {
-      taggedEntities.add(single_entity, 'testTag');
-      expect(taggedEntities.remove(single_entity)).toBeTruthy();
-      expect(baseEntities.values.length).toBe(0);
+  describe('.remove()', () => {
+    describe('should remove an item', () => {
+      it('and return true if it succeeds', () => {
+        taggedEntities.add(single_entity, 'testTag');
+        expect(taggedEntities.remove(single_entity)).toBeTruthy();
+        expect(baseEntities.values.length).toBe(0);
+      });
+
+      it('and return false if it fails', () => {
+        expect(taggedEntities.remove(single_entity)).toBeFalsy();
+      });
     });
 
-    it('and return false if it fails', () => {
-      expect(taggedEntities.remove(single_entity)).toBeFalsy();
+    describe('should remove items by tag', () => {
+      it('and return true if items were removed', () => {
+        taggedEntities.add(multiple_entities, 'remove-tag');
+        expect(taggedEntities.contains('remove-tag')).toBeTruthy();
+        expect(taggedEntities.get('remove-tag').length).toBe(
+          multiple_entities.length,
+        );
+
+        expect(taggedEntities.remove('remove-tag')).toBeTruthy();
+        expect(taggedEntities.contains('remove-tag')).toBeFalsy();
+      });
+
+      it('and return false if no items match the tag', () => {
+        expect(taggedEntities.remove('nonExistentTag')).toBeFalsy();
+      });
+    });
+
+    describe('should remove items by tag array', () => {
+      it('and return true if any tags had items removed', () => {
+        const tag1 = 'remove1';
+        const tag2 = 'remove2';
+
+        taggedEntities.add(multiple_entities, tag1);
+        taggedEntities.add(single_entity, tag2);
+
+        expect(taggedEntities.remove([tag1, tag2])).toBeTruthy();
+        expect(taggedEntities.contains(tag1)).toBeFalsy();
+        expect(taggedEntities.contains(tag2)).toBeFalsy();
+      });
+
+      it('and return true if only some tags had items', () => {
+        taggedEntities.add(multiple_entities, 'existing-tag');
+
+        expect(
+          taggedEntities.remove(['existing-tag', 'nonexistent-tag']),
+        ).toBeTruthy();
+        expect(taggedEntities.contains('existing-tag')).toBeFalsy();
+      });
+
+      it('and return false if no tags match any items', () => {
+        expect(
+          taggedEntities.remove(['nonexistent1', 'nonexistent2']),
+        ).toBeFalsy();
+      });
+
+      it('and return false for an empty array of tags', () => {
+        taggedEntities.add(multiple_entities, 'should-remain');
+        expect(taggedEntities.remove([])).toBeFalsy();
+        expect(taggedEntities.contains('should-remain')).toBeTruthy();
+      });
     });
   });
 
@@ -340,33 +415,42 @@ describe('Collection', () => {
     expect(mockCollection.length).toBe(0);
   });
 
-  it('.contains() should return the same value from the base collection method "contains"', () => {
-    taggedEntities.add(single_entity);
-    expect(taggedEntities.contains(single_entity)).toEqual(
-      baseEntities.contains(single_entity),
-    );
+  describe('.contains()', () => {
+    it('should return the same value from the base collection method "contains"', () => {
+      taggedEntities.add(single_entity);
+      expect(taggedEntities.contains(single_entity)).toEqual(
+        baseEntities.contains(single_entity),
+      );
+    });
+
+    it('should check if a tag exists', () => {
+      taggedEntities.add(single_entity, 'existingTag');
+
+      expect(taggedEntities.contains('existingTag')).toBeTruthy();
+      expect(taggedEntities.contains('nonExistingTag')).toBeFalsy();
+    });
   });
 
-  it('.getByTag() should get items by tag', () => {
+  it('.get() should get items by tag', () => {
     taggedEntities.add(single_entity, 'multi-add-test1');
     taggedEntities.add(multiple_entities, 'multi-add-test2');
 
-    expect(taggedEntities.getByTag('multi-add-test1')).toHaveLength(1);
-    expect(taggedEntities.getByTag('multi-add-test2')).toHaveLength(3);
-    expect(taggedEntities.getByTag('empty')).toHaveLength(0);
+    expect(taggedEntities.get('multi-add-test1')).toHaveLength(1);
+    expect(taggedEntities.get('multi-add-test2')).toHaveLength(3);
+    expect(taggedEntities.get('empty')).toHaveLength(0);
   });
 
-  describe('.getFirstByTag()', () => {
+  describe('.first()', () => {
     const tag = 'test';
     it('should get the first item having a specific tag', () => {
       taggedEntities.add(multiple_entities, tag);
-      expect(taggedEntities.hasTag(tag)).toBeTruthy();
-      expect(taggedEntities.getFirstByTag(tag)).toBe(multiple_entities[0]);
+      expect(taggedEntities.contains(tag)).toBeTruthy();
+      expect(taggedEntities.first(tag)).toBe(multiple_entities[0]);
     });
 
     it('should return undefined if there is no matching tag', () => {
-      expect(taggedEntities.hasTag(tag)).toBeFalsy();
-      expect(taggedEntities.getFirstByTag(tag)).toBeUndefined();
+      expect(taggedEntities.contains(tag)).toBeFalsy();
+      expect(taggedEntities.first(tag)).toBeUndefined();
     });
 
     it('should return undefined if the tag exists but has no items', () => {
@@ -375,94 +459,51 @@ describe('Collection', () => {
       taggedEntities.remove(single_entity);
 
       // Verify the tag exists but has no items
-      expect(taggedEntities.hasTag(tag)).toBeFalsy();
-      expect(taggedEntities.getFirstByTag(tag)).toBeUndefined();
+      expect(taggedEntities.contains(tag)).toBeFalsy();
+      expect(taggedEntities.first(tag)).toBeUndefined();
     });
   });
 
-  describe('.getTags()', () => {
+  describe('.tags', () => {
     it('should get all tags in the collection', () => {
       taggedEntities.add(single_entity, 'tag1');
       taggedEntities.add(multiple_entities[0], 'tag2');
 
-      const tags = taggedEntities.getTags();
+      const tags = taggedEntities.tags;
       expect(tags).toHaveLength(2);
       expect(tags).toContain('tag1');
       expect(tags).toContain('tag2');
     });
 
     it('should return an empty array when no tags exist', () => {
-      expect(taggedEntities.getTags()).toEqual([]);
+      expect(taggedEntities.tags).toEqual([]);
     });
   });
 
-  it('.hasTag() should check if a tag exists', () => {
-    taggedEntities.add(single_entity, 'existingTag');
-
-    expect(taggedEntities.hasTag('existingTag')).toBeTruthy();
-    expect(taggedEntities.hasTag('nonExistingTag')).toBeFalsy();
-  });
-
-  describe('.updateTag()', () => {
+  describe('.update()', () => {
     it('should update item tags', () => {
       taggedEntities.add(single_entity, 'oldTag');
       taggedEntities.add(multiple_entities[0], 'oldTag');
 
-      expect(taggedEntities.updateTag('oldTag', 'newTag')).toBe(2);
-      expect(taggedEntities.hasTag('oldTag')).toBeFalsy();
-      expect(taggedEntities.hasTag('newTag')).toBeTruthy();
+      expect(taggedEntities.update('oldTag', 'newTag')).toBe(2);
+      expect(taggedEntities.contains('oldTag')).toBeFalsy();
+      expect(taggedEntities.contains('newTag')).toBeTruthy();
       expect((single_entity as Entity & WithTag)[Collection.symbol]).toBe(
         'newTag',
       );
     });
 
     it('should return 0 if no items match the old tag', () => {
-      expect(taggedEntities.updateTag('nonExistentTag', 'newTag')).toBe(0);
+      expect(taggedEntities.update('nonExistentTag', 'newTag')).toBe(0);
     });
 
     it('should handle updating to the same tag', () => {
       taggedEntities.add(single_entity, 'sameTag');
-      expect(taggedEntities.updateTag('sameTag', 'sameTag')).toBe(1);
-      expect(taggedEntities.hasTag('sameTag')).toBeTruthy();
+      expect(taggedEntities.update('sameTag', 'sameTag')).toBe(1);
+      expect(taggedEntities.contains('sameTag')).toBeTruthy();
       expect((single_entity as Entity & WithTag)[Collection.symbol]).toBe(
         'sameTag',
       );
-    });
-  });
-
-  describe('.removeByTag()', () => {
-    const tag = 'remove';
-    it('should remove all items matching a tag', () => {
-      taggedEntities.add(multiple_entities, tag);
-      expect(taggedEntities.hasTag(tag)).toBeTruthy();
-      expect(taggedEntities.getByTag(tag).length).toBe(
-        multiple_entities.length,
-      );
-
-      expect(taggedEntities.removeByTag(tag)).toBe(multiple_entities.length);
-      expect(taggedEntities.hasTag(tag)).toBeFalsy();
-    });
-
-    it('should return 0 if no items match the tag', () => {
-      expect(taggedEntities.removeByTag('nonExistentTag')).toBe(0);
-    });
-
-    it('should handle removing items with an array of tags', () => {
-      const tag1 = 'remove1';
-      const tag2 = 'remove2';
-
-      taggedEntities.add(multiple_entities, tag1);
-      taggedEntities.add(single_entity, tag2);
-
-      expect(taggedEntities.removeByTag([tag1, tag2])).toBe(4); // 3 + 1
-      expect(taggedEntities.hasTag(tag1)).toBeFalsy();
-      expect(taggedEntities.hasTag(tag2)).toBeFalsy();
-    });
-
-    it('should handle removing items with an empty array of tags', () => {
-      taggedEntities.add(multiple_entities, tag);
-      expect(taggedEntities.removeByTag([])).toBe(0);
-      expect(taggedEntities.hasTag(tag)).toBeTruthy();
     });
   });
 
@@ -471,45 +512,27 @@ describe('Collection', () => {
       const entity1 = new Entity({ id: 'vis1', show: false });
       const entity2 = new Entity({ id: 'vis2', show: false });
       taggedEntities.add([entity1, entity2], 'visibilityTest');
-      expect(taggedEntities.show('visibilityTest')).toBe(2);
+      expect(taggedEntities.show('visibilityTest')).toBe(taggedEntities);
       expect(entity1.show).toBeTruthy();
       expect(entity2.show).toBeTruthy();
-    });
-
-    it('.show() should return 0 if no items match the tag', () => {
-      expect(taggedEntities.show('nonExistentTag')).toBe(0);
-    });
-
-    it('.show() should handle items without a show property', () => {
-      const mockEntity = { id: 'noShow' } as any;
-      taggedEntities.add(mockEntity, 'testNoShow');
-      expect(taggedEntities.show('testNoShow')).toBe(0);
     });
 
     it('.hide() should hide all items with the specified tag', () => {
       const entity1 = new Entity({ id: 'vis1', show: true });
       const entity2 = new Entity({ id: 'vis2', show: true });
       taggedEntities.add([entity1, entity2], 'visibilityTest');
-      expect(taggedEntities.hide('visibilityTest')).toBe(2);
+      expect(taggedEntities.hide('visibilityTest')).toBe(taggedEntities);
       expect(entity1.show).toBeFalsy();
       expect(entity2.show).toBeFalsy();
-    });
-
-    it('.hide() should return 0 if no items match the tag', () => {
-      expect(taggedEntities.hide('nonExistentTag')).toBe(0);
     });
 
     it('.toggle() should toggle visibility of all items with the specified tag', () => {
       const entity1 = new Entity({ id: 'vis1', show: false });
       const entity2 = new Entity({ id: 'vis2', show: true });
       taggedEntities.add([entity1, entity2], 'visibilityTest');
-      expect(taggedEntities.toggle('visibilityTest')).toBe(2);
+      expect(taggedEntities.toggle('visibilityTest')).toBe(taggedEntities);
       expect(entity1.show).toBeTruthy();
       expect(entity2.show).toBeFalsy();
-    });
-
-    it('.toggle() should return 0 if no items match the tag', () => {
-      expect(taggedEntities.toggle('nonExistentTag')).toBe(0);
     });
   });
 
@@ -520,9 +543,11 @@ describe('Collection', () => {
       taggedEntities.add(multiple_entities, tag);
 
       expect(taggedEntities.setProperty('name', 'testName', tag)).toBe(
-        multiple_entities.length,
+        taggedEntities,
       );
-      expect(taggedEntities.setProperty('name', 'unsetName')).toBe(1);
+      expect(taggedEntities.setProperty('name', 'unsetName')).toBe(
+        taggedEntities,
+      );
       expect(single_entity.name).toBe('unsetName');
       multiple_entities.forEach((e) => {
         expect(e.name).toBe('testName');
@@ -618,6 +643,69 @@ describe('Collection', () => {
       expect(callback).toHaveBeenNthCalledWith(1, multiple_entities[0], 0);
       expect(callback).toHaveBeenNthCalledWith(2, multiple_entities[1], 1);
       expect(callback).toHaveBeenNthCalledWith(3, multiple_entities[2], 2);
+    });
+  });
+
+  describe('.map()', () => {
+    it('should map all items when no tag is provided', () => {
+      taggedEntities.add(multiple_entities);
+      const ids = taggedEntities.map((entity) => entity.id);
+      expect(ids).toHaveLength(3);
+      expect(ids).toEqual([
+        'multi-add-test1',
+        'multi-add-test2',
+        'multi-add-test3',
+      ]);
+    });
+
+    it('should map only items with the specified tag', () => {
+      const tag = 'mappable';
+      taggedEntities.add(single_entity);
+      taggedEntities.add(multiple_entities, tag);
+      const ids = taggedEntities.map((entity) => entity.id, tag);
+      expect(ids).toHaveLength(3);
+      expect(ids).toEqual([
+        'multi-add-test1',
+        'multi-add-test2',
+        'multi-add-test3',
+      ]);
+    });
+
+    it('should provide correct indices', () => {
+      taggedEntities.add(multiple_entities);
+      const indices = taggedEntities.map((_, index) => index);
+      expect(indices).toEqual([0, 1, 2]);
+    });
+  });
+
+  describe('.find()', () => {
+    it('should find an item matching the predicate', () => {
+      taggedEntities.add(multiple_entities);
+      const entity = taggedEntities.find(
+        (entity) => entity.id === 'multi-add-test2',
+      );
+      expect(entity).toBeDefined();
+      expect(entity?.id).toBe('multi-add-test2');
+    });
+
+    it('should only search items with the specified tag', () => {
+      const tag = 'findable';
+      taggedEntities.add(single_entity);
+      taggedEntities.add(multiple_entities, tag);
+      const entity = taggedEntities.find(
+        (entity) => entity.id.includes('multi'),
+        tag,
+      );
+      expect(entity).toBeDefined();
+      expect(entity?.id).toBe('multi-add-test1');
+    });
+
+    it('should return undefined when no items match', () => {
+      taggedEntities.add(multiple_entities);
+      const entity = taggedEntities.find(
+        (entity) => entity.id === 'nonexistent',
+      );
+      expect(entity).toBeUndefined();
     });
   });
 });

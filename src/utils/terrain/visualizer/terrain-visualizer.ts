@@ -89,7 +89,7 @@ export class TerrainVisualizer {
    * Clears all visualizations.
    */
   clear(): void {
-    this._collection.removeByTag(this._collection.getTags());
+    this._collection.remove(this._collection.tags);
   }
 
   /**
@@ -99,7 +99,7 @@ export class TerrainVisualizer {
   show(level: number = 15): void {
     if (!this._hybridTerrain) return;
 
-    this._collection.removeByTag(TerrainVisualizer.tag.grid);
+    this._collection.remove(TerrainVisualizer.tag.grid);
 
     this._level = level;
     const tilingScheme = this._hybridTerrain.tilingScheme;
@@ -221,7 +221,7 @@ export class TerrainVisualizer {
    * Hides the tile grid.
    */
   hide(): void {
-    this._collection.removeByTag(TerrainVisualizer.tag.grid);
+    this._collection.remove(TerrainVisualizer.tag.grid);
 
     if (this._tileCoordinatesLayer) {
       this._viewer.imageryLayers.remove(this._tileCoordinatesLayer);

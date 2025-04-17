@@ -38,8 +38,7 @@ import type {
  * entities.add(new Entity({ ... }), 'roads');
  *
  * // Later, show only buildings
- * entities.show('buildings');
- * entities.hide('roads');
+ * entities.show('buildings').hide('roads');
  */
 class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
   /**
@@ -92,6 +91,25 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
   constructor({ collection, tag }: { collection: C; tag?: Tag }) {
     this.tag = tag || 'default';
     this.collection = collection;
+  }
+
+  /**
+   * Makes the collection directly iterable, allowing it to be used in `for...of` loops
+   * and with spread operators.
+   *
+   * @returns An iterator for the items in the collection
+   *
+   * @example
+   * // Iterate through all items in the collection
+   * for (const entity of collection) {
+   *   console.log(entity.id);
+   * }
+   *
+   * // Convert collection to array using spread syntax
+   * const entitiesArray = [...collection];
+   */
+  [Symbol.iterator](): Iterator<I> {
+    return this.values[Symbol.iterator]();
   }
 
   /**
@@ -233,11 +251,29 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
   /**
    * Returns true if the provided item is in this collection, false otherwise.
    *
-   * @param item - The item to check for
+   * @param item - The item instance to check for
    * @returns True if the item is in the collection, false otherwise
    */
-  contains(item: I): boolean {
-    return this.collection.contains(item);
+  contains(item: I): boolean;
+  /**
+   * Checks if the collection has any items with the specified tag.
+   *
+   * @param tag - The tag to check for
+   * @returns True if items with the tag exist, false otherwise
+   *
+   * @example
+   * if (collection.contains('temporary')) {
+   *   console.log('Temporary items exist');
+   * }
+   */
+  contains(tag: Tag): boolean;
+  contains(target: I | Tag): boolean {
+    if (typeof target === 'object') {
+      return this.collection.contains(target);
+    }
+
+    const items = this._tagMap.get(target);
+    return !!items && items.size > 0;
   }
 
   /**
@@ -246,14 +282,59 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * @param item - The item to remove
    * @returns True if the item was removed, false if it wasn't found
    */
-  remove(item: I): boolean {
-    const result = this.collection.remove(item);
-    if (result) {
-      this._removeFromTagMap(item as I & WithTag);
-      this._invalidateCache();
-      this._emit('remove', { items: [item] });
+  remove(item: I): boolean;
+  /**
+   * Removes all items with the specified tag from the collection.
+   *
+   * @param by - The tag identifying which items to remove
+   * @returns True if the item was removed, false if it wasn't found
+   */
+  remove(by: Tag): boolean;
+  /**
+   * Removes all items with the array of tags from the collection.
+   *
+   * @param by - The tags identifying which items to remove
+   * @returns True if the item was removed, false if it wasn't found
+   */
+  remove(by: Tag[]): boolean;
+  remove(target: I | Tag | Tag[]): boolean {
+    // Case 1: Object but not array (an item)
+    if (typeof target === 'object' && !Array.isArray(target)) {
+      const result = this.collection.remove(target);
+      if (result) {
+        this._removeFromTagMap(target as I & WithTag);
+        this._invalidateCache();
+        this._emit('remove', { items: [target] });
+      }
+      return result;
     }
-    return result;
+
+    // Case 2: Array of tags
+    if (Array.isArray(target)) {
+      if (target.length === 0) return false;
+
+      let anyRemoved = false;
+      for (const tag of target) {
+        // Track if any tag removal succeeded
+        if (this.remove(tag)) {
+          anyRemoved = true;
+        }
+      }
+      return anyRemoved;
+    }
+
+    // Case 3: Single tag
+    const items = this.get(target as Tag);
+    if (items.length === 0) return false;
+
+    let anyRemoved = false;
+    for (const item of items) {
+      // Track if any item removal succeeded
+      if (this.remove(item)) {
+        anyRemoved = true;
+      }
+    }
+    return anyRemoved;
   }
 
   /**
@@ -297,31 +378,31 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * Gets all items with the specified tag from the collection.
    * Uses an optimized internal map for faster lookups.
    *
-   * @param tag - The tag to filter by
+   * @param by - The tag to filter by
    * @returns An array of items with the specified tag, or an empty array if none found
    *
    * @example
    * // Get all buildings
-   * const buildings = collection.getByTag('buildings');
+   * const buildings = collection.get('buildings');
    */
-  getByTag(tag: Tag): I[] {
-    const items = this._tagMap.get(tag);
+  get(by: Tag): I[] {
+    const items = this._tagMap.get(by);
     return items ? Array.from(items) : [];
   }
 
   /**
-   * Gets the first item matching the tag. More efficient than getByTag when
+   * Gets the first item matching the tag. More efficient than `get` when
    * you only need one item, especially for large collections.
    *
-   * @param tag - The tag to search for
+   * @param by - The tag to search for
    * @returns The first matching item or undefined if none found
    *
    * @example
    * // Get the first building
-   * const firstBuilding = collection.getFirstByTag('buildings');
+   * const firstBuilding = collection.first('buildings');
    */
-  getFirstByTag(tag: Tag): I | undefined {
-    const items = this._tagMap.get(tag);
+  first(by: Tag): I | undefined {
+    const items = this._tagMap.get(by);
     if (items && items.size > 0) {
       return items.values().next().value;
     }
@@ -335,43 +416,27 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    *
    * @example
    * // Get all tags
-   * const tags = collection.getTags();
+   * const tags = collection.tags;
    * console.log(`Collection has these tags: ${tags.join(', ')}`);
    */
-  getTags(): Tag[] {
+  get tags(): Tag[] {
     return Array.from(this._tagMap.keys());
-  }
-
-  /**
-   * Checks if the collection has any items with the specified tag.
-   *
-   * @param tag - The tag to check for
-   * @returns True if items with the tag exist, false otherwise
-   *
-   * @example
-   * if (collection.hasTag('temporary')) {
-   *   console.log('Temporary items exist');
-   * }
-   */
-  hasTag(tag: Tag): boolean {
-    const items = this._tagMap.get(tag);
-    return !!items && items.size > 0;
   }
 
   /**
    * Updates the tag for all items with the specified tag.
    *
-   * @param oldTag - The tag to replace
-   * @param newTag - The new tag to assign
+   * @param from - The tag to replace
+   * @param to - The new tag to assign
    * @returns The number of items updated
    *
    * @example
    * // Rename a tag
-   * const count = collection.updateTag('temp', 'temporary');
+   * const count = collection.update('temp', 'temporary');
    * console.log(`Updated ${count} items`);
    */
-  updateTag(oldTag: Tag, newTag: Tag): number {
-    const items = this.getByTag(oldTag);
+  update(from: Tag, to: Tag): number {
+    const items = this.get(from);
 
     for (const item of items) {
       // Remove from old tag map
@@ -379,145 +444,96 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
 
       // Update tag
       Object.defineProperty(item, Collection.symbol, {
-        value: newTag,
+        value: to,
         enumerable: false,
         writable: true,
         configurable: true,
       });
 
       // Add to new tag map
-      this._addToTagMap(item, newTag);
+      this._addToTagMap(item, to);
     }
 
     if (items.length > 0) {
-      this._emit('update', { items, tag: newTag });
+      this._emit('update', { items, tag: to });
     }
 
     return items.length;
   }
 
   /**
-   * Removes all items with the specified tag from the collection.
-   *
-   * @param tag - The tag identifying which items to remove
-   * @returns The number of items removed
-   *
-   * @example
-   * // Remove all temporary markers
-   * const count = collection.removeByTag('temporary');
-   * console.log(`Removed ${count} items`);
-   */
-  removeByTag(tag: Tag): number;
-  /**
-   * Removes all items with the array of tags from the collection.
-   *
-   * @param tag - The tags identifying which items to remove
-   * @returns The number of items removed
-   *
-   * @example
-   * // Remove all items containing tags
-   * const count = collection.removeByTag('temporary', 'default', 'tag');
-   * console.log(`Removed ${count} items`);
-   */
-  removeByTag(tag: Tag[]): number;
-
-  removeByTag(t: Tag | Tag[]): number {
-    let count = 0;
-
-    if (Array.isArray(t)) {
-      t.forEach((t) => {
-        count += this.removeByTag(t);
-      });
-    } else {
-      this.getByTag(t).forEach((item) => {
-        if (this.remove(item as I & WithTag)) {
-          count++;
-        }
-      });
-    }
-
-    return count;
-  }
-
-  /**
    * Makes all items with the specified tag visible.
    * Only affects items that have a 'show' property.
    *
-   * @param tag - The tag identifying which items to show
-   * @returns The number of items affected
+   * @param by - The tag identifying which items to show
+   * @returns The collection itself.
    *
    * @example
    * // Show all buildings
    * collection.show('buildings');
    */
-  show(tag: Tag): number {
-    const items = this.getByTag(tag);
-    let count = 0;
+  show(by: Tag): this {
+    const items = this.get(by);
 
     for (const item of items) {
       if (defined(item.show)) {
         item.show = true;
-        count++;
       }
     }
 
-    return count;
+    return this;
   }
 
   /**
    * Hides all items with the specified tag.
    * Only affects items that have a 'show' property.
    *
-   * @param tag - The tag identifying which items to hide
-   * @returns The number of items affected
+   * @param by - The tag identifying which items to hide
+   * @returns The collection itself.
    *
    * @example
    * // Hide all buildings
    * collection.hide('buildings');
    */
-  hide(tag: Tag): number {
-    const items = this.getByTag(tag);
-    let count = 0;
+  hide(by: Tag): this {
+    const items = this.get(by);
 
     for (const item of items) {
       if (defined(item.show)) {
         item.show = false;
-        count++;
       }
     }
 
-    return count;
+    return this;
   }
 
   /**
    * Toggles visibility of all items with the specified tag.
    * Only affects items that have a 'show' property.
    *
-   * @param tag - The tag identifying which items to toggle
-   * @returns The number of items affected
+   * @param by - The tag identifying which items to toggle
+   * @returns The collection itself.
    *
    * @example
    * // Toggle visibility of all buildings
    * collection.toggle('buildings');
    */
-  toggle(tag: Tag): number {
-    const items = this.getByTag(tag);
-    let count = 0;
+  toggle(by: Tag): this {
+    const items = this.get(by);
 
     for (const item of items) {
       if (defined(item.show)) {
         item.show = !item.show;
-        count++;
       }
     }
 
-    return count;
+    return this;
   }
 
   /**
    * Sets a property value on all items with the specified tag.
    *
-   * @param tag - The tag identifying which items to update
+   * @param by - The tag identifying which items to update
    * @param property - The property name to set
    * @param value - The value to set
    * @returns The number of items updated
@@ -529,10 +545,9 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
   setProperty<K extends NonFunction<I>, V extends Exclude<I[K], Function>>(
     property: K,
     value: V,
-    tag: Tag = this.tag,
-  ): number {
-    const items = this.getByTag(tag);
-    let count = 0;
+    by: Tag = this.tag,
+  ): this {
+    const items = this.get(by);
 
     for (const item of items) {
       if (property in item && typeof item[property] !== 'function') {
@@ -543,11 +558,10 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
         }
 
         item[property] = value;
-        count++;
       }
     }
 
-    return count;
+    return this;
   }
 
   /**
@@ -555,7 +569,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * Optionally only filters items with a specific tag.
    *
    * @param predicate - Function that tests each item
-   * @param tag - Optional tag to filter by before applying the predicate
+   * @param by - Optional tag to filter by before applying the predicate
    * @returns Array of items that pass the test
    *
    * @example
@@ -565,8 +579,8 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    *   'buildings'
    * );
    */
-  filter(predicate: (item: I) => boolean, tag?: Tag): I[] {
-    const items = tag ? this.getByTag(tag) : this.values;
+  filter(predicate: (item: I) => boolean, by?: Tag): I[] {
+    const items = by ? this.get(by) : this.values;
     return items.filter(predicate);
   }
 
@@ -575,7 +589,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * Optionally filters items by tag before execution.
    *
    * @param callback - Function to execute for each item
-   * @param tag - Optional tag to filter items (if not provided, processes all items)
+   * @param by - Optional tag to filter items (if not provided, processes all items)
    *
    * @example
    * // Highlight all buildings
@@ -585,9 +599,55 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    *   }
    * }, 'buildings');
    */
-  forEach(callback: (item: I, index: number) => void, tag?: Tag): void {
-    const items = tag ? this.getByTag(tag) : this.values;
+  forEach(callback: (value: I, index: number) => void, by?: Tag): void {
+    const items = by ? this.get(by) : this.values;
     items.forEach((item, index) => callback(item, index));
+  }
+
+  /**
+   * Creates a new array with the results of calling a provided function on every element
+   * in the collection. Optionally filters by tag before mapping.
+   *
+   * @param callbackfn - Function that produces an element of the new array
+   * @param by - Optional tag to filter items by before mapping
+   * @returns A new array with each element being the result of the callback function
+   *
+   * @example
+   * // Get all entity IDs
+   * const entityIds = collection.map(entity => entity.id);
+   *
+   * // Get positions of all buildings
+   * const buildingPositions = collection.map(
+   *   entity => entity.position.getValue(Cesium.JulianDate.now()),
+   *   'buildings'
+   * );
+   */
+  map<R>(callbackfn: (value: I, index: number) => R, by?: Tag): R[] {
+    const items = by ? this.get(by) : this.values;
+    return items.map(callbackfn);
+  }
+
+  /**
+   * Returns the first element in the collection that satisfies the provided testing function.
+   * Optionally filters by tag before searching.
+   *
+   * @param predicate - Function to test each element
+   * @param by - Optional tag to filter items by before searching
+   * @returns The first element that passes the test, or undefined if no elements pass
+   *
+   * @example
+   * // Find the first entity with a specific name
+   * const namedEntity = collection.find(entity => entity.name === 'Target');
+   *
+   * // Find the first building taller than 100 meters
+   * const tallBuilding = collection.find(
+   *   entity => entity.properties?.height?.getValue() > 100,
+   *   'buildings'
+   * );
+   */
+  find(predicate: (value: I) => boolean, by?: Tag): I | undefined {
+    const items = by ? this.get(by) : this.values;
+    return items.find(predicate);
   }
 }
 
