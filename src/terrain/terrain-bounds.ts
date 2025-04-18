@@ -194,14 +194,19 @@ export namespace TerrainBounds {
    * @param tilingScheme The tiling scheme to use.
    * @returns A new `TerrainBounds` instance for the specified tile.
    */
-  export function fromTile(
-    x: number,
-    y: number,
+  export function fromTileRange(
     level: number,
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
     tilingScheme: TilingScheme = new GeographicTilingScheme(),
   ): TerrainBounds {
     const tileRanges: TileRanges = new Map();
-    tileRanges.set(level, { start: { x, y }, end: { x, y } });
+    tileRanges.set(level, {
+      start: { x: startX, y: startY },
+      end: { x: endX, y: endY },
+    });
 
     return new TerrainBounds(
       {
