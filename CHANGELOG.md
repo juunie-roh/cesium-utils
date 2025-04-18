@@ -1,5 +1,21 @@
 # @juun-roh/cesium-utils
 
+## 0.0.8
+
+### Patch Changes
+
+- 4d59191: Update TerrainAreas class
+
+  test: Add new test for TerrainAreas class
+
+  refactor: Update overloaded class methods
+
+  - `add` and `remove` method now supports multiple input.
+
+  - `remove` method now returns `this` to support chaning.
+
+  - Rename `clear` as `removeAll`.
+
 ## 0.0.7
 
 ### Patch Changes
