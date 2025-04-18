@@ -23,7 +23,7 @@ import { testTerrain } from './terrain';
 
 window.CESIUM_BASE_URL = window.CESIUM_BASE_URL
   ? window.CESIUM_BASE_URL
-  : "../node_modules/cesium/Build/Cesium/";
+  : "../../node_modules/cesium/Build/Cesium/";
 
 async function main() {
   /*

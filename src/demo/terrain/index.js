@@ -1,5 +1,5 @@
 import { EllipsoidTerrainProvider, Terrain } from 'cesium';
-import { cloneViewer, HybridTerrainProvider, syncCameraState, TerrainBounds, TerrainVisualizer } from '../../dist/index';
+import { cloneViewer, HybridTerrainProvider, syncCamera, TerrainBounds, TerrainVisualizer } from '../../../dist/index';
 
 /**
  * @param {import('cesium').Viewer} viewer 
@@ -41,6 +41,6 @@ export function testTerrain(viewer) {
     const viewer2 = cloneViewer(viewer, 'cloneContainer');
     window.viewer2 = viewer2;
     viewer.camera.percentageChanged = 0.01;
-    viewer.camera.changed.addEventListener(() => syncCameraState(viewer, viewer2));
+    viewer.camera.changed.addEventListener(() => syncCamera(viewer, viewer2));
   });
 }
