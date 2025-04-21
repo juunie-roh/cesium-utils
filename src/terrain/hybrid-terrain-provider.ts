@@ -1,7 +1,6 @@
 import {
   CesiumTerrainProvider,
   EllipsoidTerrainProvider,
-  GeographicTilingScheme,
   Request,
   TerrainData,
   TerrainProvider,
@@ -9,7 +8,7 @@ import {
   TilingScheme,
 } from 'cesium';
 
-import { TileRanges } from './terrain.types.js';
+import { TileRange } from './terrain.types.js';
 import { TerrainArea } from './terrain-area.js';
 import TerrainAreas from './terrain-areas.js';
 
@@ -44,9 +43,9 @@ import TerrainAreas from './terrain-areas.js';
  */
 export class HybridTerrainProvider implements TerrainProvider {
   private _terrainAreas = new TerrainAreas();
-  private _terrainProvider!: TerrainProvider;
-  private _fallbackProvider!: TerrainProvider;
-  private _tilingScheme!: TilingScheme;
+  private _terrainProvider: TerrainProvider;
+  private _fallbackProvider: TerrainProvider;
+  private _tilingScheme: TilingScheme;
   private _ready: boolean = false;
   private _availability?: TileAvailability;
 
@@ -65,8 +64,7 @@ export class HybridTerrainProvider implements TerrainProvider {
   ) {
     this._terrainProvider = terrainProvider;
     this._fallbackProvider = fallbackProvider;
-    this._tilingScheme =
-      terrainProvider.tilingScheme || new GeographicTilingScheme();
+    this._tilingScheme = terrainProvider.tilingScheme;
     this._terrainAreas = new TerrainAreas(...terrainAreas);
     this._availability = terrainProvider.availability;
     this._ready = true;
@@ -113,7 +111,7 @@ export class HybridTerrainProvider implements TerrainProvider {
       // Initialize terrain areas
       const terrainAreas: TerrainArea[] = [];
       for (const opt of options.terrainAreas) {
-        const area = await TerrainArea.create(opt);
+        const area = new TerrainArea(opt);
         terrainAreas.push(area);
       }
 
@@ -287,13 +285,16 @@ export namespace HybridTerrainProvider {
   export async function createOverlay(
     customTerrainUrl: string,
     baseTerrainUrl: string,
-    tileRanges: TileRanges,
+    tileRanges: Map<number, TileRange>,
     levels?: number[],
   ): Promise<Awaited<HybridTerrainProvider>> {
+    const provider = await CesiumTerrainProvider.fromUrl(customTerrainUrl, {
+      credit: 'custom',
+    });
     return HybridTerrainProvider.create({
       terrainAreas: [
         {
-          provider: customTerrainUrl,
+          provider,
           bounds: { type: 'tileRange', tileRanges },
           levels: levels || Object.keys(tileRanges).map((k) => parseInt(k)),
           credit: 'custom',

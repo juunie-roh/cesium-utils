@@ -5,7 +5,7 @@ import {
   TilingScheme,
 } from 'cesium';
 
-import { TileRange, TileRanges } from './terrain.types.js';
+import { TileRange } from './terrain.types.js';
 
 /**
  * @class
@@ -14,7 +14,7 @@ import { TileRange, TileRanges } from './terrain.types.js';
 export class TerrainBounds {
   private _rectangle: Rectangle;
   private _tilingScheme: TilingScheme;
-  private _tileRanges: TileRanges;
+  private _tileRanges: Map<number, TileRange>;
   private _levels: Set<number>;
 
   /**
@@ -114,7 +114,7 @@ export class TerrainBounds {
   }
 
   /** Gets the tile ranges defined for these bounds. */
-  get tileRanges(): TileRanges {
+  get tileRanges(): Map<number, TileRange> {
     return this._tileRanges;
   }
 
@@ -202,7 +202,7 @@ export namespace TerrainBounds {
     endY: number,
     tilingScheme: TilingScheme = new GeographicTilingScheme(),
   ): TerrainBounds {
-    const tileRanges: TileRanges = new Map();
+    const tileRanges = new Map<number, TileRange>();
     tileRanges.set(level, {
       start: { x: startX, y: startY },
       end: { x: endX, y: endY },

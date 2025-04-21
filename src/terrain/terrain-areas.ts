@@ -4,27 +4,23 @@ export default class TerrainAreas extends Array<TerrainArea> {
   /**
    * Adds a new terrain area to the collection.
    * @param area A TerrainArea instance or constructor options
-   * @returns A promise that resolves to the index of the added item
+   * @returns The index of the added item
    */
-  async add(
-    area: TerrainArea | TerrainArea.ConstructorOptions,
-  ): Promise<number>;
+  add(area: TerrainArea | TerrainArea.ConstructorOptions): number;
   /**
    * Adds terrain areas to the collection.
    * @param areas An array of TerrainArea instance or constructor options
-   * @returns A promise that resolves to the index of the added item
+   * @returns The index of the added item
    */
-  async add(
-    areas: (TerrainArea | TerrainArea.ConstructorOptions)[],
-  ): Promise<number>;
-  async add(
+  add(areas: (TerrainArea | TerrainArea.ConstructorOptions)[]): number;
+  add(
     target:
       | (TerrainArea | TerrainArea.ConstructorOptions)
       | (TerrainArea | TerrainArea.ConstructorOptions)[],
-  ): Promise<number> {
+  ): number {
     if (Array.isArray(target)) {
       for (const t of target) {
-        await this.add(t);
+        this.add(t);
       }
       return this.length;
     }
@@ -34,7 +30,7 @@ export default class TerrainAreas extends Array<TerrainArea> {
     if (target instanceof TerrainArea) {
       terrainArea = target;
     } else {
-      terrainArea = await TerrainArea.create(target);
+      terrainArea = new TerrainArea(target);
     }
 
     // Add to collection after terrain area is ready

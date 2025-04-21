@@ -5,5 +5,3 @@ export type TileRange = {
   /** Bottom Right tile coordinates */
   end: { x: number; y: number };
 };
-/** A `TileRange` map with specific levels as their keys. */
-export type TileRanges = Map<number, TileRange>;
