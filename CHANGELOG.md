@@ -1,5 +1,44 @@
 # @juun-roh/cesium-utils
 
+## 0.0.8
+
+### Patch Changes
+
+- 8ffe842: Remove Redundant Type
+
+  - refactor: Remove `TileRanges`
+
+- 4d59191: Update TerrainAreas class
+
+  test: Add new test for TerrainAreas class
+
+  refactor: Update overloaded class methods
+
+  - `add` and `remove` method now supports multiple input.
+
+  - `remove` method now returns `this` to support chaning.
+
+  - Rename `clear` as `removeAll`.
+
+- b81f7d3: Remove Redundant Method
+
+  refactor: Remove `configureAvailability`
+
+- 3608c07: Separate Utility Function
+
+  refactor: Move rectangle calculation function
+
+- a7dd9b6: Remove Redundant Class
+
+  refactor: Remove terrain bounds class
+
+  - Remove `TerrainBounds`.
+    Now doing proper delegation rather than modifying internals. (was modifying private member)
+
+  - Stricter checks for terrain areas.
+
+  - Fix others according to the deletion and refactoring.
+
 ## 0.0.7
 
 ### Patch Changes
