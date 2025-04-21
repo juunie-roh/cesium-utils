@@ -1,5 +1,5 @@
 import { EllipsoidTerrainProvider, Terrain } from 'cesium';
-import { cloneViewer, HybridTerrainProvider, syncCamera, TerrainBounds, TerrainVisualizer } from '../../../dist/index';
+import { cloneViewer, HybridTerrainProvider, syncCamera, TerrainVisualizer } from '../../../dist/index';
 
 /**
  * @param {import('cesium').Viewer} viewer 
@@ -11,12 +11,6 @@ export function testTerrain(viewer) {
   // tileRanges.set(14, { start: { x: 27926, y: 4778 }, end: { x: 27935, y: 4787 } });
   // tileRanges.set(15, { start: { x: 55852, y: 9556 }, end: { x: 55871, y: 9575 } });
 
-  /** @type {import('../../@types/index').TerrainBounds} */
-  const bounds = new TerrainBounds({
-    type: 'tileRange',
-    tileRanges,
-  });
-
   const terrain = Terrain.fromWorldTerrain({
     requestVertexNormals: true,
   });
@@ -25,7 +19,7 @@ export function testTerrain(viewer) {
     const hybrid = await HybridTerrainProvider.create({
       terrainAreas: [{
         provider,
-        bounds,
+        tileRanges,
         isCustom: true,
       }],
       terrainProvider: new EllipsoidTerrainProvider(),

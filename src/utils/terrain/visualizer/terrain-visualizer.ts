@@ -9,7 +9,6 @@ import {
   Viewer,
 } from 'cesium';
 import { TerrainArea } from 'src/terrain/terrain-area.js';
-import { TerrainBounds } from 'src/terrain/terrain-bounds.js';
 
 import Collection from '@/collection/collection.js';
 import { HybridTerrainProvider } from '@/terrain/hybrid-terrain-provider.js';
@@ -249,7 +248,7 @@ export class TerrainVisualizer {
    * @param options {@link Viewer.flyTo}
    */
   flyTo(area: TerrainArea, options?: { duration?: number }): void {
-    const { rectangle } = area.bounds;
+    const { rectangle } = area;
     this._viewer.camera.flyTo({
       destination: rectangle,
       ...options,
@@ -356,7 +355,7 @@ export namespace TerrainVisualizer {
    * @returns Collection of created entities.
    */
   export function visualize(
-    terrain: TerrainArea | TerrainBounds,
+    area: TerrainArea,
     viewer: Viewer,
     options?: Options,
   ): Collection<EntityCollection, Entity> {
@@ -367,46 +366,39 @@ export namespace TerrainVisualizer {
     const alpha = options?.alpha || 0.7;
     const tileAlpha = options?.tileAlpha || 0.2;
 
-    const bounds = 'provider' in terrain ? terrain.bounds : terrain;
-
     const collection = new Collection<EntityCollection, Entity>({
       collection: viewer.entities,
       tag,
     });
 
-    const { rectangle } = bounds;
+    const { rectangle } = area;
     collection.add(
       TerrainVisualizer.createRectangle(rectangle, color.withAlpha(alpha)),
       tag,
     );
 
-    if (show && bounds.levels.size > 0) {
-      const { tilingScheme } = bounds;
-      bounds.levels.forEach((level) => {
-        let count = 0;
+    if (show && area.tileRanges.size > 0) {
+      const { tilingScheme } = area.provider;
 
-        const { tileRanges } = bounds;
-        for (const [rangeLevel, range] of tileRanges.entries()) {
-          if (rangeLevel !== level) continue;
-
+      let count = 0;
+      area.tileRanges.forEach((range, level) => {
+        for (
+          let x = range.start.x;
+          x <= range.end.x && count < maxTilesToShow;
+          x++
+        ) {
           for (
-            let x = range.start.x;
-            x <= range.end.x && count < maxTilesToShow;
-            x++
+            let y = range.start.y;
+            y <= range.end.y && count < maxTilesToShow;
+            y++
           ) {
-            for (
-              let y = range.start.y;
-              y <= range.end.y && count < maxTilesToShow;
-              y++
-            ) {
-              const rect = tilingScheme.tileXYToRectangle(x, y, level);
-              collection.add(
-                createRectangle(rect, color.withAlpha(tileAlpha)),
-                `${tag}_tile`,
-              );
+            const rect = tilingScheme.tileXYToRectangle(x, y, level);
+            collection.add(
+              createRectangle(rect, color.withAlpha(tileAlpha)),
+              `${tag}_tile`,
+            );
 
-              count++;
-            }
+            count++;
           }
         }
       });
