@@ -111,8 +111,21 @@ export class HybridTerrainProvider implements TerrainProvider {
       // Initialize terrain areas
       const terrainAreas: TerrainArea[] = [];
       for (const opt of options.terrainAreas) {
-        const area = new TerrainArea(opt);
-        terrainAreas.push(area);
+        const provider =
+          typeof opt.provider === 'string'
+            ? await CesiumTerrainProvider.fromUrl(opt.provider, {
+                requestVertexNormals: true,
+              })
+            : opt.provider;
+
+        terrainAreas.push(
+          new TerrainArea({
+            provider,
+            tileRanges: opt.tileRanges,
+            credit: opt.credit,
+            isCustom: opt.isCustom,
+          }),
+        );
       }
 
       // Create the fully initialized provider
@@ -243,17 +256,15 @@ export class HybridTerrainProvider implements TerrainProvider {
     y: number,
     level: number,
   ): boolean | undefined {
-    // Check each terrain area first.
-    this._terrainAreas.forEach((area) => {
-      if (
-        area.contains(x, y, level) &&
-        area.getTileDataAvailable(x, y, level)
-      ) {
-        return true;
+    // First check if any terrain area contains this tile
+    for (const area of this._terrainAreas) {
+      if (area.contains(x, y, level)) {
+        return area.getTileDataAvailable(x, y, level);
       }
-    });
+    }
 
-    return this._terrainProvider.getTileDataAvailable(x, y, level) || true;
+    // Don't force to true - let the provider determine actual availability
+    return this._terrainProvider.getTileDataAvailable(x, y, level);
   }
 }
 
@@ -279,14 +290,12 @@ export namespace HybridTerrainProvider {
    * @param customTerrainUrl URL to the custom terrain.
    * @param baseTerrainUrl URL to the base terrain.
    * @param tileRanges Tile ranges defining the custom terrain area.
-   * @param levels Levels to apply the custom terrain.
    * @returns A promise resolving to a new `HybridTerrainProvider`.
    */
   export async function createOverlay(
     customTerrainUrl: string,
     baseTerrainUrl: string,
     tileRanges: Map<number, TileRange>,
-    levels?: number[],
   ): Promise<Awaited<HybridTerrainProvider>> {
     const provider = await CesiumTerrainProvider.fromUrl(customTerrainUrl, {
       credit: 'custom',
@@ -295,8 +304,7 @@ export namespace HybridTerrainProvider {
       terrainAreas: [
         {
           provider,
-          bounds: { type: 'tileRange', tileRanges },
-          levels: levels || Object.keys(tileRanges).map((k) => parseInt(k)),
+          tileRanges,
           credit: 'custom',
         },
       ],

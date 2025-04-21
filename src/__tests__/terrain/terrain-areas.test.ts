@@ -1,15 +1,18 @@
 import { EllipsoidTerrainProvider } from 'cesium';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { TerrainArea } from '@/terrain/terrain-area.js';
-import TerrainAreas from '@/terrain/terrain-areas.js';
-import { TerrainBounds } from '@/terrain/terrain-bounds.js';
+import { TerrainArea, TerrainAreas } from '@/terrain/index.js';
+import type { TileRange } from '@/terrain/terrain.types.js';
 
 describe('TerrainAreas', () => {
-  const option = (i: number): TerrainArea.ConstructorOptions => ({
-    provider: new EllipsoidTerrainProvider(),
-    bounds: TerrainBounds.fromTileRange(i + 1, i + 1, i + 1, i + 1, i + 1),
-  });
+  const option = (i: number): TerrainArea.ConstructorOptions => {
+    const tileRanges = new Map<number, TileRange>();
+    tileRanges.set(i, { start: { x: i, y: i }, end: { x: i, y: i } });
+    return {
+      provider: new EllipsoidTerrainProvider(),
+      tileRanges,
+    };
+  };
   const create = (option: TerrainArea.ConstructorOptions) => {
     return new TerrainArea(option);
   };

@@ -8,7 +8,7 @@ import {
 } from 'cesium';
 
 import { TileRange } from './terrain.types.js';
-import { TerrainBounds } from './terrain-bounds.js';
+import { computeRectangle } from './terrain.utils.js';
 
 /**
  * @class
@@ -16,10 +16,9 @@ import { TerrainBounds } from './terrain-bounds.js';
  * `TerrainArea` pairs a provider with geographic bounds and level constraints.
  */
 export class TerrainArea {
-  private _provider: TerrainProvider | undefined;
-  private _bounds: TerrainBounds;
+  private _provider: TerrainProvider;
   private _rectangle: Rectangle;
-  private _levels: Set<number>;
+  private _tileRanges: Map<number, TileRange>;
   private _ready: boolean = false;
   private _credit: string | Credit;
   private _isCustom: boolean;
@@ -29,30 +28,56 @@ export class TerrainArea {
    * @param options Object describing initialization options
    */
   constructor(options: TerrainArea.ConstructorOptions) {
-    this._bounds =
-      options.bounds instanceof TerrainBounds
-        ? options.bounds
-        : new TerrainBounds(options.bounds);
-
-    this._rectangle = new Rectangle();
-    this._levels = new Set(options.levels || []);
+    this._provider = options.provider;
+    this._tileRanges = options.tileRanges;
     this._credit = options.credit || 'custom';
     this._isCustom = options.isCustom !== undefined ? options.isCustom : true;
-    this._provider = options.provider;
+    this._rectangle = computeRectangle(
+      options.provider.tilingScheme,
+      options.tileRanges,
+    );
+    options.tileRanges.forEach((range, level) => {
+      this._provider.availability?.addAvailableTileRange(
+        level,
+        range.start.x,
+        range.start.y,
+        range.end.x,
+        range.end.y,
+      );
+    });
     this._ready = true;
-
-    this._bounds.configureAvailability(this._provider);
   }
 
   /**
-   * @see {@link TerrainBounds.contains}
+   * Checks if the specified tile coordinates are within the bounds.
+   * @param x The tile X coordinate.
+   * @param y The tile Y coordinate.
+   * @param level The tile level.
+   * @returns `true` if the tile is within bounds, `false` otherwise.
    */
   contains(x: number, y: number, level: number): boolean {
-    if (this._levels.size > 0 && !this._levels.has(level)) {
-      return false;
+    // If we're using tile ranges, ONLY allow tiles at the specified levels
+    if (this._tileRanges.size > 0) {
+      if (!this._tileRanges.has(level)) {
+        return false;
+      }
+
+      const range = this._tileRanges.get(level)!;
+      return (
+        x >= range.start.x &&
+        x <= range.end.x &&
+        y >= range.start.y &&
+        y <= range.end.y
+      );
     }
 
-    return this._bounds.contains(x, y, level);
+    // This code will only run if no tile ranges were specified
+    const tileRectangle = this._provider.tilingScheme.tileXYToRectangle(
+      x,
+      y,
+      level,
+    );
+    return Rectangle.intersection(tileRectangle, this._rectangle) !== undefined;
   }
 
   /**
@@ -75,7 +100,7 @@ export class TerrainArea {
     if (
       !this._ready ||
       !this.contains(x, y, level) ||
-      !this._provider?.getTileDataAvailable(x, y, level)
+      !this._provider.getTileDataAvailable(x, y, level)
     ) {
       return undefined;
     }
@@ -91,8 +116,25 @@ export class TerrainArea {
    * @returns Undefined if not supported by the terrain provider, otherwise true or false.
    * @see {@link TerrainProvider.getTileDataAvailable} */
   getTileDataAvailable(x: number, y: number, level: number): boolean {
-    if (!this.contains(x, y, level) || !this._ready) return false;
-    return this._provider?.getTileDataAvailable(x, y, level) ?? false;
+    // If we're using explicit tile ranges, be strict about which levels are available
+    if (this._tileRanges.size > 0) {
+      // Only return true for levels we've explicitly defined
+      if (!this._tileRanges.has(level)) {
+        return false;
+      }
+
+      const range = this._tileRanges.get(level)!;
+      return (
+        x >= range.start.x &&
+        x <= range.end.x &&
+        y >= range.start.y &&
+        y <= range.end.y
+      );
+    }
+
+    // If no tile ranges are specified, defer to provider
+    if (!this._ready) return false;
+    return this._provider.getTileDataAvailable(x, y, level) ?? false;
   }
 
   /** Checks if this terrain provider is marked as a custom provider. */
@@ -106,18 +148,18 @@ export class TerrainArea {
   }
 
   /** Gets the terrain provider for this terrain area. */
-  get provider(): TerrainProvider | undefined {
+  get provider(): TerrainProvider {
     return this._provider;
   }
 
-  /** Gets the terrain bounds for this terrain area. */
-  get bounds(): TerrainBounds {
-    return this._bounds;
+  /** Gets available tile ranges with zoom levels set with this terrain area. */
+  get tileRanges(): Map<number, TileRange> {
+    return this._tileRanges;
   }
 
-  /** Gets available zoom levels set with this terrain area. */
-  get levels(): Set<number> {
-    return this._levels;
+  /** Gets the rectangle representing this terrain area. */
+  get rectangle(): Rectangle {
+    return this._rectangle;
   }
 
   /** Gets if this terrain area is ready. */
@@ -135,13 +177,11 @@ export namespace TerrainArea {
   export interface ConstructorOptions {
     /** The terrain provider for this area or a URL to create one from. */
     provider: TerrainProvider;
-    /** The geographic bounds of this terrain area. */
-    bounds: TerrainBounds | TerrainBounds.ConstructorOptions;
     /**
-     * The zoom levels this terrain area applies to.
-     * If empty, the area applies to all levels.
+     * Tile ranges by level when using tileRange type.
+     * Keys are zoom levels, values define the range of tiles at that level.
      */
-    levels?: number[];
+    tileRanges: Map<number, TileRange>;
     /**
      * Credit to associate with this terrain provider.
      * Used to identify custom terrain providers.
@@ -159,22 +199,20 @@ export namespace TerrainArea {
    * Creates a `TerrainArea` from a URL and tile ranges.
    * @param url The URL to create the terrain provider from.
    * @param tileRanges Tile ranges by level.
-   * @param levels The zoom levels this area applies to.
-   * @param credit Credit to associate with this terrain provider.
+   * @param options: Constructor options for CesiumTerrainProvider.
    * @returns A promise resolving to a new `TerrainArea`
    */
   export async function fromUrl(
     url: string,
     tileRanges: Map<number, TileRange>,
     options?: CesiumTerrainProvider.ConstructorOptions,
-    levels?: number[],
-    credit: string | Credit = 'custom',
+  ): Promise<Awaited<TerrainArea>>;
+  export async function fromUrl(
+    url: string,
+    tileRanges: Map<number, TileRange>,
+    options?: CesiumTerrainProvider.ConstructorOptions,
   ): Promise<Awaited<TerrainArea>> {
-    const bounds = new TerrainBounds({
-      type: 'tileRange',
-      tileRanges,
-    });
-
+    const credit = options?.credit || 'custom';
     const provider = await CesiumTerrainProvider.fromUrl(url, {
       ...options,
       credit,
@@ -182,8 +220,7 @@ export namespace TerrainArea {
 
     const terrainArea = new TerrainArea({
       provider,
-      bounds,
-      levels: levels || Object.keys(tileRanges).map((k) => parseInt(k)),
+      tileRanges,
       credit,
     });
 

@@ -15,7 +15,6 @@ describe('Common JS require test with Cesium', () => {
     expect(utils.HybridTerrainProvider).toBeDefined();
     expect(utils.TerrainArea).toBeDefined();
     expect(utils.TerrainAreas).toBeDefined();
-    expect(utils.TerrainBounds).toBeDefined();
     expect(utils.TerrainVisualizer).toBeDefined();
     expect(utils.syncCamera).toBeDefined();
   })
