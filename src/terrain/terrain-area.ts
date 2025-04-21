@@ -1,12 +1,13 @@
 import {
   CesiumTerrainProvider,
   Credit,
+  Rectangle,
   Request,
   TerrainData,
   TerrainProvider,
 } from 'cesium';
 
-import { TileRanges } from './terrain.types.js';
+import { TileRange } from './terrain.types.js';
 import { TerrainBounds } from './terrain-bounds.js';
 
 /**
@@ -17,6 +18,7 @@ import { TerrainBounds } from './terrain-bounds.js';
 export class TerrainArea {
   private _provider: TerrainProvider | undefined;
   private _bounds: TerrainBounds;
+  private _rectangle: Rectangle;
   private _levels: Set<number>;
   private _ready: boolean = false;
   private _credit: string | Credit;
@@ -25,46 +27,21 @@ export class TerrainArea {
   /**
    * Creates a new instance of `TerrainArea`.
    * @param options Object describing initialization options
-   * @private Use {@link TerrainArea.create} instead.
    */
-  private constructor(
-    options: TerrainArea.ConstructorOptions,
-    provider: TerrainProvider,
-  ) {
+  constructor(options: TerrainArea.ConstructorOptions) {
     this._bounds =
       options.bounds instanceof TerrainBounds
         ? options.bounds
         : new TerrainBounds(options.bounds);
 
+    this._rectangle = new Rectangle();
     this._levels = new Set(options.levels || []);
     this._credit = options.credit || 'custom';
     this._isCustom = options.isCustom !== undefined ? options.isCustom : true;
-    this._provider = provider;
+    this._provider = options.provider;
     this._ready = true;
 
     this._bounds.configureAvailability(this._provider);
-  }
-
-  /**
-   * Asynchronously creates a new instance of `TerrainArea`.
-   * @param options {@link TerrainArea.ConstructorOptions}
-   * @returns A promise that resolves to a new `TerrainArea` instance.
-   */
-  static async create(
-    options: TerrainArea.ConstructorOptions,
-  ): Promise<TerrainArea> {
-    let provider: TerrainProvider;
-
-    if (typeof options.provider === 'string') {
-      provider = await CesiumTerrainProvider.fromUrl(options.provider, {
-        requestVertexNormals: true,
-        credit: options.credit || 'custom',
-      });
-    } else {
-      provider = options.provider;
-    }
-
-    return new TerrainArea(options, provider);
   }
 
   /**
@@ -157,7 +134,7 @@ export namespace TerrainArea {
   /** Initialization options for `TerrainArea` constructor. */
   export interface ConstructorOptions {
     /** The terrain provider for this area or a URL to create one from. */
-    provider: TerrainProvider | string;
+    provider: TerrainProvider;
     /** The geographic bounds of this terrain area. */
     bounds: TerrainBounds | TerrainBounds.ConstructorOptions;
     /**
@@ -188,7 +165,8 @@ export namespace TerrainArea {
    */
   export async function fromUrl(
     url: string,
-    tileRanges: TileRanges,
+    tileRanges: Map<number, TileRange>,
+    options?: CesiumTerrainProvider.ConstructorOptions,
     levels?: number[],
     credit: string | Credit = 'custom',
   ): Promise<Awaited<TerrainArea>> {
@@ -197,8 +175,13 @@ export namespace TerrainArea {
       tileRanges,
     });
 
-    const terrainArea = await TerrainArea.create({
-      provider: url,
+    const provider = await CesiumTerrainProvider.fromUrl(url, {
+      ...options,
+      credit,
+    });
+
+    const terrainArea = new TerrainArea({
+      provider,
       bounds,
       levels: levels || Object.keys(tileRanges).map((k) => parseInt(k)),
       credit,

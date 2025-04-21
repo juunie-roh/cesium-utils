@@ -1,5 +1,6 @@
 import Collection from './collection/collection.js';
 import { HybridTerrainProvider } from './terrain/hybrid-terrain-provider.js';
+import { computeRectangle } from './terrain/terrain.utils.js';
 import { TerrainArea } from './terrain/terrain-area.js';
 import TerrainAreas from './terrain/terrain-areas.js';
 import { TerrainBounds } from './terrain/terrain-bounds.js';
@@ -19,7 +20,7 @@ export {
 };
 
 // Functions
-export { cloneViewer, isGetterOnly, syncCamera };
+export { cloneViewer, computeRectangle, isGetterOnly, syncCamera };
 
 // Types
 export type * from './collection/collection.types.js';
