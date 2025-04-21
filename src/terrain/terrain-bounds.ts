@@ -1,9 +1,4 @@
-import {
-  GeographicTilingScheme,
-  Rectangle,
-  TerrainProvider,
-  TilingScheme,
-} from 'cesium';
+import { GeographicTilingScheme, Rectangle, TilingScheme } from 'cesium';
 
 import { TileRange } from './terrain.types.js';
 import { computeRectangle } from './terrain.utils.js';
@@ -68,31 +63,6 @@ export class TerrainBounds {
 
     const tileRectangle = this._tilingScheme.tileXYToRectangle(x, y, level);
     return Rectangle.intersection(tileRectangle, this._rectangle) !== undefined;
-  }
-
-  /**
-   * Configures a terrain provider's availability based on these bounds.
-   * @see WARNING This method is accessing private member of {@link https://cesium.com/learn/csiumjs/ref-doc/TileAvailability.html `TileAvailability`}.
-   * @param provider The terrain provider to configure.
-   */
-  configureAvailability(provider: TerrainProvider): void {
-    // Ensure provider has an availability property.
-    if (!provider.availability) return;
-    // @ts-expect-error
-    if (provider.availability._tilingScheme) {
-      // @ts-expect-error
-      provider.availability._tilingScheme = this._tilingScheme;
-    }
-
-    for (const [level, range] of this._tileRanges.entries()) {
-      provider.availability.addAvailableTileRange(
-        level,
-        range.start.x,
-        range.start.y,
-        range.end.x,
-        range.end.y,
-      );
-    }
   }
 
   /**

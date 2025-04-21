@@ -40,8 +40,6 @@ export class TerrainArea {
     this._isCustom = options.isCustom !== undefined ? options.isCustom : true;
     this._provider = options.provider;
     this._ready = true;
-
-    this._bounds.configureAvailability(this._provider);
   }
 
   /**
