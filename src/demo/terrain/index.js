@@ -7,10 +7,10 @@ import { cloneViewer, HybridTerrainProvider, syncCamera, TerrainBounds, TerrainV
 export function testTerrain(viewer) {
   const tileRanges = new Map();
   
-  tileRanges.set(13, {
-    start: { x: 13963, y: 2389 },
-    end: { x: 13967, y: 2393 },
-  });
+  tileRanges.set(13, { start: { x: 13963, y: 2389 }, end: { x: 13967, y: 2393 } });
+  // tileRanges.set(14, { start: { x: 27926, y: 4778 }, end: { x: 27935, y: 4787 } });
+  // tileRanges.set(15, { start: { x: 55852, y: 9556 }, end: { x: 55871, y: 9575 } });
+
   /** @type {import('../../@types/index').TerrainBounds} */
   const bounds = new TerrainBounds({
     type: 'tileRange',

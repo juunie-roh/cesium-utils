@@ -6,6 +6,7 @@ import {
 } from 'cesium';
 
 import { TileRange } from './terrain.types.js';
+import { computeRectangle } from './terrain.utils.js';
 
 /**
  * @class
@@ -34,18 +35,12 @@ export class TerrainBounds {
     if (options.type === 'rectangle' && options.rectangle) {
       this._rectangle = Rectangle.clone(options.rectangle);
     } else if (options.type === 'tileRange' && options.tileRanges) {
-      if (options.tileRanges instanceof Map) {
-        this._tileRanges = new Map(options.tileRanges);
-      } else {
-        this._tileRanges = new Map(
-          Object.entries(options.tileRanges).map(([level, range]) => [
-            parseInt(level),
-            range,
-          ]),
-        );
-      }
+      this._tileRanges = options.tileRanges;
 
-      this._calculateRectangleFromTileRanges();
+      this._rectangle = computeRectangle(
+        this._tilingScheme,
+        options.tileRanges,
+      );
     } else {
       throw new Error('Either rectangle or tileRanges must be provided.');
     }
@@ -76,9 +71,8 @@ export class TerrainBounds {
   }
 
   /**
-   *
    * Configures a terrain provider's availability based on these bounds.
-   * @see WARNING This method is accessing private property of {@link https://cesium.com/learn/csiumjs/ref-doc/TileAvailability.html `TileAvailability`}.
+   * @see WARNING This method is accessing private member of {@link https://cesium.com/learn/csiumjs/ref-doc/TileAvailability.html `TileAvailability`}.
    * @param provider The terrain provider to configure.
    */
   configureAvailability(provider: TerrainProvider): void {
@@ -122,49 +116,6 @@ export class TerrainBounds {
   get levels(): Set<number> {
     return this._levels;
   }
-
-  /**
-   * Calculates a bounding rectangle that encompasses all the specified tile ranges.
-   * @private
-   */
-  private _calculateRectangleFromTileRanges(): void {
-    let west = Number.POSITIVE_INFINITY;
-    let south = Number.POSITIVE_INFINITY;
-    let east = Number.NEGATIVE_INFINITY;
-    let north = Number.NEGATIVE_INFINITY;
-
-    const levels = Array.from(this._tileRanges.keys());
-    if (levels.length === 0) {
-      this._rectangle = Rectangle.MAX_VALUE;
-      return;
-    }
-
-    const highestLevel = Math.min(...levels);
-    const tileRange = this._tileRanges.get(highestLevel);
-
-    if (tileRange) {
-      const { start, end } = tileRange;
-
-      const startRect = this._tilingScheme.tileXYToRectangle(
-        start.x,
-        start.y,
-        highestLevel,
-      );
-
-      const endRect = this._tilingScheme.tileXYToRectangle(
-        end.x,
-        end.y,
-        highestLevel,
-      );
-
-      west = Math.min(startRect.west, west);
-      south = Math.min(endRect.south, south);
-      east = Math.max(endRect.east, east);
-      north = Math.max(startRect.north, north);
-    }
-
-    this._rectangle = new Rectangle(west, south, east, north);
-  }
 }
 
 /**
@@ -179,9 +130,8 @@ export namespace TerrainBounds {
     /**
      * Tile ranges by level when using tileRange type.
      * Keys are zoom levels, values define the range of tiles at that level.
-     * Can be provided either as a Map or as a plain object with numeric keys.
      */
-    tileRanges?: Map<number, TileRange> | Record<string | number, TileRange>;
+    tileRanges?: Map<number, TileRange>;
     /** Rectangle bounds when using rectangle type. */
     rectangle?: Rectangle;
   }
