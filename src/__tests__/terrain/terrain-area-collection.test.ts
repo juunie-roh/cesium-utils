@@ -1,7 +1,7 @@
 import { EllipsoidTerrainProvider } from 'cesium';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { TerrainArea, TerrainAreas } from '@/terrain/index.js';
+import { TerrainArea, TerrainAreaCollection } from '@/terrain/index.js';
 import type { TileRange } from '@/terrain/terrain.types.js';
 
 describe('TerrainAreas', () => {
@@ -9,7 +9,7 @@ describe('TerrainAreas', () => {
     const tileRanges = new Map<number, TileRange>();
     tileRanges.set(i, { start: { x: i, y: i }, end: { x: i, y: i } });
     return {
-      provider: new EllipsoidTerrainProvider(),
+      terrainProvider: new EllipsoidTerrainProvider(),
       tileRanges,
     };
   };
@@ -17,7 +17,7 @@ describe('TerrainAreas', () => {
     return new TerrainArea(option);
   };
 
-  const areas: TerrainAreas = new TerrainAreas();
+  const areas: TerrainAreaCollection = new TerrainAreaCollection();
 
   beforeEach(() => {
     areas.removeAll();

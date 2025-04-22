@@ -16,7 +16,7 @@ import { computeRectangle } from './terrain.utils.js';
  * `TerrainArea` pairs a provider with geographic bounds and level constraints.
  */
 export class TerrainArea {
-  private _provider: TerrainProvider;
+  private _terrainProvider: TerrainProvider;
   private _rectangle: Rectangle;
   private _tileRanges: Map<number, TileRange>;
   private _ready: boolean = false;
@@ -28,16 +28,16 @@ export class TerrainArea {
    * @param options Object describing initialization options
    */
   constructor(options: TerrainArea.ConstructorOptions) {
-    this._provider = options.provider;
+    this._terrainProvider = options.terrainProvider;
     this._tileRanges = options.tileRanges;
     this._credit = options.credit || 'custom';
     this._isCustom = options.isCustom !== undefined ? options.isCustom : true;
     this._rectangle = computeRectangle(
-      options.provider.tilingScheme,
+      options.terrainProvider.tilingScheme,
       options.tileRanges,
     );
     options.tileRanges.forEach((range, level) => {
-      this._provider.availability?.addAvailableTileRange(
+      this._terrainProvider.availability?.addAvailableTileRange(
         level,
         range.start.x,
         range.start.y,
@@ -56,7 +56,7 @@ export class TerrainArea {
    * @returns `true` if the tile is within bounds, `false` otherwise.
    */
   contains(x: number, y: number, level: number): boolean {
-    // If we're using tile ranges, ONLY allow tiles at the specified levels
+    // Allow ONLY tiles at the specified levels
     if (this._tileRanges.size > 0) {
       if (!this._tileRanges.has(level)) {
         return false;
@@ -71,8 +71,8 @@ export class TerrainArea {
       );
     }
 
-    // This code will only run if no tile ranges were specified
-    const tileRectangle = this._provider.tilingScheme.tileXYToRectangle(
+    // If no tile ranges were specified, compare with rectangle
+    const tileRectangle = this._terrainProvider.tilingScheme.tileXYToRectangle(
       x,
       y,
       level,
@@ -100,12 +100,12 @@ export class TerrainArea {
     if (
       !this._ready ||
       !this.contains(x, y, level) ||
-      !this._provider.getTileDataAvailable(x, y, level)
+      !this._terrainProvider.getTileDataAvailable(x, y, level)
     ) {
       return undefined;
     }
 
-    return this._provider.requestTileGeometry(x, y, level, request);
+    return this._terrainProvider.requestTileGeometry(x, y, level, request);
   }
 
   /**
@@ -116,9 +116,7 @@ export class TerrainArea {
    * @returns Undefined if not supported by the terrain provider, otherwise true or false.
    * @see {@link TerrainProvider.getTileDataAvailable} */
   getTileDataAvailable(x: number, y: number, level: number): boolean {
-    // If we're using explicit tile ranges, be strict about which levels are available
     if (this._tileRanges.size > 0) {
-      // Only return true for levels we've explicitly defined
       if (!this._tileRanges.has(level)) {
         return false;
       }
@@ -134,7 +132,7 @@ export class TerrainArea {
 
     // If no tile ranges are specified, defer to provider
     if (!this._ready) return false;
-    return this._provider.getTileDataAvailable(x, y, level) ?? false;
+    return this._terrainProvider.getTileDataAvailable(x, y, level) ?? false;
   }
 
   /** Checks if this terrain provider is marked as a custom provider. */
@@ -148,8 +146,8 @@ export class TerrainArea {
   }
 
   /** Gets the terrain provider for this terrain area. */
-  get provider(): TerrainProvider {
-    return this._provider;
+  get terrainProvider(): TerrainProvider {
+    return this._terrainProvider;
   }
 
   /** Gets available tile ranges with zoom levels set with this terrain area. */
@@ -176,7 +174,7 @@ export namespace TerrainArea {
   /** Initialization options for `TerrainArea` constructor. */
   export interface ConstructorOptions {
     /** The terrain provider for this area or a URL to create one from. */
-    provider: TerrainProvider;
+    terrainProvider: TerrainProvider;
     /**
      * Tile ranges by level when using tileRange type.
      * Keys are zoom levels, values define the range of tiles at that level.
@@ -219,7 +217,7 @@ export namespace TerrainArea {
     });
 
     const terrainArea = new TerrainArea({
-      provider,
+      terrainProvider: provider,
       tileRanges,
       credit,
     });

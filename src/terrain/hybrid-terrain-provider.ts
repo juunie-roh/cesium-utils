@@ -10,7 +10,7 @@ import {
 
 import { TileRange } from './terrain.types.js';
 import { TerrainArea } from './terrain-area.js';
-import TerrainAreas from './terrain-areas.js';
+import TerrainAreaCollection from './terrain-area-collection.js';
 
 /**
  * @class
@@ -20,18 +20,13 @@ import TerrainAreas from './terrain-areas.js';
  *
  * @example
  * ``` typescript
+ * const tileRanges = new Map<number, TileRange>;
+ * tileRanges.set(15, { start: { x: 55852, y: 9556 }, end: { x: 55871, y: 9575 } });
  * const hybridTerrain = await HybridTerrainProvider.create({
  *   terrainAreas: [
- *     provider: 'custom-terrain-url',
- *     bounds: {
- *       type: 'tileRange',
- *       tileRanges: {
- *         15: {
- *           start: { x: 55852, y: 9556 },
- *           end: { x: 55871, y: 9575 },
- *         },
- *       },
- *       levels: [15],
+ *     {
+ *       provider: 'custom-terrain-url',
+ *       tileRanges,
  *     }
  *   ],
  *   terrainProvider: 'default-terrain-url',
@@ -42,7 +37,7 @@ import TerrainAreas from './terrain-areas.js';
  * ```
  */
 export class HybridTerrainProvider implements TerrainProvider {
-  private _terrainAreas = new TerrainAreas();
+  private _terrainAreas = new TerrainAreaCollection();
   private _terrainProvider: TerrainProvider;
   private _fallbackProvider: TerrainProvider;
   private _tilingScheme: TilingScheme;
@@ -65,7 +60,7 @@ export class HybridTerrainProvider implements TerrainProvider {
     this._terrainProvider = terrainProvider;
     this._fallbackProvider = fallbackProvider;
     this._tilingScheme = terrainProvider.tilingScheme;
-    this._terrainAreas = new TerrainAreas(...terrainAreas);
+    this._terrainAreas = new TerrainAreaCollection(...terrainAreas);
     this._availability = terrainProvider.availability;
     this._ready = true;
   }
@@ -112,15 +107,15 @@ export class HybridTerrainProvider implements TerrainProvider {
       const terrainAreas: TerrainArea[] = [];
       for (const opt of options.terrainAreas) {
         const provider =
-          typeof opt.provider === 'string'
-            ? await CesiumTerrainProvider.fromUrl(opt.provider, {
+          typeof opt.terrainProvider === 'string'
+            ? await CesiumTerrainProvider.fromUrl(opt.terrainProvider, {
                 requestVertexNormals: true,
               })
-            : opt.provider;
+            : opt.terrainProvider;
 
         terrainAreas.push(
           new TerrainArea({
-            provider,
+            terrainProvider: provider,
             tileRanges: opt.tileRanges,
             credit: opt.credit,
             isCustom: opt.isCustom,
@@ -180,37 +175,50 @@ export class HybridTerrainProvider implements TerrainProvider {
   }
 
   /**
-   * @see {@link TerrainProvider.credit}
+   * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
+   * the source of the terrain.
    */
   get credit(): any {
     return this._terrainProvider?.credit;
   }
   /**
-   * @see {@link TerrainProvider.errorEvent}
+   * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
+   * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+   * are passed an instance of `TileProviderError`.
    */
   get errorEvent(): any {
     return this._terrainProvider.errorEvent;
   }
   /**
-   * @see {@link TerrainProvider.hasWaterMask}
+   * Gets a value indicating whether or not the provider includes a water mask.  The water mask
+   * indicates which areas of the globe are water rather than land, so they can be rendered
+   * as a reflective surface with animated waves.
    */
   get hasWaterMask(): boolean {
     return this._terrainProvider.hasWaterMask;
   }
-  /**
-   * @see {@link TerrainProvider.hasVertexNormals}
-   */
+  /** Gets a value indicating whether or not the requested tiles include vertex normals. */
   get hasVertexNormals(): boolean {
     return this._terrainProvider.hasVertexNormals;
   }
   /**
-   * @see {@link TerrainProvider.loadTileDataAvailability}
+   * Makes sure we load availability data for a tile
+   * @param x - The X coordinate of the tile for which to request geometry.
+   * @param y - The Y coordinate of the tile for which to request geometry.
+   * @param level - The level of the tile for which to request geometry.
+   * @returns Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
    */
-  loadTileDataAvailability(x: number, y: number, level: number) {
+  loadTileDataAvailability(
+    x: number,
+    y: number,
+    level: number,
+  ): Promise<void> | undefined {
     return this._terrainProvider.loadTileDataAvailability(x, y, level);
   }
   /**
-   * @see {@link TerrainProvider.getLevelMaximumGeometricError}
+   * Gets the maximum geometric error allowed in a tile at a given level.
+   * @param level - The tile level for which to get the maximum geometric error.
+   * @returns The maximum geometric error.
    */
   getLevelMaximumGeometricError(level: number): number {
     return this._terrainProvider.getLevelMaximumGeometricError(level);
@@ -246,10 +254,11 @@ export class HybridTerrainProvider implements TerrainProvider {
   }
 
   /**
-   * @see {@link TerrainProvider.getTileDataAvailable}
-   * @param x
-   * @param y
-   * @param level
+   * Determines whether data for a tile is available to be loaded. Checks the specified terrain areas first.
+   * @param x - The X coordinate of the tile for which to request geometry.
+   * @param y - The Y coordinate of the tile for which to request geometry.
+   * @param level - The level of the tile for which to request geometry.
+   * @returns Undefined if not supported by the terrain provider, otherwise true or false.
    */
   getTileDataAvailable(
     x: number,
@@ -273,9 +282,7 @@ export class HybridTerrainProvider implements TerrainProvider {
  * Contains types and factory methods for creating `HybridTerrainProvider` instance.
  */
 export namespace HybridTerrainProvider {
-  /**
-   * Initialization options for `HybridTerrainProvider` constructor.
-   */
+  /** Initialization options for `HybridTerrainProvider` constructor. */
   export interface ConstructorOptions {
     /** An array of terrain areas to include in the hybrid terrain. */
     terrainAreas: TerrainArea.ConstructorOptions[];
@@ -303,7 +310,7 @@ export namespace HybridTerrainProvider {
     return HybridTerrainProvider.create({
       terrainAreas: [
         {
-          provider,
+          terrainProvider: provider,
           tileRanges,
           credit: 'custom',
         },
