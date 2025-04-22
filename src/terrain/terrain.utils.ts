@@ -1,6 +1,6 @@
 import { Rectangle, TilingScheme } from 'cesium';
 
-import { TileRange } from '@/terrain/terrain.types.js';
+import { TileRange } from './terrain.types.js';
 
 /**
  * Calculates a bounding rectangle that encompasses all the specified tile ranges.

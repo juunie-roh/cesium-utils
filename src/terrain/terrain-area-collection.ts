@@ -1,6 +1,11 @@
 import { TerrainArea } from './terrain-area.js';
 
-export default class TerrainAreas extends Array<TerrainArea> {
+/**
+ * @extends Array
+ * @class
+ * Collection-like Extended Array Class of `TerrainArea`.
+ */
+export default class TerrainAreaCollection extends Array<TerrainArea> {
   /**
    * Adds a new terrain area to the collection.
    * @param area A TerrainArea instance or constructor options
@@ -39,10 +44,12 @@ export default class TerrainAreas extends Array<TerrainArea> {
 
   /**
    * Removes a terrain area from the collection.
+   * @param area The terrain area to remove.
    */
   remove(area: TerrainArea): this;
   /**
    * Removes multiple terrain areas from the collection.
+   * @param areas The terrain areas to remove.
    */
   remove(areas: TerrainArea[]): this;
   remove(target: TerrainArea | TerrainArea[]): this {

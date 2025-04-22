@@ -2,7 +2,7 @@ import Collection from './collection/collection.js';
 import { HybridTerrainProvider } from './terrain/hybrid-terrain-provider.js';
 import { computeRectangle } from './terrain/terrain.utils.js';
 import { TerrainArea } from './terrain/terrain-area.js';
-import TerrainAreas from './terrain/terrain-areas.js';
+import TerrainAreaCollection from './terrain/terrain-area-collection.js';
 import { TerrainVisualizer } from './utils/terrain/index.js';
 import { isGetterOnly } from './utils/type-check.js';
 import { syncCamera } from './utils/viewer/index.js';
@@ -13,7 +13,7 @@ export {
   Collection,
   HybridTerrainProvider,
   TerrainArea,
-  TerrainAreas,
+  TerrainAreaCollection,
   TerrainVisualizer,
 };
 

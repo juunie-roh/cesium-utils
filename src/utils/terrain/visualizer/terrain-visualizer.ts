@@ -378,7 +378,7 @@ export namespace TerrainVisualizer {
     );
 
     if (show && area.tileRanges.size > 0) {
-      const { tilingScheme } = area.provider;
+      const { tilingScheme } = area.terrainProvider;
 
       let count = 0;
       area.tileRanges.forEach((range, level) => {
