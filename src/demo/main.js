@@ -1,29 +1,29 @@
 import {
+  CameraEventType,
   Cartesian3,
+  CzmlDataSource,
   defined,
   formatError,
+  GeoJsonDataSource,
+  GpxDataSource,
+  ImageryLayer,
+  KeyboardEventModifier,
+  KmlDataSource,
   Math as CesiumMath,
   objectToQuery,
   queryToObject,
-  CzmlDataSource,
-  GeoJsonDataSource,
-  ImageryLayer,
-  KmlDataSource,
-  GpxDataSource,
   Terrain,
   TileMapServiceImageryProvider,
   Viewer,
   viewerCesiumInspectorMixin,
   viewerDragDropMixin,
-  CameraEventType,
-  KeyboardEventModifier,
-} from "cesium";
+} from 'cesium';
 
 import { testTerrain } from './terrain';
 
 window.CESIUM_BASE_URL = window.CESIUM_BASE_URL
   ? window.CESIUM_BASE_URL
-  : "../../node_modules/cesium/Build/Cesium/";
+  : '../../node_modules/cesium/Build/Cesium/';
 
 async function main() {
   /*
@@ -54,7 +54,7 @@ async function main() {
     );
   }
 
-  const loadingIndicator = document.getElementById("loadingIndicator");
+  const loadingIndicator = document.getElementById('loadingIndicator');
   const hasBaseLayerPicker = !defined(baseLayer);
 
   const terrain = Terrain.fromWorldTerrain({
@@ -64,7 +64,7 @@ async function main() {
 
   let viewer;
   try {
-    viewer = new Viewer("cesiumContainer", {
+    viewer = new Viewer('cesiumContainer', {
       baseLayer: baseLayer,
       baseLayerPicker: hasBaseLayerPicker,
       scene3DOnly: endUserOptions.scene3DOnly,
@@ -76,8 +76,14 @@ async function main() {
     viewer.scene.screenSpaceCameraController.tiltEventTypes = [
       CameraEventType.RIGHT_DRAG,
       CameraEventType.PINCH,
-      { eventType: CameraEventType.LEFT_DRAG, modifier: KeyboardEventModifier.CTRL },
-      { eventType: CameraEventType.RIGHT_DRAG, modifier: KeyboardEventModifier.CTRL },
+      {
+        eventType: CameraEventType.LEFT_DRAG,
+        modifier: KeyboardEventModifier.CTRL,
+      },
+      {
+        eventType: CameraEventType.RIGHT_DRAG,
+        modifier: KeyboardEventModifier.CTRL,
+      },
     ];
     // Set zoom event type as MIDDLE_DRAG
     viewer.scene.screenSpaceCameraController.zoomEventTypes = [
@@ -91,10 +97,10 @@ async function main() {
       viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
     }
   } catch (exception) {
-    loadingIndicator.style.display = "none";
+    loadingIndicator.style.display = 'none';
     const message = formatError(exception);
     console.error(message);
-    if (!document.querySelector(".cesium-widget-errorPanel")) {
+    if (!document.querySelector('.cesium-widget-errorPanel')) {
       window.alert(message);
     }
     return;
@@ -108,7 +114,7 @@ async function main() {
   const showLoadError = function (name, error) {
     const title = `An error occurred while loading the file: ${name}`;
     const message =
-      "An error occurred while loading the file, which may indicate that it is invalid.  A detailed error report is below:";
+      'An error occurred while loading the file, which may indicate that it is invalid.  A detailed error report is below:';
     viewer.cesiumWidget.showErrorPanel(title, message, error);
   };
 
@@ -132,35 +138,35 @@ async function main() {
     if (!defined(sourceType)) {
       // autodetect using file extension if not specified
       if (/\.czml$/i.test(source)) {
-        sourceType = "czml";
+        sourceType = 'czml';
       } else if (
         /\.geojson$/i.test(source) ||
         /\.json$/i.test(source) ||
         /\.topojson$/i.test(source)
       ) {
-        sourceType = "geojson";
+        sourceType = 'geojson';
       } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
-        sourceType = "kml";
+        sourceType = 'kml';
       } else if (/\.gpx$/i.test(source)) {
-        sourceType = "gpx";
+        sourceType = 'gpx';
       }
     }
 
     let loadPromise;
-    if (sourceType === "czml") {
+    if (sourceType === 'czml') {
       loadPromise = CzmlDataSource.load(source);
-    } else if (sourceType === "geojson") {
+    } else if (sourceType === 'geojson') {
       loadPromise = GeoJsonDataSource.load(source);
-    } else if (sourceType === "kml") {
+    } else if (sourceType === 'kml') {
       loadPromise = KmlDataSource.load(source, {
         camera: scene.camera,
         canvas: scene.canvas,
         screenOverlayContainer: viewer.container,
       });
-    } else if (sourceType === "gpx") {
+    } else if (sourceType === 'gpx') {
       loadPromise = GpxDataSource.load(source);
     } else {
-      showLoadError(source, "Unknown format.");
+      showLoadError(source, 'Unknown format.');
     }
 
     if (defined(loadPromise)) {
@@ -175,7 +181,7 @@ async function main() {
             const error = `No entity with id "${lookAt}" exists in the provided data source.`;
             showLoadError(source, error);
           }
-        } else if (!defined(view) && endUserOptions.flyTo !== "false") {
+        } else if (!defined(view) && endUserOptions.flyTo !== 'false') {
           viewer.flyTo(dataSource);
         }
       } catch (error) {
@@ -190,12 +196,12 @@ async function main() {
 
   const theme = endUserOptions.theme;
   if (defined(theme)) {
-    if (endUserOptions.theme === "lighter") {
-      document.body.classList.add("cesium-lighter");
+    if (endUserOptions.theme === 'lighter') {
+      document.body.classList.add('cesium-lighter');
       viewer.animation.applyThemeChanges();
     } else {
       const error = `Unknown theme: ${theme}`;
-      viewer.cesiumWidget.showErrorPanel(error, "");
+      viewer.cesiumWidget.showErrorPanel(error, '');
     }
   }
 
@@ -235,7 +241,7 @@ async function main() {
   const camera = viewer.camera;
   function saveCamera() {
     const position = camera.positionCartographic;
-    let hpr = "";
+    let hpr = '';
     if (defined(camera.heading)) {
       hpr = `,${CesiumMath.toDegrees(camera.heading)},${CesiumMath.toDegrees(
         camera.pitch,
@@ -244,18 +250,18 @@ async function main() {
     endUserOptions.view = `${CesiumMath.toDegrees(
       position.longitude,
     )},${CesiumMath.toDegrees(position.latitude)},${position.height}${hpr}`;
-    history.replaceState(undefined, "", `?${objectToQuery(endUserOptions)}`);
+    history.replaceState(undefined, '', `?${objectToQuery(endUserOptions)}`);
   }
 
   let timeout;
-  if (endUserOptions.saveCamera !== "false") {
+  if (endUserOptions.saveCamera !== 'false') {
     camera.changed.addEventListener(function () {
       window.clearTimeout(timeout);
       timeout = window.setTimeout(saveCamera, 1000);
     });
   }
 
-  loadingIndicator.style.display = "none";
+  loadingIndicator.style.display = 'none';
 
   // Terrain visualizer
   testTerrain(viewer);

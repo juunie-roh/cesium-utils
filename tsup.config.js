@@ -8,7 +8,7 @@ export default defineConfig({
     'src/collection/index.ts',
     'src/terrain/index.ts',
     'src/utils/index.ts',
-    'src/viewer/index.ts'
+    'src/viewer/index.ts',
   ],
   esbuildOptions(options) {
     options.platform = 'neutral';

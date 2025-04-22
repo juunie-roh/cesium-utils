@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite';
 import path from 'path';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   base: './',
@@ -25,7 +25,12 @@ export default defineConfig({
     exclude: ['**/node_modules/**', '**/docs/**'],
     coverage: {
       include: ['src/**'],
-      exclude: ['**/index.*', 'src/demo/**', '**/*.types.*', 'src/__tests__/**'],
-    }
+      exclude: [
+        '**/index.*',
+        'src/demo/**',
+        '**/*.types.*',
+        'src/__tests__/**',
+      ],
+    },
   },
 });

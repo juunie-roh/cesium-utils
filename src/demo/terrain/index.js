@@ -1,13 +1,20 @@
 import { EllipsoidTerrainProvider, Terrain } from 'cesium';
-import { cloneViewer, HybridTerrainProvider, syncCamera, TerrainVisualizer } from '../../../dist/index';
 
-/**
- * @param {import('cesium').Viewer} viewer 
- */
+import {
+  cloneViewer,
+  HybridTerrainProvider,
+  syncCamera,
+  TerrainVisualizer,
+} from '../../../dist/index.js';
+
+/** @param {import('cesium').Viewer} viewer  */
 export function testTerrain(viewer) {
   const tileRanges = new Map();
-  
-  tileRanges.set(13, { start: { x: 13963, y: 2389 }, end: { x: 13967, y: 2393 } });
+
+  tileRanges.set(13, {
+    start: { x: 13963, y: 2389 },
+    end: { x: 13967, y: 2393 },
+  });
   // tileRanges.set(14, { start: { x: 27926, y: 4778 }, end: { x: 27935, y: 4787 } });
   // tileRanges.set(15, { start: { x: 55852, y: 9556 }, end: { x: 55871, y: 9575 } });
 
@@ -17,11 +24,13 @@ export function testTerrain(viewer) {
 
   terrain.readyEvent.addEventListener(async (provider) => {
     const hybrid = await HybridTerrainProvider.create({
-      terrainAreas: [{
-        provider,
-        tileRanges,
-        isCustom: true,
-      }],
+      terrainAreas: [
+        {
+          provider,
+          tileRanges,
+          isCustom: true,
+        },
+      ],
       terrainProvider: new EllipsoidTerrainProvider(),
     });
     console.log('🚀 ~ terrain.readyEvent.addEventListener ~ hybrid:', hybrid);
@@ -31,7 +40,7 @@ export function testTerrain(viewer) {
     });
 
     window.visualizer = visualizer;
-    
+
     const viewer2 = cloneViewer(viewer, 'cloneContainer');
     window.viewer2 = viewer2;
     viewer.camera.percentageChanged = 0.01;
