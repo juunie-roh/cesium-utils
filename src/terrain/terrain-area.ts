@@ -56,28 +56,26 @@ export class TerrainArea {
    * @returns `true` if the tile is within bounds, `false` otherwise.
    */
   contains(x: number, y: number, level: number): boolean {
-    // Allow ONLY tiles at the specified levels
-    if (this._tileRanges.size > 0) {
-      if (!this._tileRanges.has(level)) {
-        return false;
-      }
-
-      const range = this._tileRanges.get(level)!;
-      return (
-        x >= range.start.x &&
-        x <= range.end.x &&
-        y >= range.start.y &&
-        y <= range.end.y
-      );
+    if (this._tileRanges.size === 0) return false;
+    if (!this._tileRanges.has(level)) {
+      return false;
     }
 
-    // If no tile ranges were specified, compare with rectangle
-    const tileRectangle = this._terrainProvider.tilingScheme.tileXYToRectangle(
-      x,
-      y,
-      level,
+    const range = this._tileRanges.get(level)!;
+    return (
+      x >= range.start.x &&
+      x <= range.end.x &&
+      y >= range.start.y &&
+      y <= range.end.y
     );
-    return Rectangle.intersection(tileRectangle, this._rectangle) !== undefined;
+
+    // If no tile ranges were specified, compare with rectangle
+    // const tileRectangle = this._terrainProvider.tilingScheme.tileXYToRectangle(
+    //   x,
+    //   y,
+    //   level,
+    // );
+    // return Rectangle.intersection(tileRectangle, this._rectangle) !== undefined;
   }
 
   /**
@@ -99,8 +97,10 @@ export class TerrainArea {
   ): Promise<Awaited<TerrainData>> | undefined {
     if (
       !this._ready ||
-      !this.contains(x, y, level) ||
-      !this._terrainProvider.getTileDataAvailable(x, y, level)
+      !this.contains(x, y, level)
+      // ||
+      // (!(this._terrainProvider instanceof EllipsoidTerrainProvider) &&
+      //   !this._terrainProvider.getTileDataAvailable(x, y, level))
     ) {
       return undefined;
     }
@@ -116,23 +116,22 @@ export class TerrainArea {
    * @returns Undefined if not supported by the terrain provider, otherwise true or false.
    * @see {@link TerrainProvider.getTileDataAvailable} */
   getTileDataAvailable(x: number, y: number, level: number): boolean {
-    if (this._tileRanges.size > 0) {
-      if (!this._tileRanges.has(level)) {
-        return false;
-      }
-
-      const range = this._tileRanges.get(level)!;
-      return (
-        x >= range.start.x &&
-        x <= range.end.x &&
-        y >= range.start.y &&
-        y <= range.end.y
-      );
+    if (this._tileRanges.size === 0) return false;
+    if (!this._tileRanges.has(level)) {
+      return false;
     }
 
+    const range = this._tileRanges.get(level)!;
+    return (
+      x >= range.start.x &&
+      x <= range.end.x &&
+      y >= range.start.y &&
+      y <= range.end.y
+    );
+
     // If no tile ranges are specified, defer to provider
-    if (!this._ready) return false;
-    return this._terrainProvider.getTileDataAvailable(x, y, level) ?? false;
+    // if (!this._ready) return false;
+    // return this._terrainProvider.getTileDataAvailable(x, y, level) ?? false;
   }
 
   /** Checks if this terrain provider is marked as a custom provider. */
