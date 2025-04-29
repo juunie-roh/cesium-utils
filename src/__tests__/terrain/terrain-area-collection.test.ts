@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { TerrainArea, TerrainAreaCollection } from '@/terrain/index.js';
 import type { TileRange } from '@/terrain/terrain.types.js';
 
-describe('TerrainAreas', () => {
+describe('TerrainAreaCollection', () => {
   const option = (i: number): TerrainArea.ConstructorOptions => {
     const tileRanges = new Map<number, TileRange>();
     tileRanges.set(i, { start: { x: i, y: i }, end: { x: i, y: i } });
