@@ -103,31 +103,11 @@ export class HybridTerrainProvider implements TerrainProvider {
         fallbackProvider = new EllipsoidTerrainProvider();
       }
 
-      // Initialize terrain areas
-      const terrainAreas: TerrainArea[] = [];
-      for (const opt of options.terrainAreas) {
-        const provider =
-          typeof opt.terrainProvider === 'string'
-            ? await CesiumTerrainProvider.fromUrl(opt.terrainProvider, {
-                requestVertexNormals: true,
-              })
-            : opt.terrainProvider;
-
-        terrainAreas.push(
-          new TerrainArea({
-            terrainProvider: provider,
-            tileRanges: opt.tileRanges,
-            credit: opt.credit,
-            isCustom: opt.isCustom,
-          }),
-        );
-      }
-
       // Create the fully initialized provider
       return new HybridTerrainProvider(
         terrainProvider,
         fallbackProvider,
-        terrainAreas,
+        options.terrainAreas,
       );
     } catch (error: any) {
       console.error('Failed to initialize HybridTerrainProvider:', error);
@@ -285,7 +265,7 @@ export namespace HybridTerrainProvider {
   /** Initialization options for `HybridTerrainProvider` constructor. */
   export interface ConstructorOptions {
     /** An array of terrain areas to include in the hybrid terrain. */
-    terrainAreas: TerrainArea.ConstructorOptions[];
+    terrainAreas: TerrainArea[];
     /** Default provider to use outside of specified terrain areas.  */
     terrainProvider: TerrainProvider | string;
     /** Optional fallback provider when data is not available from default provider. @default EllipsoidTerrainProvider */
@@ -309,11 +289,11 @@ export namespace HybridTerrainProvider {
     });
     return HybridTerrainProvider.create({
       terrainAreas: [
-        {
+        new TerrainArea({
           terrainProvider: provider,
           tileRanges,
           credit: 'custom',
-        },
+        }),
       ],
       terrainProvider: baseTerrainUrl,
       fallbackProvider: new EllipsoidTerrainProvider(),
