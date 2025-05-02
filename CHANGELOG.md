@@ -1,32 +1,5 @@
 # @juun-roh/cesium-utils
 
-## 0.0.9
-
-### Patch Changes
-
-- 320ac32: Refactoring Classes
-
-  refactor: Rename class
-
-  - Rename `TerrainAreas` as `TerrainAreaCollection`.
-    The class provides collection-like methods, so renamed it to be more consistent.
-
-  - Rename the member `_provider` as `_terrainProvider` of `TerrainArea`.
-    To have more aligned form of variables.
-
-  - Update Documents.
-    Some of the existing documents were incompatible with the code.
-
-- d365e5e: New Test for TerrainArea
-
-  test: Add test for terrain area class
-
-  - Conduct new test for terrain area class.
-
-  - A function that detects area with a rectangle has been disabled.
-
-  - Fix test description for `TerrainAreaCollection`.
-
 ## 0.0.8
 
 ### Patch Changes
@@ -43,7 +16,7 @@
 
   - `add` and `remove` method now supports multiple input.
 
-  - `remove` method now returns `this` to support chaning.
+  - `remove` method now returns `this` to support chaining.
 
   - Rename `clear` as `removeAll`.
 
