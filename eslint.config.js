@@ -69,12 +69,11 @@ export default [
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        project: './tsconfig.json',
         ecmaVersion: 'latest',
         sourceType: 'module',
       },
     },
     rules: baseRules,
-    ignores: ['dist/**/*', 'node_modules/**/*', '.tsup/**/*'],
+    ignores: ['dist/**/*', 'node_modules/**/*', '.tsup/**/*', 'docs/**/*'],
   },
 ];
