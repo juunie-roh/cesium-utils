@@ -1,5 +1,4 @@
 import {
-  CesiumTerrainProvider,
   EllipsoidTerrainProvider,
   Request,
   TerrainData,
@@ -8,7 +7,6 @@ import {
   TilingScheme,
 } from 'cesium';
 
-import { TileRange } from './terrain.types.js';
 import { TerrainArea } from './terrain-area.js';
 import TerrainAreaCollection from './terrain-area-collection.js';
 
@@ -214,39 +212,5 @@ export namespace HybridTerrainProvider {
     terrainProvider: TerrainProvider;
     /** Optional fallback provider when data is not available from default provider. @default EllipsoidTerrainProvider */
     fallbackProvider?: TerrainProvider;
-  }
-
-  /**
-   * Creates a `HybridTerrainProvider` with a custom terrain area overlaid on a base terrain.
-   * @param tileRanges Tile ranges defining the custom terrain area.
-   * @param terrainUrl URL to the custom terrain.
-   * @param fallbackTerrainUrl URL to the base terrain.
-   * @returns A promise resolving to a new `HybridTerrainProvider`.
-   */
-  export async function createOverlay(
-    tileRanges: Map<number, TileRange>,
-    terrainUrl: string,
-    fallbackTerrainUrl?: string,
-  ): Promise<Awaited<HybridTerrainProvider>> {
-    const provider = await CesiumTerrainProvider.fromUrl(terrainUrl, {
-      requestVertexNormals: true,
-      credit: 'custom',
-    });
-    const fallback = fallbackTerrainUrl
-      ? await CesiumTerrainProvider.fromUrl(fallbackTerrainUrl, {
-          requestVertexNormals: true,
-        })
-      : new EllipsoidTerrainProvider();
-    return new HybridTerrainProvider({
-      terrainAreas: [
-        new TerrainArea({
-          terrainProvider: provider,
-          tileRanges,
-          credit: 'custom',
-        }),
-      ],
-      terrainProvider: provider,
-      fallbackProvider: fallback,
-    });
   }
 }
