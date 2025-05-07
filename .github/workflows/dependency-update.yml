@@ -2,6 +2,8 @@ name: Lockfile Maintenance
 on:
   schedule:
     - cron: '0 0 * * 0'  # Weekly on Sundays
+env:
+  HUSKY: 0
 permissions:
   contents: write
   pull-requests: write
@@ -17,5 +19,7 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           title: 'ci: Weekly dependency updates'
-          body: 'Automated dependency updates'
+          body: 'ci: Automated dependency updates'
           branch: 'deps/weekly-updates'
+        env:
+          HUSKY: 0
