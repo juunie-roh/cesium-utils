@@ -44,6 +44,12 @@ pnpm build
 pnpm test
 ```
 
+### Run Demonstration
+
+```bash
+pnpm dev
+```
+
 ### Documentation
 
 Generate API documentation:
