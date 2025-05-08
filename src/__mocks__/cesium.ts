@@ -3,6 +3,9 @@ import { vi } from 'vitest';
 // Deep merge utility
 function deepMerge(to: any, from: any) {
   Object.keys(from).forEach((key) => {
+    if (key === '__proto__' || key === 'constructor') {
+      return; // Skip prototype-polluting keys
+    }
     if (from[key] instanceof Object && key in to) {
       deepMerge(to[key], from[key]);
     } else {
