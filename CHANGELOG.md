@@ -1,5 +1,39 @@
 # @juun-roh/cesium-utils
 
+## 0.0.10
+
+### Patch Changes
+
+- 97c7cc4: Test Coverage Improvement
+
+  test: Improve coverage
+
+  - Add test case for available terrain provider with availability.
+
+  - Comment annotation to ignore line 207.
+    Common limitation for coverage tools to examine async functions.
+
+- 4845d5c: Fix Hybrid Terrain Provider
+
+  fix: Fix constructor parameter
+
+  - Receive an array of TerrainArea itself, not the ConstructorOptions.
+
+- 0ecfe62: New Test Conducted
+
+  test: Add new test for hybrid terrain provider
+
+  - Remove redundant function `createOverlay`.
+
+  - Create test file for HybridTerrainProvider class.
+
+- 657be9d: Refactor Class
+
+  refactor: Fix types for terrain provider options
+
+  - Remove static method `create`.
+    There is no reason to handle the terrain url directly in this class.
+
 ## 0.0.9
 
 ### Patch Changes
