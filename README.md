@@ -44,7 +44,9 @@ pnpm build
 pnpm test
 ```
 
-### Run Demonstration
+### Demonstration
+
+Run demonstration in local environment:
 
 ```bash
 pnpm dev
