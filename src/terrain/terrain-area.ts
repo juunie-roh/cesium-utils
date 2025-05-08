@@ -204,6 +204,7 @@ export namespace TerrainArea {
     tileRanges: Map<number, TileRange>,
     options?: CesiumTerrainProvider.ConstructorOptions,
   ): Promise<Awaited<TerrainArea>>;
+  /* c8 ignore next */
   export async function fromUrl(
     url: string,
     tileRanges: Map<number, TileRange>,
