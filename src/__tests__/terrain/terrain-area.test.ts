@@ -53,6 +53,29 @@ describe('TerrainArea', () => {
       expect(area.isCustom).toBe(false);
       expect(area.credit).toBe('test-credit');
     });
+
+    it('should add tile ranges to provider availability when available', () => {
+      // a mock provider with availability
+      const mockProvider = {
+        tilingScheme: new EllipsoidTerrainProvider().tilingScheme,
+        availability: {
+          addAvailableTileRange: vi.fn(),
+        },
+      };
+
+      const tileRanges = new Map<number, TileRange>();
+      tileRanges.set(0, { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } });
+
+      const area = new TerrainArea({
+        terrainProvider: mockProvider as unknown as TerrainProvider,
+        tileRanges,
+      });
+
+      expect(area.terrainProvider.availability).toBeDefined();
+      expect(
+        mockProvider.availability.addAvailableTileRange,
+      ).toHaveBeenCalledWith(0, 0, 0, 1, 1);
+    });
   });
 
   describe('contains', () => {
@@ -322,6 +345,27 @@ describe('TerrainArea', () => {
           credit: 'My Custom Credit',
         }),
       );
+    });
+
+    it('should handle errors when creating a terrain area from URL', async () => {
+      const originalFromUrl = CesiumTerrainProvider.fromUrl;
+
+      try {
+        // Mock implementation that throws an error
+        CesiumTerrainProvider.fromUrl = vi.fn().mockImplementation(() => {
+          throw new Error('Test error');
+        });
+
+        const tileRanges = new Map<number, TileRange>();
+        tileRanges.set(0, { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } });
+
+        await expect(
+          TerrainArea.fromUrl('https://example.com/terrain', tileRanges),
+        ).rejects.toThrow('Test error');
+      } finally {
+        // Restore original implementation
+        CesiumTerrainProvider.fromUrl = originalFromUrl;
+      }
     });
   });
 });
