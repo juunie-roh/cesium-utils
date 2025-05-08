@@ -98,6 +98,7 @@
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-unused-imports": "^4.1.4",
     "husky": "^9.1.7",
+    "jsdom": "^26.1.0",
     "rimraf": "^6.0.1",
     "tsup": "^8.4.0",
     "typedoc": "^0.28.4",
