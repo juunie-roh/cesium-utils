@@ -1,13 +1,22 @@
+import {
+  Camera as CCamera,
+  Clock as CClock,
+  ImageryLayerCollection as CImageryLayerCollection,
+  Scene as CScene,
+  TerrainProvider as CTerrainProvider,
+  Viewer as CViewer,
+} from 'cesium';
 import { vi } from 'vitest';
 
 // Deep merge utility
-function deepMerge(to: any, from: any) {
+function merge(to: any, from?: any) {
+  if (!from) return to;
   Object.keys(from).forEach((key) => {
     if (key === '__proto__' || key === 'constructor') {
       return; // Skip prototype-polluting keys
     }
     if (from[key] instanceof Object && key in to) {
-      deepMerge(to[key], from[key]);
+      merge(to[key], from[key]);
     } else {
       to[key] = from[key];
     }
@@ -17,13 +26,20 @@ function deepMerge(to: any, from: any) {
 }
 
 // Helper to create a cloneable object with a clone method
-const createCloneable = (value: any) => ({
-  clone: vi.fn().mockReturnValue(value),
-});
+function createCloneable<T>(value: T) {
+  return {
+    clone: vi.fn().mockReturnValue(value),
+  };
+}
+
+// Helper for type assertion
+function createMock<T>(base: any, overrides?: Partial<T>): Partial<T> {
+  return merge(base, overrides);
+}
 
 // Create a mock camera
-const createMockCamera = (overrides = {}) =>
-  deepMerge(
+const createMockCamera = (overrides?: Partial<CCamera>) =>
+  createMock(
     {
       positionWC: createCloneable('position-clone'),
       directionWC: createCloneable('direction-clone'),
@@ -31,13 +47,15 @@ const createMockCamera = (overrides = {}) =>
       position: {},
       direction: {},
       up: {},
+      computeViewRectangle: vi.fn(),
+      flyTo: vi.fn(),
     },
     overrides,
   );
 
 // Create a mock clock
-const createMockClock = (overrides = {}) =>
-  deepMerge(
+const createMockClock = (overrides?: Partial<CClock>) =>
+  createMock(
     {
       startTime: createCloneable('startTime'),
       stopTime: createCloneable('stopTime'),
@@ -51,8 +69,10 @@ const createMockClock = (overrides = {}) =>
   );
 
 // Create a mock imageryLayers collection
-const createMockImageryLayers = (overrides = {}) =>
-  deepMerge(
+const createMockImageryLayers = (
+  overrides?: Partial<CImageryLayerCollection>,
+) =>
+  createMock(
     {
       length: 1,
       get: vi.fn().mockReturnValue({
@@ -65,13 +85,8 @@ const createMockImageryLayers = (overrides = {}) =>
   );
 
 // Create a mock scene
-const createMockScene = (
-  overrides: {
-    globe?: any;
-    screenSpaceCameraController?: any;
-  } = {},
-) =>
-  deepMerge(
+const createMockScene = (overrides?: Partial<CScene>) =>
+  createMock(
     {
       requestRenderMode: true,
       globe: {
@@ -88,15 +103,8 @@ const createMockScene = (
   );
 
 // Create a complete mock Viewer
-const createMockViewer = (
-  overrides: {
-    camera?: any;
-    clock?: any;
-    scene?: any;
-    imageryLayers?: any;
-  } = {},
-) =>
-  deepMerge(
+const createMockViewer = (overrides?: Partial<CViewer>) =>
+  createMock(
     {
       baseLayerPicker: true,
       geocoder: true,
@@ -108,18 +116,18 @@ const createMockViewer = (
       fullscreenButton: true,
       infoBox: true,
 
-      camera: createMockCamera(overrides.camera),
-      clock: createMockClock(overrides.clock),
+      camera: createMockCamera(overrides?.camera),
+      clock: createMockClock(overrides?.clock),
       terrainProvider: { id: 'mockTerrainProvider' },
-      scene: createMockScene(overrides.scene),
-      imageryLayers: createMockImageryLayers(overrides.imageryLayers),
+      scene: createMockScene(overrides?.scene),
+      imageryLayers: createMockImageryLayers(overrides?.imageryLayers),
     },
     overrides,
   );
 
 // Mock terrain providers
-const createMockTerrainProvider = (overrides = {}) =>
-  deepMerge(
+const createMockTerrainProvider = (overrides?: CTerrainProvider) =>
+  createMock(
     {
       availability: {
         addAvailableTileRange: vi.fn(),
@@ -133,27 +141,47 @@ const createMockTerrainProvider = (overrides = {}) =>
     overrides,
   );
 
-// Mock Cesium classes
-const Viewer = vi.fn();
-const EntityCollection = vi.fn();
+const defined = vi.fn();
+
 const EllipsoidTerrainProvider = vi
   .fn()
   .mockImplementation(() => createMockTerrainProvider());
-const Rectangle = vi.fn().mockImplementation(() => ({}));
 const CesiumTerrainProvider = {
   fromUrl: vi.fn().mockResolvedValue(createMockTerrainProvider()),
 };
 
+const Camera = vi.fn().mockImplementation(() => createMockCamera());
+const Clock = vi.fn().mockImplementation(() => createMockClock());
+const Color = vi
+  .fn()
+  .mockImplementation(() => ({ withAlpha: vi.fn().mockReturnValue({}) }));
+const Entity = vi.fn().mockImplementation(() => ({}));
+const EntityCollection = vi
+  .fn()
+  .mockImplementation(() => ({ add: vi.fn(), remove: vi.fn() }));
+const HeightReference = vi.fn().mockImplementation(() => ({}));
+const Rectangle = vi.fn().mockImplementation(() => ({}));
+const TileCoordinatesImageryProvider = vi.fn().mockImplementation(() => ({}));
+const Viewer = vi.fn().mockImplementation(() => createMockViewer());
+
 export {
+  Camera,
   CesiumTerrainProvider,
+  Clock,
+  Color,
   createCloneable,
   createMockCamera,
   createMockClock,
   createMockImageryLayers,
   createMockScene,
+  createMockTerrainProvider,
   createMockViewer,
+  defined,
   EllipsoidTerrainProvider,
+  Entity,
   EntityCollection,
+  HeightReference,
   Rectangle,
+  TileCoordinatesImageryProvider,
   Viewer,
 };

@@ -2,13 +2,11 @@
 import { TerrainProvider } from 'cesium';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { syncCamera } from '@/utils/viewer/index.js';
-import { cloneViewer } from '@/viewer/clone.js';
-
-import { createMockViewer, Viewer } from '../../__mocks__/cesium.js';
+import { createMockViewer, Viewer } from '@/__mocks__/cesium.js';
+import { cloneViewer, syncCamera } from '@/viewer/index.js';
 
 // Mock dependencies
-vi.mock('@/utils/viewer/index.js', () => ({
+vi.mock('@/viewer/sync-camera.js', () => ({
   syncCamera: vi.fn(),
 }));
 
@@ -28,7 +26,7 @@ describe('cloneViewer', () => {
     mockSource = createMockViewer();
 
     // Create destination with needed properties
-    mockDestination = createMockViewer({
+    mockDestination = {
       camera: {},
       clock: {
         startTime: {},
@@ -45,7 +43,7 @@ describe('cloneViewer', () => {
         removeAll: vi.fn(),
         addImageryProvider: vi.fn(),
       },
-    });
+    };
 
     Viewer.mockReturnValue(mockDestination);
   });
