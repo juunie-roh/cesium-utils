@@ -1,6 +1,6 @@
 // src/__tests__/viewer/clone.test.ts
 import { TerrainProvider } from 'cesium';
-import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { syncCamera } from '@/utils/viewer/index.js';
 import { cloneViewer } from '@/viewer/clone.js';
@@ -47,7 +47,7 @@ describe('cloneViewer', () => {
       },
     });
 
-    (Viewer as Mock).mockReturnValue(mockDestination);
+    Viewer.mockReturnValue(mockDestination);
   });
 
   it('should create a new viewer with copied configuration', () => {
@@ -110,4 +110,6 @@ describe('cloneViewer', () => {
     // Verify the function executes successfully
     expect(result).toBeDefined();
   });
+
+  afterAll(() => vi.clearAllMocks());
 });
