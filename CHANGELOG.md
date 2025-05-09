@@ -1,5 +1,52 @@
 # @juun-roh/cesium-utils
 
+## 0.0.11
+
+### Patch Changes
+
+- 6857423: Update Mocks and Structure
+
+  refactor: Update test mocks and project structure
+
+  - Re-position `sync-camera` file.
+
+  - Update mocks for cesium.
+    Add helper function for type assertion.
+    Rename merge utility function.
+    Support more instances.
+
+- 42ebf00: Update Visualizer
+
+  refactor: Update terrain visualizer
+
+  - Rename private member `_hybridTerrain` as `_terrainProvider`.
+
+  - Add getters for private members `_colors` and `_terrainProvider`.
+
+  - Remove unused parameter from `ConstructorOptions`.
+
+- 8edc7a8: Minor Fixes on a test
+
+  test: Minor fix
+
+  - Fix type assertion of mocked `Viewer` element.
+
+  - Add mock cleanup stage.
+
+- 201aeb4: Update Test Environments
+
+  test: Update test environment
+
+  - Change test environment as "jsdom" from "node".
+    Add jsdom package.
+    Specify environment as jsdom in vite configuration.
+
+  - Create mock for cesium elements.
+    Exclude `__mocks__` directory from test coverage.
+    Create mock cesium.
+
+  - Conduct a new test case for `cloneViewer`.
+
 ## 0.0.10
 
 ### Patch Changes
