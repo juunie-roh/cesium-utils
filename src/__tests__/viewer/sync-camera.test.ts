@@ -1,7 +1,7 @@
 import { Viewer } from 'cesium';
 import { describe, expect, it, vi } from 'vitest';
 
-import { syncCamera } from '@/utils/viewer/camera/sync-camera.js';
+import { syncCamera } from '@/viewer/sync-camera.js';
 
 describe('syncCamera', () => {
   it('should copy camera properties from source to destination viewer', () => {

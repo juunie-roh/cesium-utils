@@ -5,8 +5,8 @@ import { TerrainArea } from './terrain/terrain-area.js';
 import TerrainAreaCollection from './terrain/terrain-area-collection.js';
 import { TerrainVisualizer } from './utils/terrain/index.js';
 import { isGetterOnly } from './utils/type-check.js';
-import { syncCamera } from './utils/viewer/index.js';
 import { cloneViewer } from './viewer/clone.js';
+import { syncCamera } from './viewer/index.js';
 
 // Classes
 export {
