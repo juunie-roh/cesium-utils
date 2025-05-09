@@ -20,7 +20,7 @@ import { HybridTerrainProvider } from '@/terrain/hybrid-terrain-provider.js';
 export class TerrainVisualizer {
   private _viewer: Viewer;
   private _collection: Collection<EntityCollection, Entity>;
-  private _hybridTerrain?: HybridTerrainProvider;
+  private _terrainProvider?: HybridTerrainProvider;
   private _visible: boolean = false;
   private _level: number = 15;
   private _tileCoordinatesLayer: ImageryLayer | undefined;
@@ -69,7 +69,7 @@ export class TerrainVisualizer {
    * @param terrainProvider The terrain provider to visualize.
    */
   setTerrainProvider(terrainProvider: HybridTerrainProvider): void {
-    this._hybridTerrain = terrainProvider;
+    this._terrainProvider = terrainProvider;
     this.update();
   }
 
@@ -96,12 +96,12 @@ export class TerrainVisualizer {
    * @param level The zoom level to visualize
    */
   show(level: number = 15): void {
-    if (!this._hybridTerrain) return;
+    if (!this._terrainProvider) return;
 
     this._collection.remove(TerrainVisualizer.tag.grid);
 
     this._level = level;
-    const tilingScheme = this._hybridTerrain.tilingScheme;
+    const tilingScheme = this._terrainProvider.tilingScheme;
 
     if (!this._tileCoordinatesLayer) {
       this._tileCoordinatesLayer =
@@ -116,8 +116,8 @@ export class TerrainVisualizer {
     // Fixed getTileColor function that properly returns a color
     const getTileColor = (x: number, y: number, level: number): Color => {
       // Use find instead of forEach to properly handle the return value
-      if (this._hybridTerrain) {
-        for (const area of this._hybridTerrain.terrainAreas) {
+      if (this._terrainProvider) {
+        for (const area of this._terrainProvider.terrainAreas) {
           if (area.contains(x, y, level)) {
             return area.isCustom
               ? this._colors.get('custom') || Color.RED
@@ -125,7 +125,7 @@ export class TerrainVisualizer {
           }
         }
 
-        if (this._hybridTerrain.getTileDataAvailable(x, y, level)) {
+        if (this._terrainProvider.getTileDataAvailable(x, y, level)) {
           return this._colors.get('default') || Color.BLUE;
         }
       }
@@ -292,6 +292,14 @@ export class TerrainVisualizer {
   get viewer(): Viewer {
     return this._viewer;
   }
+  /** The colors used in the visualizer */
+  get colors() {
+    return this._colors;
+  }
+  /** The hybrid terrain instance used in the visualizer */
+  get terrainProvider() {
+    return this._terrainProvider;
+  }
 }
 
 /**
@@ -303,8 +311,6 @@ export namespace TerrainVisualizer {
   export interface ConstructorOptions {
     /** Colors to use for different visualization elements */
     colors?: Record<string, Color>;
-    /** Whether to show boundaries initially. */
-    boundaries?: boolean;
     /** Whether to show tile grid initially. */
     tile?: boolean;
     /** Initial zoom level to use for visualizations. */
