@@ -50,6 +50,11 @@
       "types": "./dist/utils/index.d.ts",
       "import": "./dist/utils/index.js",
       "require": "./dist/utils/index.cjs"
+    },
+    "./viewer": {
+      "types": "./dist/viewer/index.d.ts",
+      "import": "./dist/viewer/index.js",
+      "require": "./dist/viewer/index.cjs"
     }
   },
   "scripts": {
