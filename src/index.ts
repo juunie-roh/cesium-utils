@@ -6,11 +6,13 @@ import TerrainAreaCollection from './terrain/terrain-area-collection.js';
 import { TerrainVisualizer } from './utils/terrain/index.js';
 import { isGetterOnly } from './utils/type-check.js';
 import { cloneViewer } from './viewer/clone.js';
+import { Highlight } from './viewer/highlight.js';
 import { syncCamera } from './viewer/index.js';
 
 // Classes
 export {
   Collection,
+  Highlight,
   HybridTerrainProvider,
   TerrainArea,
   TerrainAreaCollection,

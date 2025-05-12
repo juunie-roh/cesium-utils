@@ -88,6 +88,8 @@ const createMockImageryLayers = (
 const createMockScene = (overrides?: Partial<CScene>) =>
   createMock(
     {
+      primitives: vi.fn().mockImplementation(() => ({})),
+      groundPrimitives: vi.fn().mockImplementation(() => ({})),
       requestRenderMode: true,
       globe: {
         enableLighting: false,
@@ -118,9 +120,10 @@ const createMockViewer = (overrides?: Partial<CViewer>) =>
 
       camera: createMockCamera(overrides?.camera),
       clock: createMockClock(overrides?.clock),
+      entities: vi.fn().mockImplementation(() => ({})),
+      imageryLayers: createMockImageryLayers(overrides?.imageryLayers),
       terrainProvider: { id: 'mockTerrainProvider' },
       scene: createMockScene(overrides?.scene),
-      imageryLayers: createMockImageryLayers(overrides?.imageryLayers),
     },
     overrides,
   );
