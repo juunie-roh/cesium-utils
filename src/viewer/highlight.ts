@@ -61,6 +61,7 @@ class Highlight {
    * @private
    */
   private _entities: Collection<EntityCollection, Entity>;
+  private _cache = new Map<string, Entity>();
 
   /**
    * Creates a new `Highlight` instance.
@@ -94,7 +95,7 @@ class Highlight {
     const container = viewer.container;
     const instance = Highlight.instances.get(container);
     if (instance) {
-      instance.clearAll();
+      instance.removeAll();
       Highlight.instances.delete(container);
     }
   }
@@ -117,21 +118,19 @@ class Highlight {
 
     if (picked instanceof Entity) {
       if (this._activeHighlights.has(picked)) return picked;
-      highlight = this._highlightEntity(picked, color);
+      highlight = this._createEntity(picked, color, outline);
     } else if (picked.id instanceof Entity) {
       if (this._activeHighlights.has(picked.id)) return picked.id;
-      highlight = this._highlightEntity(picked.id, color);
+      highlight = this._createEntity(picked.id, color, outline);
     } else if (picked.primitive instanceof GroundPrimitive) {
       if (this._activeHighlights.has(picked.primitive)) return picked.primitive;
-      highlight = this._highlightGroundPrimitive(
-        picked.primitive,
-        color,
-        outline,
-      );
+      highlight = this._createEntity(picked.primitive, color, outline);
     }
 
     if (highlight) {
+      this._entities.add(highlight);
       this._activeHighlights.add(highlight);
+      if (!highlight.isShowing) highlight.show = true;
     }
 
     return highlight;
@@ -141,7 +140,7 @@ class Highlight {
    * Clears a specific highlight.
    * @param highlight The highlight object to clear
    */
-  clear(highlight: Entity): void {
+  remove(highlight: Entity): void {
     this._entities.remove(highlight);
     this._activeHighlights.delete(highlight);
   }
@@ -149,11 +148,223 @@ class Highlight {
   /**
    * Clears all highlights.
    */
-  clearAll(): void {
+  removeAll(): void {
     this._entities.remove('Highlights');
     this._activeHighlights.clear();
   }
 
+  /**
+   * Gets a unique identifier for a geometry instance.
+   * @private
+   * @param instance The geometry instance
+   * @returns A unique string identifier
+   */
+  private _getGeometryId(instance: GeometryInstance): string | undefined {
+    if (instance.id) {
+      return `geometry-${instance.id}`;
+    }
+
+    // Create a hash from position attributes
+    if (instance.geometry?.attributes?.position) {
+      const positions = instance.geometry.attributes.position.values;
+
+      let hash = '';
+
+      // Use the first 3 points (9 values) and last 3 points
+      const sampleSize = Math.min(9, positions.length / 4);
+
+      // Sample beginning
+      for (let i = 0; i < sampleSize; i++) {
+        hash += Math.round(positions[i]) + '-';
+      }
+
+      // Sample end
+      if (positions.length > sampleSize * 2) {
+        for (let i = positions.length - sampleSize; i < positions.length; i++) {
+          hash += Math.round(positions[i]);
+        }
+      }
+
+      return `geometry-hash-${hash}`;
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Highlights a Ground Primitive by creating a ground-clamped Entity.
+   * @private
+   * @param from The GroundPrimitive object to create from
+   * @param color The color to use for the highlight
+   * @param outline Whether to create an outline (polyline) instead of a filled polygon
+   * @returns The created Entity
+   */
+  private _createEntity(
+    from: GroundPrimitive,
+    color: Color,
+    outline: boolean,
+  ): Entity | undefined;
+  /**
+   * Highlights an Entity.
+   * @private
+   * @param from The Entity to highlight
+   * @param color The color to use for the highlight
+   * @returns The created Entity
+   */
+  private _createEntity(
+    from: Entity,
+    color: Color,
+    outline: boolean,
+  ): Entity | undefined;
+  private _createEntity(
+    from: GroundPrimitive | Entity,
+    color: Color,
+    outline: boolean = false,
+  ): Entity | undefined {
+    try {
+      if (from instanceof GroundPrimitive) {
+        const instances = from.geometryInstances;
+        const instance: GeometryInstance = Array.isArray(instances)
+          ? instances[0]
+          : instances;
+
+        if (!instance || !instance.geometry.attributes.position)
+          return undefined;
+
+        const geometryId = this._getGeometryId(instance);
+
+        // Extract positions from geometry
+        const positionValues = instance.geometry.attributes.position.values;
+        const positions: Cartesian3[] = [];
+
+        // Position values are stored as a flat array of x,y,z components
+        for (let i = 0; i < positionValues.length; i += 3) {
+          positions.push(
+            new Cartesian3(
+              positionValues[i],
+              positionValues[i + 1],
+              positionValues[i + 2],
+            ),
+          );
+        }
+
+        // Create entity options
+        const options: Entity.ConstructorOptions = {
+          id: geometryId ? `highlight-${geometryId}` : undefined,
+        };
+
+        if (outline) {
+          // Create an outline (polyline) highlight
+          options.polyline = {
+            positions: positions,
+            width: 2,
+            material: color,
+            clampToGround: true,
+          };
+        } else {
+          // Create a filled polygon highlight
+          options.polygon = {
+            hierarchy: new PolygonHierarchy(positions),
+            material: color,
+            classificationType: ClassificationType.BOTH,
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+          };
+        }
+
+        return new Entity(options);
+      } else {
+        // Create properties for the highlight entity
+        const options: Entity.ConstructorOptions = {
+          id: `highlight-${from.id}`,
+        };
+
+        // Copy appropriate geometry from the original entity
+        if (from.polygon) {
+          if (outline) {
+            options.polyline = {
+              positions: from.polygon.hierarchy?.getValue().positions,
+              material: color,
+              width: 2,
+              clampToGround:
+                from.polygon.heightReference?.getValue() ===
+                HeightReference.CLAMP_TO_GROUND,
+            };
+          } else {
+            options.polygon = {
+              hierarchy: from.polygon.hierarchy?.getValue(),
+              material: color,
+              classificationType: ClassificationType.BOTH,
+            };
+          }
+        } else if (from.polyline) {
+          // polyline doesn't support the outline option.
+          options.polyline = {
+            positions: from.polyline.positions,
+            width: (from.polyline.width?.getValue() || 2) + 2,
+            material: color,
+            clampToGround: from.polyline.clampToGround,
+          };
+        } else if (from.rectangle) {
+          if (outline) {
+            const rectangleCoords = from.rectangle.coordinates?.getValue();
+            if (rectangleCoords) {
+              // Convert rectangle to corner positions
+              const cornerPositions = [
+                Cartesian3.fromRadians(
+                  rectangleCoords.west,
+                  rectangleCoords.north,
+                ),
+                Cartesian3.fromRadians(
+                  rectangleCoords.east,
+                  rectangleCoords.north,
+                ),
+                Cartesian3.fromRadians(
+                  rectangleCoords.east,
+                  rectangleCoords.south,
+                ),
+                Cartesian3.fromRadians(
+                  rectangleCoords.west,
+                  rectangleCoords.south,
+                ),
+                Cartesian3.fromRadians(
+                  rectangleCoords.west,
+                  rectangleCoords.north,
+                ), // Close the loop
+              ];
+
+              options.polyline = {
+                positions: cornerPositions,
+                material: color,
+                width: 2,
+                clampToGround:
+                  from.rectangle.heightReference?.getValue() ===
+                  HeightReference.CLAMP_TO_GROUND,
+              };
+            }
+          } else {
+            options.rectangle = from.rectangle.clone();
+            options.rectangle.material = color;
+          }
+        } else {
+          return undefined;
+        }
+
+        return new Entity(options);
+      }
+    } catch (error) {
+      console.error('Failed to create highlight Entity:', error);
+      return undefined;
+    }
+  }
+
+  /** Gets all active highlights */
+  get activeHighlights(): readonly Entity[] {
+    return Array.from(this._activeHighlights);
+  }
+  /** Gets the default highlight color. */
+  get defaultColor(): Color {
+    return this._defaultColor;
+  }
   /**
    * Sets the default highlight color.
    * @param color The new default color for highlights
@@ -161,135 +372,9 @@ class Highlight {
   set defaultColor(color: Color) {
     this._defaultColor = color;
   }
-  /** Gets the default highlight color. */
-  get defaultColor(): Color {
-    return this._defaultColor;
-  }
-
-  /**
-   * Highlights a Ground Primitive by creating a ground-clamped Entity.
-   * @private
-   * @param primitive The GroundPrimitive object to highlight
-   * @param color The color to use for the highlight
-   * @param outline Whether to create an outline (polyline) instead of a filled polygon
-   * @returns The created Entity
-   */
-  private _highlightGroundPrimitive(
-    primitive: GroundPrimitive,
-    color: Color,
-    outline: boolean = false,
-  ): Entity | undefined {
-    try {
-      const instances = primitive.geometryInstances;
-      const instance: GeometryInstance = Array.isArray(instances)
-        ? instances[0]
-        : instances;
-
-      if (!instance || !instance.geometry.attributes.position) return undefined;
-
-      // Extract positions from geometry
-      const positionValues = instance.geometry.attributes.position.values;
-      const positions: Cartesian3[] = [];
-
-      // Position values are stored as a flat array of x,y,z components
-      for (let i = 0; i < positionValues.length; i += 3) {
-        positions.push(
-          new Cartesian3(
-            positionValues[i],
-            positionValues[i + 1],
-            positionValues[i + 2],
-          ),
-        );
-      }
-
-      // Create entity options
-      const options: Entity.ConstructorOptions = {
-        id: `highlight-${instance.id || 'groundPrimitive'}`,
-      };
-
-      if (outline) {
-        // Create an outline (polyline) highlight
-        options.polyline = {
-          positions: positions,
-          width: 2,
-          material: color,
-          clampToGround: true,
-        };
-      } else {
-        // Create a filled polygon highlight
-        options.polygon = {
-          hierarchy: new PolygonHierarchy(positions),
-          material: color,
-          classificationType: ClassificationType.BOTH,
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-        };
-      }
-
-      const highlightEntity = new Entity(options);
-
-      // Add to collection
-      this._entities.add(highlightEntity);
-      return highlightEntity;
-    } catch (error) {
-      console.error('Failed to highlight Ground Primitive:', error);
-      return undefined;
-    }
-  }
-
-  /**
-   * Highlights an Entity.
-   * @private
-   * @param entity The Entity to highlight
-   * @param color The color to use for the highlight
-   * @returns The created Entity
-   */
-  private _highlightEntity(entity: Entity, color: Color): Entity | undefined {
-    try {
-      // Create properties for the highlight entity
-      const options: Entity.ConstructorOptions = {
-        id: `highlight-${entity.id}`,
-      };
-
-      // Copy appropriate geometry from the original entity
-      if (entity.polygon) {
-        options.polygon = {
-          hierarchy: entity.polygon.hierarchy?.getValue(),
-          material: color,
-          classificationType: ClassificationType.BOTH,
-        };
-      } else if (entity.polyline) {
-        options.polyline = {
-          positions: entity.polyline.positions?.getValue(),
-          width: (entity.polyline.width?.getValue() || 2) + 2,
-          material: color,
-          clampToGround: true,
-        };
-      } else if (entity.rectangle) {
-        options.rectangle = {
-          coordinates: entity.rectangle.coordinates?.getValue(),
-          material: color,
-        };
-      } else {
-        return undefined;
-      }
-
-      const highlightEntity = new Entity(options);
-      this._entities.add(highlightEntity);
-      return highlightEntity;
-    } catch (error) {
-      console.error('Failed to highlight Entity:', error);
-      return undefined;
-    }
-  }
-
   /** Gets a collection for `Entity` used to highlight. */
   get entities(): Collection<EntityCollection, Entity> {
     return this._entities;
-  }
-
-  /** Gets all active highlights */
-  get activeHighlights(): Set<Entity> {
-    return this._activeHighlights;
   }
 }
 
