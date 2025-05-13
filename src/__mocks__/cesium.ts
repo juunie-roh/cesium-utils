@@ -118,6 +118,7 @@ const createMockViewer = (overrides?: Partial<CViewer>) =>
       fullscreenButton: true,
       infoBox: true,
 
+      container: document.createElement('div'),
       camera: createMockCamera(overrides?.camera),
       clock: createMockClock(overrides?.clock),
       entities: vi.fn().mockImplementation(() => ({})),

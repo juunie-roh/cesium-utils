@@ -21,7 +21,6 @@ describe('Highlight', () => {
     it('should create new instance from a single viewer only once', () => {
       expect(highlight).toBeDefined();
       expect(highlight.defaultColor).toEqual(Color.YELLOW.withAlpha(0.5));
-      expect(highlight.viewer).toEqual(viewer);
 
       expect(Highlight.getInstance(viewer)).toEqual(highlight);
     });
@@ -39,17 +38,17 @@ describe('Highlight', () => {
       const highlight = Highlight.getInstance(viewer);
       const clearAllSpy = vi.spyOn(highlight, 'clearAll');
       const instancesMap = Highlight['instances'];
-      expect(instancesMap.has(viewer)).toBe(true);
-      expect(instancesMap.get(viewer)).toBe(highlight);
+      expect(instancesMap.has(viewer.container)).toBe(true);
+      expect(instancesMap.get(viewer.container)).toBe(highlight);
 
       Highlight.releaseInstance(viewer);
 
       expect(clearAllSpy).toHaveBeenCalledTimes(1);
-      expect(instancesMap.has(viewer)).toBe(false);
+      expect(instancesMap.has(viewer.container)).toBe(false);
 
       const newHighlight = Highlight.getInstance(viewer);
       expect(newHighlight).not.toBe(highlight);
-      expect(instancesMap.get(viewer)).toBe(newHighlight);
+      expect(instancesMap.get(viewer.container)).toBe(newHighlight);
     });
 
     it('should handle releasing non-existent instances', () => {
@@ -87,6 +86,7 @@ describe('Highlight', () => {
       expect(highlight['_highlightGroundPrimitive']).toBeCalledWith(
         objectWithPrimitive.primitive,
         color,
+        false,
       );
     });
 
