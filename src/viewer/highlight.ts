@@ -7,8 +7,8 @@ import {
   EntityCollection,
   GeometryInstance,
   GroundPrimitive,
-  PerInstanceColorAppearance,
-  PrimitiveCollection,
+  HeightReference,
+  PolygonHierarchy,
   Viewer,
 } from 'cesium';
 
@@ -16,8 +16,7 @@ import Collection from '@/collection/collection.js';
 
 /**
  * @class
- * Multiton class for managing highlighted features in a Cesium scene.
- * Maintains separate collections for different types of highlighted objects.
+ * Multiton class for managing highlighted features in a Cesium scene using Entity Collection.
  *
  * @example
  * ```
@@ -42,12 +41,26 @@ import Collection from '@/collection/collection.js';
  * ```
  */
 class Highlight {
-  private static instances = new Map<Viewer, Highlight>();
-  private _activeHighlights: Set<Entity | GroundPrimitive> = new Set();
+  /**
+   * A map for viewer identification.
+   * @private @static
+   */
+  private static instances = new Map<Element, Highlight>();
+  /**
+   * A set of highlighted entities.
+   * @private
+   */
+  private _activeHighlights: Set<Entity> = new Set();
+  /**
+   * The default highlight color.
+   * @private
+   */
   private _defaultColor: Color = Color.YELLOW.withAlpha(0.5);
-  private _viewer: Viewer;
+  /**
+   * A collection for handling highlight entities internally.
+   * @private
+   */
   private _entities: Collection<EntityCollection, Entity>;
-  private _groundPrimitives: Collection<PrimitiveCollection, GroundPrimitive>;
 
   /**
    * Creates a new `Highlight` instance.
@@ -55,14 +68,9 @@ class Highlight {
    * @param viewer A viewer for the highlight collections to be derived from.
    */
   private constructor(viewer: Viewer) {
-    this._viewer = viewer;
     this._entities = new Collection({
       collection: viewer.entities,
-      tag: 'Highlight',
-    });
-    this._groundPrimitives = new Collection({
-      collection: viewer.scene.groundPrimitives,
-      tag: 'Highlight',
+      tag: 'Highlights',
     });
   }
 
@@ -71,22 +79,23 @@ class Highlight {
    * @param viewer The viewer to get or create a new instance from.
    */
   static getInstance(viewer: Viewer): Highlight {
-    if (!Highlight.instances.has(viewer)) {
-      Highlight.instances.set(viewer, new Highlight(viewer));
+    const container = viewer.container;
+    if (!Highlight.instances.has(container)) {
+      Highlight.instances.set(container, new Highlight(viewer));
     }
-    return Highlight.instances.get(viewer)!;
+    return Highlight.instances.get(container)!;
   }
 
   /**
    * Releases the highlight instance associated with a viewer.
-   * Call this when the viewer is being destroyed.
    * @param viewer The viewer whose highlight instance should be released.
    */
   static releaseInstance(viewer: Viewer): void {
-    const instance = Highlight.instances.get(viewer);
+    const container = viewer.container;
+    const instance = Highlight.instances.get(container);
     if (instance) {
-      instance.clearAll(); // Clean up any remaining highlights
-      Highlight.instances.delete(viewer);
+      instance.clearAll();
+      Highlight.instances.delete(container);
     }
   }
 
@@ -94,24 +103,31 @@ class Highlight {
    * Highlights a picked object from the scene.
    * @param picked The object returned from `scene.pick()` or `drillPick()`
    * @param color Optional color for the highlight. Defaults to yellow with 0.5 alpha.
+   * @param outline Optional style for the highlight. Defaults to `false`.
    * @returns The newly created highlight object
    */
   add(
     picked: any,
     color: Color = this._defaultColor,
-  ): Entity | GroundPrimitive | undefined {
+    outline: boolean = false,
+  ): Entity | undefined {
     if (!defined(picked)) return undefined;
 
-    let highlight: Entity | GroundPrimitive | undefined;
+    let highlight: Entity | undefined;
 
-    if (this._activeHighlights.has(picked ?? picked.id ?? picked.primitive))
-      return;
     if (picked instanceof Entity) {
+      if (this._activeHighlights.has(picked)) return picked;
       highlight = this._highlightEntity(picked, color);
     } else if (picked.id instanceof Entity) {
+      if (this._activeHighlights.has(picked.id)) return picked.id;
       highlight = this._highlightEntity(picked.id, color);
     } else if (picked.primitive instanceof GroundPrimitive) {
-      highlight = this._highlightGroundPrimitive(picked.primitive, color);
+      if (this._activeHighlights.has(picked.primitive)) return picked.primitive;
+      highlight = this._highlightGroundPrimitive(
+        picked.primitive,
+        color,
+        outline,
+      );
     }
 
     if (highlight) {
@@ -125,12 +141,8 @@ class Highlight {
    * Clears a specific highlight.
    * @param highlight The highlight object to clear
    */
-  clear(highlight: Entity | GroundPrimitive): void {
-    if (highlight instanceof Entity) {
-      this._entities.remove(highlight);
-    } else {
-      this._groundPrimitives.remove(highlight);
-    }
+  clear(highlight: Entity): void {
+    this._entities.remove(highlight);
     this._activeHighlights.delete(highlight);
   }
 
@@ -138,8 +150,7 @@ class Highlight {
    * Clears all highlights.
    */
   clearAll(): void {
-    this._entities.remove('Highlight');
-    this._groundPrimitives.remove('Highlight');
+    this._entities.remove('Highlights');
     this._activeHighlights.clear();
   }
 
@@ -156,44 +167,69 @@ class Highlight {
   }
 
   /**
-   * Highlights a Ground Primitive.
+   * Highlights a Ground Primitive by creating a ground-clamped Entity.
    * @private
-   * @param object The object containing a Ground Primitive
+   * @param primitive The GroundPrimitive object to highlight
    * @param color The color to use for the highlight
-   * @returns The created GroundPrimitive
-   *
-   * @todo Add `outline` option that creates polyline entity based on positions from the geometry.
+   * @param outline Whether to create an outline (polyline) instead of a filled polygon
+   * @returns The created Entity
    */
   private _highlightGroundPrimitive(
     primitive: GroundPrimitive,
     color: Color,
-  ): GroundPrimitive | undefined {
+    outline: boolean = false,
+  ): Entity | undefined {
     try {
       const instances = primitive.geometryInstances;
       const instance: GeometryInstance = Array.isArray(instances)
         ? instances[0]
         : instances;
 
-      if (!instance) return undefined;
+      if (!instance || !instance.geometry.attributes.position) return undefined;
 
-      // Create highlight primitive
-      const highlightPrimitive = new GroundPrimitive({
-        geometryInstances: new GeometryInstance({
-          geometry: instance.geometry,
-          attributes: {
-            color: Color.fromCssColorString(color.toCssColorString()),
-          },
-        }),
-        appearance: new PerInstanceColorAppearance({
-          flat: true,
-          translucent: true,
-        }),
-        classificationType: ClassificationType.BOTH,
-      });
+      // Extract positions from geometry
+      const positionValues = instance.geometry.attributes.position.values;
+      const positions: Cartesian3[] = [];
+
+      // Position values are stored as a flat array of x,y,z components
+      for (let i = 0; i < positionValues.length; i += 3) {
+        positions.push(
+          new Cartesian3(
+            positionValues[i],
+            positionValues[i + 1],
+            positionValues[i + 2],
+          ),
+        );
+      }
+
+      // Create entity options
+      const options: Entity.ConstructorOptions = {
+        id: `highlight-${instance.id || 'groundPrimitive'}`,
+      };
+
+      if (outline) {
+        // Create an outline (polyline) highlight
+        options.polyline = {
+          positions: positions,
+          width: 2,
+          material: color,
+          clampToGround: true,
+        };
+      } else {
+        // Create a filled polygon highlight
+        options.polygon = {
+          hierarchy: new PolygonHierarchy(positions),
+          material: color,
+          classificationType: ClassificationType.BOTH,
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+        };
+      }
+
+      const highlightEntity = new Entity(options);
 
       // Add to collection
-      this._groundPrimitives.add(highlightPrimitive);
-      return highlightPrimitive;
+      this._entities.add(highlightEntity);
+      return highlightEntity;
     } catch (error) {
       console.error('Failed to highlight Ground Primitive:', error);
       return undefined;
@@ -210,39 +246,34 @@ class Highlight {
   private _highlightEntity(entity: Entity, color: Color): Entity | undefined {
     try {
       // Create properties for the highlight entity
-      const highlightOptions: Entity.ConstructorOptions = {
+      const options: Entity.ConstructorOptions = {
         id: `highlight-${entity.id}`,
       };
 
       // Copy appropriate geometry from the original entity
       if (entity.polygon) {
-        highlightOptions.polygon = {
+        options.polygon = {
           hierarchy: entity.polygon.hierarchy?.getValue(),
           material: color,
           classificationType: ClassificationType.BOTH,
         };
       } else if (entity.polyline) {
-        highlightOptions.polyline = {
+        options.polyline = {
           positions: entity.polyline.positions?.getValue(),
           width: (entity.polyline.width?.getValue() || 2) + 2,
           material: color,
           clampToGround: true,
         };
       } else if (entity.rectangle) {
-        highlightOptions.rectangle = {
+        options.rectangle = {
           coordinates: entity.rectangle.coordinates?.getValue(),
           material: color,
         };
       } else {
-        // Default highlighting for other entity types
-        highlightOptions.ellipsoid = {
-          radii: new Cartesian3(20, 20, 20),
-          material: color,
-        };
-        highlightOptions.position = entity.position?.getValue();
+        return undefined;
       }
 
-      const highlightEntity = new Entity(highlightOptions);
+      const highlightEntity = new Entity(options);
       this._entities.add(highlightEntity);
       return highlightEntity;
     } catch (error) {
@@ -251,23 +282,13 @@ class Highlight {
     }
   }
 
-  /** Gets a viewer which this class derived from. */
-  get viewer(): Viewer {
-    return this._viewer;
-  }
-
   /** Gets a collection for `Entity` used to highlight. */
   get entities(): Collection<EntityCollection, Entity> {
     return this._entities;
   }
 
-  /** Gets a collection for `GroundPrimitive` used to highlight. */
-  get groundPrimitives(): Collection<PrimitiveCollection, GroundPrimitive> {
-    return this._groundPrimitives;
-  }
-
   /** Gets all active highlights */
-  get activeHighlights(): Set<Entity | GroundPrimitive> {
+  get activeHighlights(): Set<Entity> {
     return this._activeHighlights;
   }
 }
