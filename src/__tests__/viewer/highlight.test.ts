@@ -36,7 +36,7 @@ describe('Highlight', () => {
     it('should release the instance associated with a viewer', () => {
       const viewer = createMockViewer() as unknown as Viewer;
       const highlight = Highlight.getInstance(viewer);
-      const clearAllSpy = vi.spyOn(highlight, 'clearAll');
+      const clearAllSpy = vi.spyOn(highlight, 'removeAll');
       const instancesMap = Highlight['instances'];
       expect(instancesMap.has(viewer.container)).toBe(true);
       expect(instancesMap.get(viewer.container)).toBe(highlight);
@@ -66,24 +66,24 @@ describe('Highlight', () => {
     });
 
     it('should handle different types of picked objects', () => {
-      highlight['_highlightEntity'] = vi.fn();
-      highlight['_highlightGroundPrimitive'] = vi.fn();
+      highlight['_createEntity'] = vi.fn();
       const entity = new Entity();
       const objectWithId = { id: new Entity() };
       const objectWithPrimitive = { primitive: new GroundPrimitive() };
       const color = Color.RED;
 
       highlight.add(entity, color);
-      expect(highlight['_highlightEntity']).toBeCalledWith(entity, color);
+      expect(highlight['_createEntity']).toBeCalledWith(entity, color, false);
 
       highlight.add(objectWithId, color);
-      expect(highlight['_highlightEntity']).toBeCalledWith(
+      expect(highlight['_createEntity']).toBeCalledWith(
         objectWithId.id,
         color,
+        false,
       );
 
       highlight.add(objectWithPrimitive, color);
-      expect(highlight['_highlightGroundPrimitive']).toBeCalledWith(
+      expect(highlight['_createEntity']).toBeCalledWith(
         objectWithPrimitive.primitive,
         color,
         false,
@@ -92,13 +92,13 @@ describe('Highlight', () => {
 
     it('should return and add result to active highlights set only when successful', () => {
       const e = new Entity();
-      highlight['_highlightEntity'] = vi.fn().mockReturnValue(e);
+      highlight['_createEntity'] = vi.fn().mockReturnValue(e);
       expect(highlight.add(new Entity())).toBe(e);
-      expect(highlight.activeHighlights.size).toBe(1);
+      expect(highlight.activeHighlights.length).toBe(1);
 
-      highlight['_highlightEntity'] = vi.fn().mockReturnValue(undefined);
+      highlight['_createEntity'] = vi.fn().mockReturnValue(undefined);
       expect(highlight.add(new Entity())).toBeUndefined();
-      expect(highlight.activeHighlights.size).toBe(1);
+      expect(highlight.activeHighlights.length).toBe(1);
     });
   });
 
