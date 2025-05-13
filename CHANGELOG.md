@@ -1,5 +1,55 @@
 # @juun-roh/cesium-utils
 
+## 0.0.12
+
+### Patch Changes
+
+- ce258dd: Refactor Methods
+
+  refactor: Update class methods
+
+  - Rename methods.
+    Replace `clear`, `clearAll` with `remove`, `removeAll.
+
+  - Consolidate methods.
+    Merge `_highlightGroundPrimitive` and `_highlightEntity` into a single overrided method `_createEntity`.
+
+  - Add `outline` styling option.
+    Support highlights with outline style.
+
+  - Assign identifiers to the highlight entities.
+    Fundamental tasks for caching strategy.
+
+- b24419b: Simplify Class
+
+  fix: Simplify class to use single type of collection
+
+  - Remove internal `Primitive` collection.
+    Replace highlight object to be type of `Entity`.
+    Replace `GroundPrimitive` instances logics with `Entity`.
+
+  - Replace viewer identifier.
+    Use DOM element, the container of viewer instance as an identifier of the viewer.
+
+  - Update viewer mock to have container property.
+
+  - Update test to match fixed class.
+
+- dc23c7c: Highlight Feature Update
+
+  feat: Add new highlight feature
+
+  - New `Highlight` class for highlighting objects.
+    A multiton class that supports multi-viewer situation.
+    Handles mainly the object returned from `scene.pick()` or `drillPick()`.
+
+  - Fix mocks for tests.
+    Extend viewer mock to have collections. (primitives, entities, groundPrimives)
+    Add a simple collection mock.
+
+  - New test conducted for `Highlight`.
+    In Progress.
+
 ## 0.0.11
 
 ### Patch Changes
