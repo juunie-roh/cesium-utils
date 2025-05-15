@@ -65,7 +65,6 @@
     "ci:publish": "pnpm build && pnpm publish --no-git-checks",
     "prebuild": "pnpm clean",
     "prepare": "husky",
-    "prepare-changeset": "node scripts/changeset-prepare.js",
     "prepublishOnly": "pnpm lint",
     "test": "vitest run",
     "test:watch": "vitest watch --coverage",
