@@ -1,6 +1,7 @@
 import {
   Camera as CCamera,
   Clock as CClock,
+  EntityCollection as CEntityCollection,
   ImageryLayerCollection as CImageryLayerCollection,
   Scene as CScene,
   TerrainProvider as CTerrainProvider,
@@ -84,6 +85,20 @@ const createMockImageryLayers = (
     overrides,
   );
 
+// Updated EntityCollection mock
+const createMockEntities = (overrides?: Partial<CEntityCollection>) =>
+  createMock(
+    {
+      add: vi.fn().mockImplementation((entity) => entity), // Return the entity being added
+      remove: vi.fn().mockReturnValue(true),
+      removeAll: vi.fn(),
+      contains: vi.fn().mockReturnValue(true),
+      getById: vi.fn(),
+      values: [],
+    },
+    overrides,
+  );
+
 // Create a mock scene
 const createMockScene = (overrides?: Partial<CScene>) =>
   createMock(
@@ -121,7 +136,7 @@ const createMockViewer = (overrides?: Partial<CViewer>) =>
       container: document.createElement('div'),
       camera: createMockCamera(overrides?.camera),
       clock: createMockClock(overrides?.clock),
-      entities: vi.fn().mockImplementation(() => ({})),
+      entities: createMockEntities(overrides?.entities),
       imageryLayers: createMockImageryLayers(overrides?.imageryLayers),
       terrainProvider: { id: 'mockTerrainProvider' },
       scene: createMockScene(overrides?.scene),
@@ -176,6 +191,7 @@ export {
   createCloneable,
   createMockCamera,
   createMockClock,
+  createMockEntities,
   createMockImageryLayers,
   createMockScene,
   createMockTerrainProvider,

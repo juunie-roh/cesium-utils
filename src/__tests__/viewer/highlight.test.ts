@@ -4,10 +4,6 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMockViewer } from '@/__mocks__/cesium.js';
 import { Highlight } from '@/viewer/highlight.js';
 
-vi.mock('../../collection/collection.ts', () => {
-  return import('../../__mocks__/collection.js');
-});
-
 describe('Highlight', () => {
   let viewer: Viewer;
   let highlight: Highlight;
@@ -36,14 +32,14 @@ describe('Highlight', () => {
     it('should release the instance associated with a viewer', () => {
       const viewer = createMockViewer() as unknown as Viewer;
       const highlight = Highlight.getInstance(viewer);
-      const clearAllSpy = vi.spyOn(highlight, 'removeAll');
+      const hideSpy = vi.spyOn(highlight, 'hide');
       const instancesMap = Highlight['instances'];
       expect(instancesMap.has(viewer.container)).toBe(true);
       expect(instancesMap.get(viewer.container)).toBe(highlight);
 
       Highlight.releaseInstance(viewer);
 
-      expect(clearAllSpy).toHaveBeenCalledTimes(1);
+      expect(hideSpy).toHaveBeenCalledTimes(1);
       expect(instancesMap.has(viewer.container)).toBe(false);
 
       const newHighlight = Highlight.getInstance(viewer);
@@ -60,45 +56,74 @@ describe('Highlight', () => {
     });
   });
 
-  describe('add', () => {
+  describe('show', () => {
     it('should return undefined if there is no picked object', () => {
-      expect(highlight.add(undefined)).toBe(undefined);
+      expect(highlight.show(undefined)).toBe(undefined);
     });
 
     it('should handle different types of picked objects', () => {
-      highlight['_createEntity'] = vi.fn();
+      highlight['_update'] = vi.fn();
       const entity = new Entity();
       const objectWithId = { id: new Entity() };
       const objectWithPrimitive = { primitive: new GroundPrimitive() };
       const color = Color.RED;
 
-      highlight.add(entity, color);
-      expect(highlight['_createEntity']).toBeCalledWith(entity, color, false);
+      highlight.show(entity, color);
+      expect(highlight['_update']).toBeCalledWith(entity, color, false);
 
-      highlight.add(objectWithId, color);
-      expect(highlight['_createEntity']).toBeCalledWith(
+      highlight.show(objectWithId, color);
+      expect(highlight['_update']).toBeCalledWith(
         objectWithId.id,
         color,
         false,
       );
 
-      highlight.add(objectWithPrimitive, color);
-      expect(highlight['_createEntity']).toBeCalledWith(
+      highlight.show(objectWithPrimitive, color);
+      expect(highlight['_update']).toBeCalledWith(
         objectWithPrimitive.primitive,
         color,
         false,
       );
     });
 
-    it('should return and add result to active highlights set only when successful', () => {
-      const e = new Entity();
-      highlight['_createEntity'] = vi.fn().mockReturnValue(e);
-      expect(highlight.add(new Entity())).toBe(e);
-      expect(highlight.activeHighlights.length).toBe(1);
+    it('should return the highlight entity when successful', () => {
+      // Mock the _update method to do nothing
+      highlight['_update'] = vi.fn();
+      const mockEntity = new Entity();
+      highlight['_highlightEntity'] = mockEntity;
 
-      highlight['_createEntity'] = vi.fn().mockReturnValue(undefined);
-      expect(highlight.add(new Entity())).toBeUndefined();
-      expect(highlight.activeHighlights.length).toBe(1);
+      expect(highlight.show(new Entity())).toBe(mockEntity);
+      expect(mockEntity.show).toBe(true);
+    });
+
+    it('should return undefined when update fails', () => {
+      // Force an error in the _update method
+      highlight['_update'] = vi.fn().mockImplementation(() => {
+        throw new Error('Test error');
+      });
+
+      expect(highlight.show(new Entity())).toBeUndefined();
+    });
+  });
+
+  describe('hide', () => {
+    it('should hide the highlight entity', () => {
+      // Mock the highlight entity
+      const mockEntity = new Entity();
+      highlight['_highlightEntity'] = mockEntity;
+
+      highlight.hide();
+
+      expect(mockEntity.show).toBe(false);
+    });
+  });
+
+  describe('highlightEntity', () => {
+    it('should return the highlight entity', () => {
+      const mockEntity = new Entity();
+      highlight['_highlightEntity'] = mockEntity;
+
+      expect(highlight.highlightEntity).toBe(mockEntity);
     });
   });
 
