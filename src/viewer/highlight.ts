@@ -43,8 +43,8 @@ import {
 export class Highlight {
   private static instances = new Map<Element, Highlight>();
   private _defaultColor: Color = Color.YELLOW.withAlpha(0.5);
-  private _highlightEntity?: Entity;
-  private _viewerEntities: EntityCollection;
+  private _entity: Entity;
+  private _entities: EntityCollection;
 
   /**
    * Creates a new `Highlight` instance.
@@ -52,10 +52,10 @@ export class Highlight {
    * @param viewer A viewer to create highlight entity in
    */
   private constructor(viewer: Viewer) {
-    this._viewerEntities = viewer.entities;
+    this._entities = viewer.entities;
 
     // Create a single highlight entity that will be reused for all highlights
-    this._highlightEntity = this._viewerEntities.add(
+    this._entity = this._entities.add(
       new Entity({
         id: `highlight-entity-${Math.random().toString(36).substring(2)}`,
         show: false,
@@ -85,8 +85,8 @@ export class Highlight {
     if (instance) {
       instance.hide();
 
-      if (instance._highlightEntity) {
-        viewer.entities.remove(instance._highlightEntity);
+      if (instance._entity) {
+        viewer.entities.remove(instance._entity);
       }
 
       Highlight.instances.delete(container);
@@ -105,7 +105,7 @@ export class Highlight {
     color: Color = this._defaultColor,
     outline: boolean = false,
   ): Entity | undefined {
-    if (!defined(picked) || !this._highlightEntity) return undefined;
+    if (!defined(picked) || !this._entity) return undefined;
 
     // Clear any previous highlight geometries
     this._clearGeometries();
@@ -123,8 +123,8 @@ export class Highlight {
       }
 
       // Show the highlight entity
-      this._highlightEntity.show = true;
-      return this._highlightEntity;
+      this._entity.show = true;
+      return this._entity;
     } catch (error) {
       console.error('Failed to highlight object:', error);
       return undefined;
@@ -136,11 +136,9 @@ export class Highlight {
    * @private
    */
   private _clearGeometries(): void {
-    if (!this._highlightEntity) return;
-
-    this._highlightEntity.polygon = undefined;
-    this._highlightEntity.polyline = undefined;
-    this._highlightEntity.rectangle = undefined;
+    this._entity.polygon = undefined;
+    this._entity.polyline = undefined;
+    this._entity.rectangle = undefined;
   }
 
   /**
@@ -158,7 +156,6 @@ export class Highlight {
     color: Color,
     outline: boolean,
   ): void {
-    if (!this._highlightEntity) return;
     if (from instanceof Entity) {
       if (from.polygon) {
         if (outline) {
@@ -180,8 +177,8 @@ export class Highlight {
             }
 
             // Create a new polyline property
-            this._highlightEntity.polyline = new PolylineGraphics({
-              positions: positions,
+            this._entity.polyline = new PolylineGraphics({
+              positions,
               material: color,
               width: 2,
               clampToGround:
@@ -193,8 +190,8 @@ export class Highlight {
           // Create a new polygon property
           const hierarchy = from.polygon.hierarchy?.getValue();
           if (hierarchy) {
-            this._highlightEntity.polygon = new PolygonGraphics({
-              hierarchy: hierarchy,
+            this._entity.polygon = new PolygonGraphics({
+              hierarchy,
               material: color,
               heightReference: from.polygon.heightReference?.getValue(),
               classificationType:
@@ -207,9 +204,9 @@ export class Highlight {
         // Create a new polyline property
         const positions = from.polyline.positions?.getValue();
         if (positions) {
-          const originalWidth = from.polyline.width?.getValue() || 2;
-          this._highlightEntity.polyline = new PolylineGraphics({
-            positions: positions,
+          const originalWidth = from.polyline.width?.getValue();
+          this._entity.polyline = new PolylineGraphics({
+            positions,
             material: color,
             width: originalWidth + 2,
             clampToGround: from.polyline.clampToGround?.getValue(),
@@ -244,7 +241,7 @@ export class Highlight {
             ];
 
             // Create a new polyline property
-            this._highlightEntity.polyline = new PolylineGraphics({
+            this._entity.polyline = new PolylineGraphics({
               positions: cornerPositions,
               material: color,
               width: 2,
@@ -257,8 +254,8 @@ export class Highlight {
           // Create a new rectangle property
           const coordinates = from.rectangle.coordinates?.getValue();
           if (coordinates) {
-            this._highlightEntity.rectangle = new RectangleGraphics({
-              coordinates: coordinates,
+            this._entity.rectangle = new RectangleGraphics({
+              coordinates,
               material: color,
               heightReference: from.rectangle.heightReference?.getValue(),
             });
@@ -269,7 +266,7 @@ export class Highlight {
       const instances = from.geometryInstances;
       const instance = Array.isArray(instances) ? instances[0] : instances;
 
-      if (!instance || !instance.geometry.attributes.position) return;
+      if (!instance.geometry.attributes.position) return;
 
       // Extract positions from geometry
       const positionValues = instance.geometry.attributes.position.values;
@@ -288,15 +285,15 @@ export class Highlight {
 
       if (outline) {
         // Create a new polyline property
-        this._highlightEntity.polyline = new PolylineGraphics({
-          positions: positions,
+        this._entity.polyline = new PolylineGraphics({
+          positions,
           material: color,
           width: 2,
           clampToGround: true,
         });
       } else {
         // Create a new polygon property
-        this._highlightEntity.polygon = new PolygonGraphics({
+        this._entity.polygon = new PolygonGraphics({
           hierarchy: new PolygonHierarchy(positions),
           material: color,
           heightReference: HeightReference.CLAMP_TO_GROUND,
@@ -310,8 +307,8 @@ export class Highlight {
    * Clears the current highlight
    */
   hide(): void {
-    if (this._highlightEntity) {
-      this._highlightEntity.show = false;
+    if (this._entity) {
+      this._entity.show = false;
     }
   }
 
@@ -329,7 +326,7 @@ export class Highlight {
   }
 
   /** Gets the highlight entity */
-  get highlightEntity(): Entity | undefined {
-    return this._highlightEntity;
+  get entity(): Entity {
+    return this._entity;
   }
 }
