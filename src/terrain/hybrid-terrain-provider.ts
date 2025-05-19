@@ -18,17 +18,15 @@ import TerrainAreaCollection from './terrain-area-collection.js';
  *
  * @example
  * ``` typescript
+ * // Set up tile ranges
  * const tileRanges = new Map<number, TileRange>;
  * tileRanges.set(15, { start: { x: 55852, y: 9556 }, end: { x: 55871, y: 9575 } });
- * const hybridTerrain = await HybridTerrainProvider.create({
- *   terrainAreas: [
- *     {
- *       provider: 'custom-terrain-url',
- *       tileRanges,
- *     }
- *   ],
- *   terrainProvider: 'default-terrain-url',
- *   fallbackProvider: new EllipsoidTerrainProvider(),
+ * // Set up tile areas
+ * const area = new TerrainArea({ terrainProvider: provider, tileRanges });
+ *
+ * const hybridTerrain = new HybridTerrainProvider({
+ *   terrainAreas: [area],
+ *   terrainProvider: new EllipsoidTerrainProvider(),
  * });
  *
  * viewer.terrainProvider = hybridTerrain;
