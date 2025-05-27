@@ -1,5 +1,15 @@
 # @juun-roh/cesium-utils
 
+## 0.0.15
+
+### Patch Changes
+
+- 32e4fe8: Document
+
+  docs: Update usage example
+
+  - Specify the collection class example along with the intention of it's development
+
 ## 0.0.14
 
 ### Patch Changes
