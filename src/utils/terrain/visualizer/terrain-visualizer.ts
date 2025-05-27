@@ -6,6 +6,7 @@ import {
   ImageryLayer,
   Rectangle,
   TileCoordinatesImageryProvider,
+  TilingScheme,
   Viewer,
 } from 'cesium';
 import { TerrainArea } from 'src/terrain/terrain-area.js';
@@ -95,125 +96,160 @@ export class TerrainVisualizer {
    * Shows a grid of tiles at the specified level.
    * @param level The zoom level to visualize
    */
+  // Suggested refactor for TerrainVisualizer.show() method
   show(level: number = 15): void {
     if (!this._terrainProvider) return;
 
     this._collection.remove(TerrainVisualizer.tag.grid);
-
     this._level = level;
-    const tilingScheme = this._terrainProvider.tilingScheme;
 
-    if (!this._tileCoordinatesLayer) {
-      this._tileCoordinatesLayer =
-        this._viewer.imageryLayers.addImageryProvider(
-          new TileCoordinatesImageryProvider({
-            tilingScheme,
-            color: Color.YELLOW,
-          }),
-        );
-    }
-
-    // Fixed getTileColor function that properly returns a color
-    const getTileColor = (x: number, y: number, level: number): Color => {
-      // Use find instead of forEach to properly handle the return value
-      if (this._terrainProvider) {
-        for (const area of this._terrainProvider.terrainAreas) {
-          if (area.contains(x, y, level)) {
-            return area.isCustom
-              ? this._colors.get('custom') || Color.RED
-              : this._colors.get('default') || Color.BLUE;
-          }
-        }
-
-        if (this._terrainProvider.getTileDataAvailable(x, y, level)) {
-          return this._colors.get('default') || Color.BLUE;
-        }
-      }
-
-      return this._colors.get('fallback') || Color.TRANSPARENT;
-    };
+    // Add tile coordinates layer if needed
+    this._ensureTileCoordinatesLayer();
 
     const visibleRectangle = this._getVisibleRectangle();
-    if (!visibleRectangle) return;
-
-    function isValid(rectangle: Rectangle): boolean {
-      return (
-        rectangle &&
-        Number.isFinite(rectangle.west) &&
-        Number.isFinite(rectangle.south) &&
-        Number.isFinite(rectangle.east) &&
-        Number.isFinite(rectangle.north) &&
-        rectangle.west <= rectangle.east &&
-        rectangle.south <= rectangle.north
-      );
-    }
-
-    // Add safety checks to ensure rectangle is valid
-    if (!isValid(visibleRectangle)) {
+    if (!visibleRectangle || !this._isValidRectangle(visibleRectangle)) {
       console.warn('Invalid visible rectangle detected, skipping grid display');
       return;
     }
 
+    this._displayTileGrid(visibleRectangle, level);
+    this._visible = true;
+  }
+
+  private _ensureTileCoordinatesLayer(): void {
+    if (!this._tileCoordinatesLayer) {
+      this._tileCoordinatesLayer =
+        this._viewer.imageryLayers.addImageryProvider(
+          new TileCoordinatesImageryProvider({
+            tilingScheme: this._terrainProvider!.tilingScheme,
+            color: Color.YELLOW,
+          }),
+        );
+    }
+  }
+
+  private _isValidRectangle(rectangle: Rectangle): boolean {
+    return (
+      rectangle &&
+      Number.isFinite(rectangle.west) &&
+      Number.isFinite(rectangle.south) &&
+      Number.isFinite(rectangle.east) &&
+      Number.isFinite(rectangle.north) &&
+      rectangle.west <= rectangle.east &&
+      rectangle.south <= rectangle.north
+    );
+  }
+
+  private _displayTileGrid(visibleRectangle: Rectangle, level: number): void {
+    const tilingScheme = this._terrainProvider!.tilingScheme;
+
     try {
-      const start = tilingScheme.positionToTileXY(
-        Rectangle.northwest(visibleRectangle),
+      const tileBounds = this._calculateTileBounds(
+        visibleRectangle,
         level,
+        tilingScheme,
       );
-      const end = tilingScheme.positionToTileXY(
-        Rectangle.southeast(visibleRectangle),
-        level,
-      );
+      const tiles = this._generateVisibleTiles(tileBounds, level, tilingScheme);
 
-      if (!start || !end) return;
+      tiles.forEach((tile) => {
+        this._collection.add(tile.entity, TerrainVisualizer.tag.grid);
+      });
+    } catch (error) {
+      console.error('Error displaying tile grid:', error);
+    }
+  }
 
-      const maxTilesToShow = 100;
-      const xCount = Math.min(end.x - start.x + 1, maxTilesToShow);
-      const yCount = Math.min(end.y - start.y + 1, maxTilesToShow);
+  private _calculateTileBounds(
+    rectangle: Rectangle,
+    level: number,
+    tilingScheme: TilingScheme,
+  ): { start: any; end: any } {
+    const start = tilingScheme.positionToTileXY(
+      Rectangle.northwest(rectangle),
+      level,
+    );
+    const end = tilingScheme.positionToTileXY(
+      Rectangle.southeast(rectangle),
+      level,
+    );
 
-      // Add bounds checking to avoid invalid tile coordinates
-      for (let x = start.x; x <= start.x + xCount - 1; x++) {
-        for (let y = start.y; y <= start.y + yCount - 1; y++) {
-          // Fixed: Changed '+1' to '-1' to avoid potential issues
-          try {
-            const rect = tilingScheme.tileXYToRectangle(x, y, level);
+    if (!start || !end) {
+      throw new Error('Failed to calculate tile bounds');
+    }
 
-            // Safety check for valid rectangle
-            if (!isValid(rect)) {
-              console.warn(
-                `Invalid rectangle for tile (${x}, ${y}, ${level}), skipping`,
-              );
-              continue;
-            }
+    return { start, end };
+  }
 
-            const color = getTileColor(x, y, level);
-            const entity = TerrainVisualizer.createRectangle(
-              rect,
-              color.withAlpha(0.3),
-            );
+  private _generateVisibleTiles(
+    bounds: { start: any; end: any },
+    level: number,
+    tilingScheme: TilingScheme,
+  ): Array<{ entity: Entity }> {
+    const tiles = [];
+    const maxTilesToShow = 100;
 
-            entity.properties?.addProperty('tileX', x);
-            entity.properties?.addProperty('tileY', y);
-            entity.properties?.addProperty('tileLevel', level);
+    const xCount = Math.min(bounds.end.x - bounds.start.x + 1, maxTilesToShow);
+    const yCount = Math.min(bounds.end.y - bounds.start.y + 1, maxTilesToShow);
 
-            this._collection.add(entity, TerrainVisualizer.tag.grid);
-          } catch (e: any) {
-            console.warn(
-              `Error creating tile (${x}, ${y}, ${level}): ${e.message}`,
-            );
-            continue;
-          }
+    for (let x = bounds.start.x; x < bounds.start.x + xCount; x++) {
+      for (let y = bounds.start.y; y < bounds.start.y + yCount; y++) {
+        try {
+          const tile = this._createTileEntity(x, y, level, tilingScheme);
+          if (tile) tiles.push({ entity: tile });
+        } catch (error) {
+          console.warn(`Error creating tile (${x}, ${y}, ${level}):`, error);
         }
       }
-
-      console.log(
-        '🚀 ~ TerrainVisualizer ~ showGrid ~ collection:',
-        this._collection,
-      );
-
-      this._visible = true;
-    } catch (e) {
-      console.error('Error displaying tile grid:', e);
     }
+
+    return tiles;
+  }
+
+  private _createTileEntity(
+    x: number,
+    y: number,
+    level: number,
+    tilingScheme: TilingScheme,
+  ): Entity | null {
+    const rect = tilingScheme.tileXYToRectangle(x, y, level);
+
+    if (!this._isValidRectangle(rect)) {
+      return null;
+    }
+
+    const color = this._getTileColor(x, y, level);
+    const entity = TerrainVisualizer.createRectangle(
+      rect,
+      color.withAlpha(0.3),
+    );
+
+    entity.properties?.addProperty('tileX', x);
+    entity.properties?.addProperty('tileY', y);
+    entity.properties?.addProperty('tileLevel', level);
+
+    return entity;
+  }
+
+  private _getTileColor(x: number, y: number, level: number): Color {
+    if (!this._terrainProvider) {
+      return this._colors.get('fallback') || Color.TRANSPARENT;
+    }
+
+    // Check terrain areas first
+    for (const area of this._terrainProvider.terrainAreas) {
+      if (area.contains(x, y, level)) {
+        return area.isCustom
+          ? this._colors.get('custom') || Color.RED
+          : this._colors.get('default') || Color.BLUE;
+      }
+    }
+
+    // Check default provider availability
+    if (this._terrainProvider.getTileDataAvailable(x, y, level)) {
+      return this._colors.get('default') || Color.BLUE;
+    }
+
+    return this._colors.get('fallback') || Color.GRAY;
   }
 
   /**
