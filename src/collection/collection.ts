@@ -22,23 +22,86 @@ import type {
  * @template I - The type of items in the collection (e.g., Entity, Primitive)
  *
  * @example
- * // Creating a specialized collection for entities
- * class MyEntities extends Collection<EntityCollection, Entity> {
- *   constructor(viewer) {
- *     super({ collection: viewer.entities, tag: 'myEntities' });
+ * // Example 1: Managing Complex Scene with Multiple Object Types
+ * class SceneOrganizer {
+ *   private entities: Collection<EntityCollection, Entity>;
+ *   private billboards: Collection<BillboardCollection, Billboard>;
+ *   private primitives: Collection<PrimitiveCollection, Primitive>;
+ *
+ *   constructor(viewer: Viewer) {
+ *     this.entities = new Collection({ collection: viewer.entities });
+ *     this.billboards = new Collection({
+ *       collection: viewer.scene.primitives.add(new BillboardCollection())
+ *     });
+ *     this.primitives = new Collection({
+ *       collection: viewer.scene.primitives
+ *     });
  *   }
  *
- *   get values() {
- *     return this.collection.values;
+ *   // Unified API across different collection types!
+ *   showLayer(layerName: string) {
+ *     this.entities.show(layerName);
+ *     this.billboards.show(layerName);
+ *     this.primitives.show(layerName);
+ *   }
+ *
+ *   hideLayer(layerName: string) {
+ *     this.entities.hide(layerName);
+ *     this.billboards.hide(layerName);
+ *     this.primitives.hide(layerName);
+ *   }
+ *
+ *   removeLayer(layerName: string) {
+ *     this.entities.remove(layerName);
+ *     this.billboards.remove(layerName);
+ *     this.primitives.remove(layerName);
  *   }
  * }
  *
- * const entities = new MyEntities(viewer);
- * entities.add(new Entity({ ... }), 'buildings');
- * entities.add(new Entity({ ... }), 'roads');
+ * // Example 2: Extend the class for Domain-Specific Needs
+ * class BuildingCollection extends Collection<EntityCollection, Entity> {
+ *   constructor(viewer: Viewer) {
+ *     super({ collection: viewer.entities, tag: 'buildings' });
+ *   }
  *
- * // Later, show only buildings
- * entities.show('buildings').hide('roads');
+ *   addBuilding(options: {
+ *     position: Cartesian3;
+ *     height: number;
+ *     floors: number;
+ *     type: 'residential' | 'commercial' | 'industrial';
+ *   }): Entity {
+ *     const building = new Entity({
+ *       position: options.position,
+ *       box: {
+ *         dimensions: new Cartesian3(50, 50, options.height),
+ *         material: this.getMaterialForType(options.type)
+ *       }
+ *     });
+ *
+ *     // Tag by type AND by floor count
+ *     this.add(building, options.type);
+ *     this.add(building, `floors-${options.floors}`);
+ *
+ *     return building;
+ *   }
+ *
+ *   getByFloorRange(min: number, max: number): Entity[] {
+ *     const results: Entity[] = [];
+ *     for (let i = min; i <= max; i++) {
+ *       results.push(...this.get(`floors-${i}`));
+ *     }
+ *     return results;
+ *   }
+ *
+ *   private getMaterialForType(type: string): Material {
+ *     const colors = {
+ *       residential: Color.GREEN,
+ *       commercial: Color.BLUE,
+ *       industrial: Color.YELLOW
+ *     };
+ *     return new ColorMaterialProperty(colors[type] || Color.WHITE);
+ *   }
+ * }
  */
 class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
   /**
