@@ -14,44 +14,18 @@ import {
   Viewer,
 } from 'cesium';
 
-/**
- * @class
- * Lightweight multiton highlight manager for Cesium using a single reusable entity.
- *
- * @example
- * ```
- * // Setup
- * const viewer1 = new Viewer('cesiumContainer1');
- * const viewer2 = new Viewer('cesiumContainer2');
- *
- * const highlighter1 = Highlight.getInstance(viewer1);
- * const highlighter2 = Highlight.getInstance(viewer2);
- *
- * // This highlight only affects viewer1
- * highlighter1.show(someEntity, Color.RED);
- *
- * // This highlight only affects viewer2
- * highlighter2.show(someEntity, Color.BLUE);
- *
- * // When done with viewers
- * Highlight.releaseInstance(viewer1);
- * Highlight.releaseInstance(viewer2);
- * viewer1.destroy();
- * viewer2.destroy();
- * ```
- */
-export class Highlight {
-  private static instances = new Map<Element, Highlight>();
-  private _defaultColor: Color = Color.YELLOW.withAlpha(0.5);
+import type { IHighlight } from './highlight.types.js';
+
+export default class SurfaceHighlight implements IHighlight {
+  private _color: Color = Color.RED;
   private _entity: Entity;
   private _entities: EntityCollection;
 
   /**
-   * Creates a new `Highlight` instance.
-   * @private Use {@link getInstance `Highlight.getInstance()`}
+   * Creates a new `SurfaceHighlight` instance.
    * @param viewer A viewer to create highlight entity in
    */
-  private constructor(viewer: Viewer) {
+  constructor(viewer: Viewer) {
     this._entities = viewer.entities;
 
     // Create a single highlight entity that will be reused for all highlights
@@ -64,59 +38,30 @@ export class Highlight {
   }
 
   /**
-   * Gets or creates highlight instance from a viewer.
-   * @param viewer The viewer to get or create a new instance from.
-   */
-  static getInstance(viewer: Viewer): Highlight {
-    const container = viewer.container;
-    if (!Highlight.instances.has(container)) {
-      Highlight.instances.set(container, new Highlight(viewer));
-    }
-    return Highlight.instances.get(container)!;
-  }
-
-  /**
-   * Releases the highlight instance associated with a viewer.
-   * @param viewer The viewer whose highlight instance should be released.
-   */
-  static releaseInstance(viewer: Viewer): void {
-    const container = viewer.container;
-    const instance = Highlight.instances.get(container);
-    if (instance) {
-      instance.hide();
-
-      if (instance._entity) {
-        viewer.entities.remove(instance._entity);
-      }
-
-      Highlight.instances.delete(container);
-    }
-  }
-
-  /**
    * Highlights a picked object by updating the reusable entity
-   * @param picked The object returned from `scene.pick()` or `drillPick()`
+   * @param object The object to be highlighted.
    * @param color Optional color for the highlight. Defaults to yellow with 0.5 alpha.
    * @param outline Optional style for the highlight. Defaults to `false`.
    * @returns The entity being used for highlighting
    */
   show(
-    picked: any,
-    color: Color = this._defaultColor,
-    outline: boolean = false,
+    object: Entity | GroundPrimitive,
+    color: Color = this._color,
+    options?: { outline?: boolean; width?: number },
   ): Entity | undefined {
-    if (!defined(picked) || !this._entity) return undefined;
+    if (!defined(object) || !this._entity) return undefined;
 
     // Clear any previous highlight geometries
     this._clearGeometries();
 
     try {
-      if (picked instanceof Entity) {
-        this._update(picked, color, outline);
-      } else if (picked.id instanceof Entity) {
-        this._update(picked.id, color, outline);
-      } else if (picked.primitive instanceof GroundPrimitive) {
-        this._update(picked.primitive, color, outline);
+      if (
+        object instanceof Entity &&
+        (object.polygon || object.polyline || object.rectangle)
+      ) {
+        this._update(object, color, options);
+      } else if (object instanceof GroundPrimitive) {
+        this._update(object, color, options);
       } else {
         // No supported geometry found
         return undefined;
@@ -145,20 +90,28 @@ export class Highlight {
    * Updates the highlight entity from an Entity object
    * @private
    */
-  private _update(from: Entity, color: Color, outline: boolean): void;
+  private _update(
+    from: Entity,
+    color: Color,
+    options?: { outline?: boolean; width?: number },
+  ): void;
   /**
    * Updates the highlight entity from a GroundPrimitive
    * @private
    */
-  private _update(from: GroundPrimitive, color: Color, outline: boolean): void;
+  private _update(
+    from: GroundPrimitive,
+    color: Color,
+    options?: { outline?: boolean; width?: number },
+  ): void;
   private _update(
     from: Entity | GroundPrimitive,
     color: Color,
-    outline: boolean,
+    options = { outline: false, width: 2 },
   ): void {
     if (from instanceof Entity) {
       if (from.polygon) {
-        if (outline) {
+        if (options.outline) {
           const hierarchy = from.polygon.hierarchy?.getValue();
           if (hierarchy && hierarchy.positions) {
             let positions;
@@ -180,7 +133,7 @@ export class Highlight {
             this._entity.polyline = new PolylineGraphics({
               positions,
               material: color,
-              width: 2,
+              width: options.width || 2,
               clampToGround:
                 from.polygon.heightReference?.getValue() ===
                 HeightReference.CLAMP_TO_GROUND,
@@ -208,12 +161,12 @@ export class Highlight {
           this._entity.polyline = new PolylineGraphics({
             positions,
             material: color,
-            width: originalWidth + 2,
+            width: originalWidth + (options.width || 2),
             clampToGround: from.polyline.clampToGround?.getValue(),
           });
         }
       } else if (from.rectangle) {
-        if (outline) {
+        if (options.outline) {
           const rectangleCoords = from.rectangle.coordinates?.getValue();
           if (rectangleCoords) {
             // Convert rectangle to corner positions
@@ -244,7 +197,7 @@ export class Highlight {
             this._entity.polyline = new PolylineGraphics({
               positions: cornerPositions,
               material: color,
-              width: 2,
+              width: options.width || 2,
               clampToGround:
                 from.rectangle.heightReference?.getValue() ===
                 HeightReference.CLAMP_TO_GROUND,
@@ -283,12 +236,12 @@ export class Highlight {
         );
       }
 
-      if (outline) {
+      if (options.outline) {
         // Create a new polyline property
         this._entity.polyline = new PolylineGraphics({
           positions,
           material: color,
-          width: 2,
+          width: options.width || 2,
           clampToGround: true,
         });
       } else {
@@ -312,17 +265,17 @@ export class Highlight {
     }
   }
 
-  /** Gets the default highlight color. */
-  get defaultColor(): Color {
-    return this._defaultColor;
+  /** Clean up the instances */
+  destroy(): void {}
+
+  /** Gets the highlight color. */
+  get color(): Color {
+    return this._color;
   }
 
-  /**
-   * Sets the default highlight color.
-   * @param color The new default color for highlights
-   */
-  set defaultColor(color: Color) {
-    this._defaultColor = color;
+  /** Sets the highlight color. */
+  set color(color: Color) {
+    this._color = color;
   }
 
   /** Gets the highlight entity */

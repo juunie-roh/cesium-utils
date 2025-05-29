@@ -9,7 +9,6 @@ import {
   PolygonGraphics,
   PolygonHierarchy,
   PolylineGraphics,
-  Primitive,
   Rectangle,
   RectangleGraphics,
   Viewer,
@@ -17,123 +16,83 @@ import {
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createMockViewer } from '@/__mocks__/cesium.js';
-import { Highlight } from '@/viewer/highlight.js';
+import SurfaceHighlight from '@/highlight/surface-highlight.js';
 
 describe('Highlight', () => {
   let viewer: Viewer;
-  let highlight: Highlight;
+  let surface: SurfaceHighlight;
 
   beforeEach(() => {
     viewer = createMockViewer() as unknown as Viewer;
-    highlight = Highlight.getInstance(viewer);
+    surface = new SurfaceHighlight(viewer);
   });
 
-  describe('getInstance', () => {
-    it('should create new instance from a single viewer only once', () => {
-      expect(highlight).toBeDefined();
-      expect(highlight.defaultColor).toEqual(Color.YELLOW.withAlpha(0.5));
+  describe('constructor', () => {
+    it('should create new instance from a viewer', () => {
+      expect(surface).toBeDefined();
+      expect(surface.color).toEqual(Color.RED);
 
-      expect(Highlight.getInstance(viewer)).toEqual(highlight);
-      expect(viewer.entities).toEqual(highlight['_entities']);
-    });
-
-    it('should create new instances each from different viewers', () => {
-      expect(Highlight.getInstance(viewer)).not.toEqual(
-        Highlight.getInstance(createMockViewer() as unknown as Viewer),
-      );
-    });
-  });
-
-  describe('releaseInstance', () => {
-    it('should release the instance associated with a viewer', () => {
-      const hideSpy = vi.spyOn(highlight, 'hide');
-      const instancesMap = Highlight['instances'];
-      expect(instancesMap.has(viewer.container)).toBe(true);
-      expect(instancesMap.get(viewer.container)).toBe(highlight);
-
-      Highlight.releaseInstance(viewer);
-
-      expect(hideSpy).toHaveBeenCalledTimes(1);
-      expect(instancesMap.has(viewer.container)).toBe(false);
-
-      const newHighlight = Highlight.getInstance(viewer);
-      expect(newHighlight).not.toBe(highlight);
-      expect(instancesMap.get(viewer.container)).toBe(newHighlight);
-    });
-
-    it('should handle releasing non-existent instances', () => {
-      expect(() => {
-        Highlight.releaseInstance(viewer);
-      }).not.toThrow();
+      expect(viewer.entities).toEqual(surface['_entities']);
     });
   });
 
   describe('show', () => {
-    it('should return undefined if there is no picked object', () => {
-      expect(highlight.show(undefined)).toBe(undefined);
-    });
-
     it('should handle different types of picked objects', () => {
-      highlight['_update'] = vi.fn();
-      const entity = new Entity();
-      const objectWithId = { id: new Entity() };
-      const objectWithGroundPrimitive = { primitive: new GroundPrimitive() };
-      const color = Color.RED;
+      surface['_update'] = vi.fn();
+      const entity = new Entity({
+        polygon: true as unknown as PolygonGraphics,
+      });
+      const groundPrimitive = new GroundPrimitive();
+      const color = Color.BLUE;
 
-      highlight.show(entity, color);
-      expect(highlight['_update']).toBeCalledWith(entity, color, false);
+      surface.show(entity, color);
+      expect(surface['_update']).toBeCalledWith(entity, color, undefined);
 
-      highlight.show(objectWithId, color);
-      expect(highlight['_update']).toBeCalledWith(
-        objectWithId.id,
+      surface.show(groundPrimitive, color);
+      expect(surface['_update']).toBeCalledWith(
+        groundPrimitive,
         color,
-        false,
+        undefined,
       );
-
-      highlight.show(objectWithGroundPrimitive, color);
-      expect(highlight['_update']).toBeCalledWith(
-        objectWithGroundPrimitive.primitive,
-        color,
-        false,
-      );
-    });
-
-    it('should handle unsupported object', () => {
-      highlight['_update'] = vi.fn();
-      const objectWithPrimitive = { primitive: new Primitive() };
-
-      expect(highlight.show(objectWithPrimitive, Color.RED)).toBeUndefined();
-      expect(highlight['_update']).not.toBeCalled();
-      expect(highlight.entity.show).toBe(false);
     });
 
     it('should return the highlight entity when successful', () => {
       // Mock the _update method to do nothing
-      highlight['_update'] = vi.fn();
-      const mockEntity = new Entity();
-      highlight['_entity'] = mockEntity;
+      surface['_update'] = vi.fn();
+      const mockEntity = new Entity({
+        polygon: true as unknown as PolygonGraphics,
+      });
+      surface['_entity'] = mockEntity;
 
-      expect(highlight.show(new Entity())).toBe(mockEntity);
+      expect(
+        surface.show(
+          new Entity({
+            polygon: true as unknown as PolygonGraphics,
+          }),
+        ),
+      ).toBe(mockEntity);
       expect(mockEntity.show).toBe(true);
     });
 
     it('should return undefined when update fails', () => {
       // Force an error in the _update method
-      highlight['_update'] = vi.fn().mockImplementation(() => {
+      surface['_update'] = vi.fn().mockImplementation(() => {
         throw new Error('Test error');
       });
 
-      expect(highlight.show(new Entity())).toBeUndefined();
+      expect(surface.show(new Entity())).toBeUndefined();
     });
   });
 
   describe('hide', () => {
     it('should hide the highlight entity', () => {
       // Mock the highlight entity
-      const mockEntity = new Entity();
-      highlight['_entity'] = mockEntity;
+      const mockEntity = new Entity({
+        polygon: true as unknown as PolygonGraphics,
+      });
+      surface['_entity'] = mockEntity;
 
-      highlight.hide();
+      surface.hide();
 
       expect(mockEntity.show).toBe(false);
     });
@@ -159,15 +118,15 @@ describe('Highlight', () => {
 
         // Call the _update method
         const color = Color.RED;
-        highlight['_update'](sourceEntity, color, false);
+        surface['_update'](sourceEntity, color, { outline: false });
 
         // Check that the polygon property was set
-        expect(highlight.entity.polygon).toBeDefined();
-        expect(highlight.entity.polygon).toBeInstanceOf(PolygonGraphics);
-        expect(highlight.entity.polygon?.hierarchy?.getValue()).toEqual(
+        expect(surface.entity.polygon).toBeDefined();
+        expect(surface.entity.polygon).toBeInstanceOf(PolygonGraphics);
+        expect(surface.entity.polygon?.hierarchy?.getValue()).toEqual(
           sourceEntity.polygon?.hierarchy?.getValue(),
         );
-        expect(highlight.entity.polygon?.heightReference?.getValue()).toEqual(
+        expect(surface.entity.polygon?.heightReference?.getValue()).toEqual(
           sourceEntity.polygon?.heightReference?.getValue(),
         );
       });
@@ -199,17 +158,17 @@ describe('Highlight', () => {
 
         // Call the _update method
         const color = Color.RED;
-        highlight['_update'](sourceEntity, color, true);
+        surface['_update'](sourceEntity, color, { outline: true });
 
         // Check that the polyline property was set
-        expect(highlight.entity.polyline).toBeDefined();
-        expect(highlight.entity.polyline).toBeInstanceOf(PolylineGraphics);
-        expect(highlight.entity.polyline?.positions?.getValue()).toEqual(
+        expect(surface.entity.polyline).toBeDefined();
+        expect(surface.entity.polyline).toBeInstanceOf(PolylineGraphics);
+        expect(surface.entity.polyline?.positions?.getValue()).toEqual(
           closedPositions,
         );
 
-        highlight['_update'](closedEntity, color, true);
-        expect(highlight.entity.polyline?.positions?.getValue()).toEqual(
+        surface['_update'](closedEntity, color, { outline: true });
+        expect(surface.entity.polyline?.positions?.getValue()).toEqual(
           closedPositions,
         );
       });
@@ -234,12 +193,12 @@ describe('Highlight', () => {
 
         // Call the _update method
         const color = Color.RED;
-        highlight['_update'](sourceEntity, color, false);
+        surface['_update'](sourceEntity, color, { outline: false });
 
         // Check that the polyline property was set
-        expect(highlight.entity.polyline).toBeDefined();
-        expect(highlight.entity.polyline).toBeInstanceOf(PolylineGraphics);
-        expect(highlight.entity.polyline?.width?.getValue()).toBe(5); // Original width + 2
+        expect(surface.entity.polyline).toBeDefined();
+        expect(surface.entity.polyline).toBeInstanceOf(PolylineGraphics);
+        expect(surface.entity.polyline?.width?.getValue()).toBe(5); // Original width + 2
       });
     });
 
@@ -257,12 +216,12 @@ describe('Highlight', () => {
 
         // Call the _update method
         const color = Color.RED;
-        highlight['_update'](sourceEntity, color, false);
+        surface['_update'](sourceEntity, color, { outline: false });
 
         // Check that the rectangle property was set
-        expect(highlight.entity.rectangle).toBeDefined();
-        expect(highlight.entity.rectangle).toBeInstanceOf(RectangleGraphics);
-        expect(highlight.entity.rectangle?.coordinates?.getValue()).toEqual(
+        expect(surface.entity.rectangle).toBeDefined();
+        expect(surface.entity.rectangle).toBeInstanceOf(RectangleGraphics);
+        expect(surface.entity.rectangle?.coordinates?.getValue()).toEqual(
           coordinates,
         );
       });
@@ -280,15 +239,13 @@ describe('Highlight', () => {
 
         // Call the _update method
         const color = Color.RED;
-        highlight['_update'](sourceEntity, color, true);
+        surface['_update'](sourceEntity, color, { outline: true });
 
         // Check that the polyline property was set
-        expect(highlight.entity.polyline).toBeDefined();
-        expect(highlight.entity.polyline).toBeInstanceOf(PolylineGraphics);
+        expect(surface.entity.polyline).toBeDefined();
+        expect(surface.entity.polyline).toBeInstanceOf(PolylineGraphics);
         // Verify it has 5 positions (4 corners + closing point)
-        expect(highlight.entity.polyline?.positions?.getValue()?.length).toBe(
-          5,
-        );
+        expect(surface.entity.polyline?.positions?.getValue()?.length).toBe(5);
       });
     });
   });
@@ -312,14 +269,14 @@ describe('Highlight', () => {
 
       // Call the _update method
       const color = Color.RED;
-      highlight['_update'](primitive, color, false);
+      surface['_update'](primitive, color, { outline: false });
 
       // Check that the polygon property was set
-      expect(highlight.entity.polygon).toBeDefined();
-      expect(highlight.entity.polygon).toBeInstanceOf(PolygonGraphics);
+      expect(surface.entity.polygon).toBeDefined();
+      expect(surface.entity.polygon).toBeInstanceOf(PolygonGraphics);
 
       // Verify the polygon hierarchy has the correct positions
-      const hierarchy = highlight.entity.polygon?.hierarchy?.getValue();
+      const hierarchy = surface.entity.polygon?.hierarchy?.getValue();
       expect(hierarchy).toBeDefined();
       expect(hierarchy!.positions.length).toBe(3); // 3 positions from 9 values (x,y,z triplets)
     });
@@ -362,37 +319,37 @@ describe('Highlight', () => {
 
       // Call the _update method
       const color = Color.RED;
-      highlight['_update'](primitive, color, true);
+      surface['_update'](primitive, color, { outline: true });
 
       // Check that the polyline property was set
-      expect(highlight.entity.polyline).toBeDefined();
-      expect(highlight.entity.polyline).toBeInstanceOf(PolylineGraphics);
+      expect(surface.entity.polyline).toBeDefined();
+      expect(surface.entity.polyline).toBeInstanceOf(PolylineGraphics);
 
       // Verify the polyline has the correct positions
-      const positions = highlight.entity.polyline?.positions?.getValue();
+      const positions = surface.entity.polyline?.positions?.getValue();
       expect(positions).toBeDefined();
       expect(positions!.length).toBe(3); // 3 positions from 9 values (x,y,z triplets)
 
-      const entityBeforeInvalidUpdate = highlight.entity;
-      highlight['_update'](invalidPrimitive, color, true);
-      expect(highlight.entity).toEqual(entityBeforeInvalidUpdate);
+      const entityBeforeInvalidUpdate = surface.entity;
+      surface['_update'](invalidPrimitive, color, { outline: true });
+      expect(surface.entity).toEqual(entityBeforeInvalidUpdate);
     });
   });
 
   describe('defaultColor', () => {
     it('should be changed', () => {
       const color = Color.RED;
-      highlight.defaultColor = color;
-      expect(highlight.defaultColor).toEqual(color);
+      surface.color = color;
+      expect(surface.color).toEqual(color);
     });
   });
 
   describe('entity', () => {
     it('should return the highlight entity', () => {
       const mockEntity = new Entity();
-      highlight['_entity'] = mockEntity;
+      surface['_entity'] = mockEntity;
 
-      expect(highlight.entity).toBe(mockEntity);
+      expect(surface.entity).toBe(mockEntity);
     });
   });
 
