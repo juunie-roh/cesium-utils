@@ -41,6 +41,11 @@
       "import": "./dist/collection/index.js",
       "require": "./dist/collection/index.cjs"
     },
+    "./highlight": {
+      "types": "./dist/highlight/index.d.ts",
+      "import": "./dist/highlight/index.js",
+      "require": "./dist/highlight/index.cjs"
+    },
     "./terrain": {
       "types": "./dist/terrain/index.d.ts",
       "import": "./dist/terrain/index.js",
