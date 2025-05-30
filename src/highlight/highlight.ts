@@ -8,7 +8,7 @@ import {
   Viewer,
 } from 'cesium';
 
-import { Picked } from './highlight.types.js';
+import type { HighlightOptions, Picked } from './highlight.types.js';
 import SilhouetteHighlight from './silhouette-highlight.js';
 import SurfaceHighlight from './surface-highlight.js';
 
@@ -86,18 +86,14 @@ export default class Highlight {
     }
   }
 
-  show(
-    picked: Picked,
-    color = this._color,
-    options?: { outline?: boolean; width?: number },
-  ) {
+  show(picked: Picked, color = this._color, options?: HighlightOptions) {
     const object = this._getObject(picked);
     if (!defined(object)) return;
     if (
       object instanceof Cesium3DTileFeature ||
       object instanceof ModelGraphics
     ) {
-      return this._silhouette.show(object, color);
+      return this._silhouette.show(object, color, options);
     }
     return this._surface.show(object, color, options);
   }
@@ -111,22 +107,15 @@ export default class Highlight {
     | Cesium3DTileFeature
     | undefined {
     if (!defined(picked)) return;
-    // Direct instances
-    if (picked instanceof Entity) return picked;
+
+    if (picked instanceof Entity) return picked.model ? picked.model : picked;
     if (picked instanceof Cesium3DTileFeature) return picked;
     if (picked instanceof GroundPrimitive) return picked;
 
-    // Entity
-    if (picked.id instanceof Entity) {
-      if (picked.id.model) return picked.id.model;
-      return picked.id;
-    }
+    if (picked.id instanceof Entity)
+      return picked.id.model ? picked.id.model : picked.id;
 
-    // Primitives
     if (picked.primitive instanceof GroundPrimitive) return picked.primitive;
-
-    // 3D Tiles
-    if (picked instanceof Cesium3DTileFeature) return picked;
   }
 
   hide(): void {

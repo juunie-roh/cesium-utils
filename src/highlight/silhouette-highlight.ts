@@ -11,7 +11,7 @@ import {
   Viewer,
 } from 'cesium';
 
-import type { IHighlight } from './highlight.types.js';
+import type { HighlightOptions, IHighlight } from './highlight.types.js';
 
 export default class SilhouetteHighlight implements IHighlight {
   private _color: Color = Color.RED;
@@ -40,7 +40,7 @@ export default class SilhouetteHighlight implements IHighlight {
   show(
     object: Cesium3DTileFeature | ModelGraphics,
     color: Color = this._color,
-    options?: { outline?: boolean; width?: number },
+    options?: HighlightOptions,
   ) {
     if (!defined(object) || this._silhouette.selected[0] === object) return;
     if (object instanceof Cesium3DTileFeature) {

@@ -14,7 +14,7 @@ import {
   Viewer,
 } from 'cesium';
 
-import type { IHighlight } from './highlight.types.js';
+import type { HighlightOptions, IHighlight } from './highlight.types.js';
 
 export default class SurfaceHighlight implements IHighlight {
   private _color: Color = Color.RED;
@@ -47,7 +47,7 @@ export default class SurfaceHighlight implements IHighlight {
   show(
     object: Entity | GroundPrimitive,
     color: Color = this._color,
-    options?: { outline?: boolean; width?: number },
+    options?: HighlightOptions,
   ): Entity | undefined {
     if (!defined(object) || !this._entity) return undefined;
 
@@ -266,7 +266,11 @@ export default class SurfaceHighlight implements IHighlight {
   }
 
   /** Clean up the instances */
-  destroy(): void {}
+  destroy(): void {
+    if (this._entities.contains(this._entity)) {
+      this._entities.remove(this._entity);
+    }
+  }
 
   /** Gets the highlight color. */
   get color(): Color {
