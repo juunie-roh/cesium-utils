@@ -37,6 +37,18 @@ describe('Highlight', () => {
   });
 
   describe('show', () => {
+    it('should return undefined with not defined objects', () => {
+      expect(surface.show(undefined as unknown as Entity)).toBeUndefined();
+      surface['_entity'] = undefined as unknown as Entity;
+      expect(
+        surface.show(
+          new Entity({
+            polygon: true as unknown as PolygonGraphics,
+          }),
+        ),
+      ).toBeUndefined();
+    });
+
     it('should handle different types of picked objects', () => {
       surface['_update'] = vi.fn();
       const entity = new Entity({
@@ -74,13 +86,25 @@ describe('Highlight', () => {
       expect(mockEntity.show).toBe(true);
     });
 
-    it('should return undefined when update fails', () => {
+    it('should return undefined when the entity has no supported geometry', () => {
+      expect(surface.show(new Entity())).toBeUndefined();
+    });
+
+    it('should log an error and return undefined when update fails', () => {
       // Force an error in the _update method
       surface['_update'] = vi.fn().mockImplementation(() => {
         throw new Error('Test error');
       });
+      const errorSpy = vi.spyOn(console, 'error');
 
-      expect(surface.show(new Entity())).toBeUndefined();
+      expect(
+        surface.show(
+          new Entity({
+            polygon: true as unknown as PolygonGraphics,
+          }),
+        ),
+      ).toBeUndefined();
+      expect(errorSpy).toBeCalled();
     });
   });
 
@@ -336,7 +360,15 @@ describe('Highlight', () => {
     });
   });
 
-  describe('defaultColor', () => {
+  describe('destroy', () => {
+    it('should clean up the entity instance used to highlight', () => {
+      surface.destroy();
+      expect(surface['_entities'].remove).toBeCalled();
+      expect(surface['_entities'].remove).toBeCalledWith(surface.entity);
+    });
+  });
+
+  describe('color', () => {
     it('should be changed', () => {
       const color = Color.RED;
       surface.color = color;
