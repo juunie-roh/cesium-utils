@@ -605,9 +605,9 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * // Change color of all buildings to red
    * collection.setProperty('buildings', 'color', Color.RED);
    */
-  setProperty<K extends NonFunction<I>, V extends Exclude<I[K], Function>>(
+  setProperty<K extends NonFunction<I>>(
     property: K,
-    value: V,
+    value: I[K],
     by: Tag = this.tag,
   ): this {
     const items = this.get(by);
@@ -616,7 +616,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
       if (property in item && typeof item[property] !== 'function') {
         if (isGetterOnly(item, property)) {
           throw Error(
-            `setProperty(${item}, ${property as string}) failed; The property is readonly.`,
+            `Cannot set read-only property '${String(property)}' on ${item.constructor.name}`,
           );
         }
 
