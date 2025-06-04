@@ -3,7 +3,7 @@ import {
   Color,
   ConstantProperty,
   defined,
-  ModelGraphics,
+  Entity,
   PostProcessStage,
   PostProcessStageCollection,
   PostProcessStageComposite,
@@ -18,7 +18,7 @@ export default class SilhouetteHighlight implements IHighlight {
   private _silhouette: PostProcessStage;
   private _composite: PostProcessStageComposite;
   private _stages: PostProcessStageCollection;
-  private _model?: ModelGraphics;
+  private _entity?: Entity;
 
   /**
    * Creates a new `Silhouette` instance.
@@ -38,7 +38,7 @@ export default class SilhouetteHighlight implements IHighlight {
   }
 
   show(
-    object: Cesium3DTileFeature | ModelGraphics,
+    object: Cesium3DTileFeature | Entity,
     color: Color = this._color,
     options?: HighlightOptions,
   ) {
@@ -46,16 +46,19 @@ export default class SilhouetteHighlight implements IHighlight {
     if (object instanceof Cesium3DTileFeature) {
       this._silhouette.selected.push(object);
     } else {
-      this._model = object;
-      object.silhouetteSize = new ConstantProperty(options?.width || 2);
-      object.silhouetteColor = new ConstantProperty(color);
+      if (!object.model) return;
+      this._entity = object;
+      object.model.silhouetteSize = new ConstantProperty(options?.width || 2);
+      object.model.silhouetteColor = new ConstantProperty(color);
     }
   }
   hide(): void {
     if (this._silhouette.selected.length > 0) this._silhouette.selected = [];
-    if (this._model) {
-      this._model.silhouetteColor = new ConstantProperty(Color.TRANSPARENT);
-      this._model = undefined;
+    if (this._entity?.model) {
+      this._entity.model.silhouetteColor = new ConstantProperty(
+        Color.TRANSPARENT,
+      );
+      this._entity = undefined;
     }
   }
   destroy(): void {
