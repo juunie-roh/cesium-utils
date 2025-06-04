@@ -1,5 +1,52 @@
 # @juun-roh/cesium-utils
 
+## 0.0.17
+
+### Patch Changes
+
+- cb5c839: Update Surface Highlight Test
+
+  test: Update surface highlight test
+
+  - Add edge cases to expand test coverage.
+
+  - Add testing on error cases.
+
+  - Add test for `destroy` method, a method for self-clean-up.
+
+- e40b7d1: Update Highlight classes
+
+  refactor: Update highlight classes
+
+  **`Highlight`:**
+
+  - Replace type of `instances` from `Map` to `WeackMap`.
+
+  - Remove handling `ModelGraphics` type.
+    Now determines the type(2D or 3D) of an entity by the presence of it's `model` property.
+
+  - Add descriptions.
+
+  **`SilhouetteHighlight`:**
+
+  - Replace `_model` having `ModelGraphics` type with `_entity` having `Entity` type.
+
+- bc825f3: Update Highlight
+
+  fix: Update highlight
+
+  - Define `options` type in separate file.
+
+  - Add missing parameter.
+
+  - Implement `destroy` method for self clean up.
+
+- 207eaf4: Update Package Exports
+
+  build: Updata package exports
+
+  - Specify modular export for highlight class
+
 ## 0.0.16
 
 ### Patch Changes
