@@ -20,7 +20,7 @@
 
   **`Highlight`:**
 
-  - Replace type of `instances` from `Map` to `WeackMap`.
+  - Replace type of `instances` from `Map` to `WeakMap`.
 
   - Remove handling `ModelGraphics` type.
     Now determines the type(2D or 3D) of an entity by the presence of it's `model` property.
@@ -153,7 +153,7 @@
     Replace `clear`, `clearAll` with `remove`, `removeAll.
 
   - Consolidate methods.
-    Merge `_highlightGroundPrimitive` and `_highlightEntity` into a single overrided method `_createEntity`.
+    Merge `_highlightGroundPrimitive` and `_highlightEntity` into a single override method `_createEntity`.
 
   - Add `outline` styling option.
     Support highlights with outline style.
@@ -185,7 +185,7 @@
     Handles mainly the object returned from `scene.pick()` or `drillPick()`.
 
   - Fix mocks for tests.
-    Extend viewer mock to have collections. (primitives, entities, groundPrimives)
+    Extend viewer mock to have collections. (primitives, entities, groundPrimitives)
     Add a simple collection mock.
 
   - New test conducted for `Highlight`.
