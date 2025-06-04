@@ -4,7 +4,6 @@ import {
   defined,
   Entity,
   GroundPrimitive,
-  ModelGraphics,
   Viewer,
 } from 'cesium';
 
@@ -39,7 +38,7 @@ import SurfaceHighlight from './surface-highlight.js';
  * ```
  */
 export default class Highlight {
-  private static instances = new Map<Element, Highlight>();
+  private static instances = new WeakMap<Element, Highlight>();
   private _surface: SurfaceHighlight;
   private _silhouette: SilhouetteHighlight;
   private _color: Color = Color.RED;
@@ -86,38 +85,42 @@ export default class Highlight {
     }
   }
 
+  /**
+   * Highlights a picked object or a direct instance.
+   * @param picked The result of `Scene.pick()` or direct instance to be highlighted.
+   * @param color Optional color for the highlight.
+   * @param options Optional style for the highlight.
+   */
   show(picked: Picked, color = this._color, options?: HighlightOptions) {
+    this.hide();
     const object = this._getObject(picked);
     if (!defined(object)) return;
     if (
       object instanceof Cesium3DTileFeature ||
-      object instanceof ModelGraphics
+      (object instanceof Entity && object.model)
     ) {
       return this._silhouette.show(object, color, options);
     }
+
     return this._surface.show(object, color, options);
   }
 
   private _getObject(
     picked: Picked,
-  ):
-    | Entity
-    | GroundPrimitive
-    | ModelGraphics
-    | Cesium3DTileFeature
-    | undefined {
+  ): Entity | GroundPrimitive | Cesium3DTileFeature | undefined {
     if (!defined(picked)) return;
 
-    if (picked instanceof Entity) return picked.model ? picked.model : picked;
+    if (picked instanceof Entity) return picked;
     if (picked instanceof Cesium3DTileFeature) return picked;
     if (picked instanceof GroundPrimitive) return picked;
 
-    if (picked.id instanceof Entity)
-      return picked.id.model ? picked.id.model : picked.id;
-
+    if (picked.id instanceof Entity) return picked.id;
     if (picked.primitive instanceof GroundPrimitive) return picked.primitive;
   }
 
+  /**
+   * Clears the current highlight effects.
+   */
   hide(): void {
     this._surface.hide();
     this._silhouette.hide();
