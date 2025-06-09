@@ -70,8 +70,8 @@ export default class SurfaceHighlight implements IHighlight {
   /**
    * Highlights a picked object by updating the reusable entity
    * @param object The object to be highlighted.
-   * @param color Optional color for the highlight.
-   * @param outline Optional style for the highlight. Defaults to `false`.
+   * @param options Optional style for the highlight.
+   * @see {@link HighlightOptions}
    */
   show(
     object: Entity | GroundPrimitive,

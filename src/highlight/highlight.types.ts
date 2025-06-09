@@ -17,8 +17,11 @@ interface IHighlight {
 }
 
 interface HighlightOptions {
+  /** Color of the highlight */
   color?: Color;
+  /** To apply outline style for the highlight */
   outline?: boolean;
+  /** Outline width */
   width?: number;
 }
 

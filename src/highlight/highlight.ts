@@ -89,6 +89,7 @@ export default class Highlight {
    * Highlights a picked object or a direct instance.
    * @param picked The result of `Scene.pick()` or direct instance to be highlighted.
    * @param options Optional style for the highlight.
+   * @see {@link HighlightOptions}
    */
   show(picked: Picked, options: HighlightOptions = { color: this._color }) {
     this.hide();
