@@ -25,10 +25,10 @@ import SurfaceHighlight from './surface-highlight.js';
  * const highlighter2 = Highlight.getInstance(viewer2);
  *
  * // This highlight only affects viewer1
- * highlighter1.show(someEntity, Color.RED);
+ * highlighter1.show(someEntity, { color: Color.RED });
  *
  * // This highlight only affects viewer2
- * highlighter2.show(someEntity, Color.BLUE);
+ * highlighter2.show(someEntity, { color: Color.BLUE });
  *
  * // When done with viewers
  * Highlight.releaseInstance(viewer1);
