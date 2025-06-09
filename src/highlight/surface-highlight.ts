@@ -45,7 +45,6 @@ export default class SurfaceHighlight implements IHighlight {
    */
   show(
     object: Entity | GroundPrimitive,
-    color: Color = this._color,
     options?: HighlightOptions,
   ): Entity | undefined {
     if (!defined(object) || !this._entity) return undefined;
@@ -58,9 +57,9 @@ export default class SurfaceHighlight implements IHighlight {
         object instanceof Entity &&
         (object.polygon || object.polyline || object.rectangle)
       ) {
-        this._update(object, color, options);
+        this._update(object, options);
       } else if (object instanceof GroundPrimitive) {
-        this._update(object, color, options);
+        this._update(object, options);
       } else {
         // No supported geometry found
         return undefined;
@@ -89,24 +88,15 @@ export default class SurfaceHighlight implements IHighlight {
    * Updates the highlight entity from an Entity object
    * @private
    */
-  private _update(
-    from: Entity,
-    color: Color,
-    options?: { outline?: boolean; width?: number },
-  ): void;
+  private _update(from: Entity, options?: HighlightOptions): void;
   /**
    * Updates the highlight entity from a GroundPrimitive
    * @private
    */
-  private _update(
-    from: GroundPrimitive,
-    color: Color,
-    options?: { outline?: boolean; width?: number },
-  ): void;
+  private _update(from: GroundPrimitive, options?: HighlightOptions): void;
   private _update(
     from: Entity | GroundPrimitive,
-    color: Color,
-    options = { outline: false, width: 2 },
+    options = { color: this._color, outline: false, width: 2 },
   ): void {
     if (from instanceof Entity) {
       if (from.polygon) {
@@ -131,11 +121,9 @@ export default class SurfaceHighlight implements IHighlight {
             // Create a new polyline property
             this._entity.polyline = new PolylineGraphics({
               positions,
-              material: color,
+              material: options.color,
               width: options.width || 2,
-              clampToGround:
-                from.polygon.heightReference?.getValue() ===
-                HeightReference.CLAMP_TO_GROUND,
+              clampToGround: true,
             });
           }
         } else {
@@ -144,8 +132,8 @@ export default class SurfaceHighlight implements IHighlight {
           if (hierarchy) {
             this._entity.polygon = new PolygonGraphics({
               hierarchy,
-              material: color,
-              heightReference: from.polygon.heightReference?.getValue(),
+              material: options.color,
+              heightReference: HeightReference.CLAMP_TO_GROUND,
               classificationType:
                 from.polygon.classificationType?.getValue() ||
                 ClassificationType.BOTH,
@@ -159,9 +147,9 @@ export default class SurfaceHighlight implements IHighlight {
           const originalWidth = from.polyline.width?.getValue();
           this._entity.polyline = new PolylineGraphics({
             positions,
-            material: color,
+            material: options.color,
             width: originalWidth + (options.width || 2),
-            clampToGround: from.polyline.clampToGround?.getValue(),
+            clampToGround: true,
           });
         }
       } else if (from.rectangle) {
@@ -195,11 +183,9 @@ export default class SurfaceHighlight implements IHighlight {
             // Create a new polyline property
             this._entity.polyline = new PolylineGraphics({
               positions: cornerPositions,
-              material: color,
+              material: options.color,
               width: options.width || 2,
-              clampToGround:
-                from.rectangle.heightReference?.getValue() ===
-                HeightReference.CLAMP_TO_GROUND,
+              clampToGround: true,
             });
           }
         } else {
@@ -208,8 +194,8 @@ export default class SurfaceHighlight implements IHighlight {
           if (coordinates) {
             this._entity.rectangle = new RectangleGraphics({
               coordinates,
-              material: color,
-              heightReference: from.rectangle.heightReference?.getValue(),
+              material: options.color,
+              heightReference: HeightReference.CLAMP_TO_GROUND,
             });
           }
         }
@@ -239,7 +225,7 @@ export default class SurfaceHighlight implements IHighlight {
         // Create a new polyline property
         this._entity.polyline = new PolylineGraphics({
           positions,
-          material: color,
+          material: options.color,
           width: options.width || 2,
           clampToGround: true,
         });
@@ -247,7 +233,7 @@ export default class SurfaceHighlight implements IHighlight {
         // Create a new polygon property
         this._entity.polygon = new PolygonGraphics({
           hierarchy: new PolygonHierarchy(positions),
-          material: color,
+          material: options.color,
           heightReference: HeightReference.CLAMP_TO_GROUND,
           classificationType: ClassificationType.BOTH,
         });
