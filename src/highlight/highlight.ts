@@ -88,10 +88,9 @@ export default class Highlight {
   /**
    * Highlights a picked object or a direct instance.
    * @param picked The result of `Scene.pick()` or direct instance to be highlighted.
-   * @param color Optional color for the highlight.
    * @param options Optional style for the highlight.
    */
-  show(picked: Picked, color = this._color, options?: HighlightOptions) {
+  show(picked: Picked, options: HighlightOptions = { color: this._color }) {
     this.hide();
     const object = this._getObject(picked);
     if (!defined(object)) return;
@@ -99,10 +98,10 @@ export default class Highlight {
       object instanceof Cesium3DTileFeature ||
       (object instanceof Entity && object.model)
     ) {
-      return this._silhouette.show(object, color, options);
+      return this._silhouette.show(object, options);
     }
 
-    return this._surface.show(object, color, options);
+    return this._surface.show(object, options);
   }
 
   private _getObject(

@@ -10,13 +10,14 @@ import type {
 
 // highlight.types.ts
 interface IHighlight {
-  show(object: any, color?: Color, options?: HighlightOptions): void;
+  show(object: any, options?: HighlightOptions): void;
   hide(): void;
   destroy(): void;
   color: Color;
 }
 
 interface HighlightOptions {
+  color?: Color;
   outline?: boolean;
   width?: number;
 }

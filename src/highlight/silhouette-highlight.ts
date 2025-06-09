@@ -37,11 +37,7 @@ export default class SilhouetteHighlight implements IHighlight {
     this._stages.add(this._composite);
   }
 
-  show(
-    object: Cesium3DTileFeature | Entity,
-    color: Color = this._color,
-    options?: HighlightOptions,
-  ) {
+  show(object: Cesium3DTileFeature | Entity, options?: HighlightOptions) {
     if (!defined(object) || this._silhouette.selected[0] === object) return;
     if (object instanceof Cesium3DTileFeature) {
       this._silhouette.selected.push(object);
@@ -49,7 +45,9 @@ export default class SilhouetteHighlight implements IHighlight {
       if (!object.model) return;
       this._entity = object;
       object.model.silhouetteSize = new ConstantProperty(options?.width || 2);
-      object.model.silhouetteColor = new ConstantProperty(color);
+      object.model.silhouetteColor = new ConstantProperty(
+        options?.color || this._color,
+      );
     }
   }
   hide(): void {

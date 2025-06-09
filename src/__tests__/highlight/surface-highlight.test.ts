@@ -57,15 +57,11 @@ describe('Highlight', () => {
       const groundPrimitive = new GroundPrimitive();
       const color = Color.BLUE;
 
-      surface.show(entity, color);
-      expect(surface['_update']).toBeCalledWith(entity, color, undefined);
+      surface.show(entity, { color });
+      expect(surface['_update']).toBeCalledWith(entity, { color });
 
-      surface.show(groundPrimitive, color);
-      expect(surface['_update']).toBeCalledWith(
-        groundPrimitive,
-        color,
-        undefined,
-      );
+      surface.show(groundPrimitive, { color });
+      expect(surface['_update']).toBeCalledWith(groundPrimitive, { color });
     });
 
     it('should return the highlight entity when successful', () => {
@@ -142,7 +138,7 @@ describe('Highlight', () => {
 
         // Call the _update method
         const color = Color.RED;
-        surface['_update'](sourceEntity, color, { outline: false });
+        surface['_update'](sourceEntity, { color, outline: false });
 
         // Check that the polygon property was set
         expect(surface.entity.polygon).toBeDefined();
@@ -182,7 +178,7 @@ describe('Highlight', () => {
 
         // Call the _update method
         const color = Color.RED;
-        surface['_update'](sourceEntity, color, { outline: true });
+        surface['_update'](sourceEntity, { color, outline: true });
 
         // Check that the polyline property was set
         expect(surface.entity.polyline).toBeDefined();
@@ -191,7 +187,7 @@ describe('Highlight', () => {
           closedPositions,
         );
 
-        surface['_update'](closedEntity, color, { outline: true });
+        surface['_update'](closedEntity, { color, outline: true });
         expect(surface.entity.polyline?.positions?.getValue()).toEqual(
           closedPositions,
         );
@@ -217,7 +213,7 @@ describe('Highlight', () => {
 
         // Call the _update method
         const color = Color.RED;
-        surface['_update'](sourceEntity, color, { outline: false });
+        surface['_update'](sourceEntity, { color, outline: false });
 
         // Check that the polyline property was set
         expect(surface.entity.polyline).toBeDefined();
@@ -240,7 +236,7 @@ describe('Highlight', () => {
 
         // Call the _update method
         const color = Color.RED;
-        surface['_update'](sourceEntity, color, { outline: false });
+        surface['_update'](sourceEntity, { color, outline: false });
 
         // Check that the rectangle property was set
         expect(surface.entity.rectangle).toBeDefined();
@@ -263,7 +259,7 @@ describe('Highlight', () => {
 
         // Call the _update method
         const color = Color.RED;
-        surface['_update'](sourceEntity, color, { outline: true });
+        surface['_update'](sourceEntity, { color, outline: true });
 
         // Check that the polyline property was set
         expect(surface.entity.polyline).toBeDefined();
@@ -293,7 +289,7 @@ describe('Highlight', () => {
 
       // Call the _update method
       const color = Color.RED;
-      surface['_update'](primitive, color, { outline: false });
+      surface['_update'](primitive, { color, outline: false });
 
       // Check that the polygon property was set
       expect(surface.entity.polygon).toBeDefined();
@@ -343,7 +339,7 @@ describe('Highlight', () => {
 
       // Call the _update method
       const color = Color.RED;
-      surface['_update'](primitive, color, { outline: true });
+      surface['_update'](primitive, { color, outline: true });
 
       // Check that the polyline property was set
       expect(surface.entity.polyline).toBeDefined();
@@ -355,7 +351,7 @@ describe('Highlight', () => {
       expect(positions!.length).toBe(3); // 3 positions from 9 values (x,y,z triplets)
 
       const entityBeforeInvalidUpdate = surface.entity;
-      surface['_update'](invalidPrimitive, color, { outline: true });
+      surface['_update'](invalidPrimitive, { color, outline: true });
       expect(surface.entity).toEqual(entityBeforeInvalidUpdate);
     });
   });
