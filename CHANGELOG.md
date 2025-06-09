@@ -1,5 +1,33 @@
 # @juun-roh/cesium-utils
 
+## 0.0.18
+
+### Patch Changes
+
+- 33b1f01: Fix Highlight Class
+
+  fix: Update surface highlight
+
+  - Integrate `color` into `options` parameter.
+    Remove color parameter for `show` and `update`, since the class has and uses it's member `_color` as a default value.
+
+  - Apply fixed height reference.
+    Matching the name of the class(_surface_ highlight), the highlight entity now always clamp to ground.
+
+  - Fix types.
+    `HighlightOptions` now includes `color`.
+    Fix `IHighlight` interface's `show` parameters.
+
+  - Update others(test, ...) to follow the changes.
+
+- 7008bcb: Fix Collection
+
+  fix: Enhance type definition and error assertion
+
+  - Fix value type from `V extends Exclude<I[K], Function>` to `I[K]`.
+
+  - Improve clarity of the error message in `setProperty`.
+
 ## 0.0.17
 
 ### Patch Changes
