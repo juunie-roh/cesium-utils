@@ -16,6 +16,36 @@ import {
 
 import type { HighlightOptions, IHighlight } from './highlight.types.js';
 
+/**
+ * @class
+ * A flyweight implementation for highlighting 2D surface objects in Cesium.
+ *
+ * This class provides efficient highlighting for ground-clamped geometries (polygons, polylines, rectangles)
+ *
+ * **Supported Geometry Types:**
+ * - `Entity` with polygon, polyline, or rectangle graphics
+ * - `GroundPrimitive` instances
+ *
+ * **Highlighting Modes:**
+ * - **Fill mode** (default): Creates a filled geometry using the original shape
+ * - **Outline mode**: Creates a polyline outline of the original geometry
+ *
+ * @example
+ * ```typescript
+ * // Basic usage
+ * const viewer = new Viewer('cesiumContainer');
+ * const surfaceHighlight = new SurfaceHighlight(viewer);
+ *
+ * // Highlight an entity with default red fill
+ * const entity = viewer.entities.add(new Entity({
+ *   polygon: {
+ *     hierarchy: Cartesian3.fromDegreesArray([-75, 35, -74, 35, -74, 36, -75, 36]),
+ *     material: Color.BLUE
+ *   }
+ * }));
+ * surfaceHighlight.show(entity);
+ * ```
+ */
 export default class SurfaceHighlight implements IHighlight {
   private _color: Color = Color.RED;
   private _entity: Entity;
@@ -40,8 +70,8 @@ export default class SurfaceHighlight implements IHighlight {
   /**
    * Highlights a picked object by updating the reusable entity
    * @param object The object to be highlighted.
-   * @param color Optional color for the highlight.
-   * @param outline Optional style for the highlight. Defaults to `false`.
+   * @param options Optional style for the highlight.
+   * @see {@link HighlightOptions}
    */
   show(
     object: Entity | GroundPrimitive,

@@ -25,10 +25,10 @@ import SurfaceHighlight from './surface-highlight.js';
  * const highlighter2 = Highlight.getInstance(viewer2);
  *
  * // This highlight only affects viewer1
- * highlighter1.show(someEntity, Color.RED);
+ * highlighter1.show(someEntity, { color: Color.RED });
  *
  * // This highlight only affects viewer2
- * highlighter2.show(someEntity, Color.BLUE);
+ * highlighter2.show(someEntity, { color: Color.BLUE });
  *
  * // When done with viewers
  * Highlight.releaseInstance(viewer1);
@@ -89,6 +89,7 @@ export default class Highlight {
    * Highlights a picked object or a direct instance.
    * @param picked The result of `Scene.pick()` or direct instance to be highlighted.
    * @param options Optional style for the highlight.
+   * @see {@link HighlightOptions}
    */
   show(picked: Picked, options: HighlightOptions = { color: this._color }) {
     this.hide();
