@@ -3,14 +3,20 @@
   "version": "0.0.18",
   "description": "Utilities to handle Cesium classes easier.",
   "keywords": [
-    "Cesium",
-    "Utility",
-    "Collection",
-    "Terrain",
-    "Tagged",
-    "GIS",
-    "3D",
-    "Mapping"
+    "cesium",
+    "cesiumjs",
+    "utility",
+    "collection",
+    "terrain",
+    "tagged",
+    "3d",
+    "3d-gis",
+    "gis",
+    "mapping",
+    "terrain-provider",
+    "entity-collection",
+    "geospatial",
+    "webgl"
   ],
   "repository": {
     "type": "git",
