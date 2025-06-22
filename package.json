@@ -97,20 +97,20 @@
     }
   },
   "devDependencies": {
-    "@changesets/cli": "^2.29.4",
+    "@changesets/cli": "^2.29.5",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@commitlint/cz-commitlint": "^19.8.1",
     "@commitlint/format": "^19.8.1",
     "@commitlint/types": "^19.8.1",
     "@eslint/js": "^9.29.0",
-    "@typescript-eslint/eslint-plugin": "^8.34.0",
-    "@typescript-eslint/parser": "^8.34.0",
-    "@vitest/coverage-v8": "^3.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.34.1",
+    "@typescript-eslint/parser": "^8.34.1",
+    "@vitest/coverage-v8": "^3.2.4",
     "cesium": "^1.130.0",
     "eslint": "^9.29.0",
-    "eslint-plugin-jsdoc": "^51.0.1",
-    "eslint-plugin-prettier": "^5.4.1",
+    "eslint-plugin-jsdoc": "^51.1.1",
+    "eslint-plugin-prettier": "^5.5.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-unused-imports": "^4.1.4",
     "husky": "^9.1.7",
@@ -120,6 +120,6 @@
     "typedoc": "^0.28.5",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
-    "vitest": "^3.2.3"
+    "vitest": "^3.2.4"
   }
 }
