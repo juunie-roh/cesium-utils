@@ -13,9 +13,6 @@ import {
 
 import type { HighlightOptions, IHighlight } from './highlight.types.js';
 
-/**
- * @class
- */
 export default class SilhouetteHighlight implements IHighlight {
   private _color: Color = Color.RED;
   private _silhouette: PostProcessStage;
@@ -40,12 +37,6 @@ export default class SilhouetteHighlight implements IHighlight {
     this._stages.add(this._composite);
   }
 
-  /**
-   *
-   * @param object
-   * @param options
-   * @returns
-   */
   show(object: Cesium3DTileFeature | Entity, options?: HighlightOptions) {
     if (!defined(object) || this._silhouette.selected[0] === object) return;
     if (object instanceof Cesium3DTileFeature) {
@@ -59,10 +50,6 @@ export default class SilhouetteHighlight implements IHighlight {
       );
     }
   }
-
-  /**
-   *
-   */
   hide(): void {
     if (this._silhouette.selected.length > 0) this._silhouette.selected = [];
     if (this._entity?.model) {
@@ -72,10 +59,6 @@ export default class SilhouetteHighlight implements IHighlight {
       this._entity = undefined;
     }
   }
-
-  /**
-   *
-   */
   destroy(): void {
     this.hide();
     if (this._composite) {
