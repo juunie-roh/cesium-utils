@@ -56,7 +56,7 @@ export default class SilhouetteHighlight implements IHighlight {
   show(object: Cesium3DTileFeature | Entity, options?: HighlightOptions) {
     if (!defined(object) || this._silhouette.selected[0] === object) return;
     if (object instanceof Cesium3DTileFeature) {
-      this._composite.uniforms.color = options?.color || this._color;
+      this._silhouette.uniforms.color = options?.color || this._color;
       this._silhouette.selected.push(object);
     } else {
       if (!object.model) return;
