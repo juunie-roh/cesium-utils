@@ -7,7 +7,7 @@
 
 A utility library for Cesium.js that simplifies working with collections and terrain providers.
 
-[📚 API Documentation](https://juunie-roh.github.io/cesium-utils/) | [📦 NPM Package](https://www.npmjs.com/package/@juun-roh/cesium-utils) | [▶️ Cesium Utils Demo](https://juun.vercel.app/cesium-utils)
+[📚 API Documentation](https://juunie-roh.github.io/cesium-utils/) | [📦 NPM Package](https://www.npmjs.com/package/@juun-roh/cesium-utils) | [▶️ Demonstration](https://juun.vercel.app/cesium-utils)
 
 ## Installation
 
