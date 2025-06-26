@@ -1,5 +1,17 @@
 # @juun-roh/cesium-utils
 
+## 0.0.20
+
+### Patch Changes
+
+- 6ffa502: Bug Fix: Silhouette Highlight
+
+  fix: Accessing wrong property for color setting
+
+- b520c0e: Add Test Draft for Silhouette Highlight
+
+  test: Add test draft
+
 ## 0.0.19
 
 ### Patch Changes
