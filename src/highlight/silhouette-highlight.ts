@@ -13,6 +13,10 @@ import {
 
 import type { HighlightOptions, IHighlight } from './highlight.types.js';
 
+/**
+ * @class
+ * An implementation for highlighting 3D objects in Cesium.
+ */
 export default class SilhouetteHighlight implements IHighlight {
   private _color: Color = Color.RED;
   private _silhouette: PostProcessStage;
@@ -37,9 +41,22 @@ export default class SilhouetteHighlight implements IHighlight {
     this._stages.add(this._composite);
   }
 
+  /**
+   * Highlights a picked object by updating silhouette composite.
+   * @param object The object to be highlighted.
+   * @param options Optional style for the highlight.
+   */
+  show(object: Cesium3DTileFeature, options?: HighlightOptions): void;
+  /**
+   * Highlights a picked object by updating the model properties.
+   * @param object The object to be highlighted.
+   * @param options Optional style for the highlight.
+   */
+  show(object: Entity, options?: HighlightOptions): void;
   show(object: Cesium3DTileFeature | Entity, options?: HighlightOptions) {
     if (!defined(object) || this._silhouette.selected[0] === object) return;
     if (object instanceof Cesium3DTileFeature) {
+      this._composite.uniforms.color = options?.color || this._color;
       this._silhouette.selected.push(object);
     } else {
       if (!object.model) return;
@@ -50,6 +67,8 @@ export default class SilhouetteHighlight implements IHighlight {
       );
     }
   }
+
+  /** Clears the current highlight */
   hide(): void {
     if (this._silhouette.selected.length > 0) this._silhouette.selected = [];
     if (this._entity?.model) {
@@ -59,6 +78,8 @@ export default class SilhouetteHighlight implements IHighlight {
       this._entity = undefined;
     }
   }
+
+  /** Clean up the instances */
   destroy(): void {
     this.hide();
     if (this._composite) {

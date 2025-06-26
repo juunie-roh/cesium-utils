@@ -95,10 +95,9 @@ export default class Highlight {
     this.hide();
     const object = this._getObject(picked);
     if (!defined(object)) return;
-    if (
-      object instanceof Cesium3DTileFeature ||
-      (object instanceof Entity && object.model)
-    ) {
+    if (object instanceof Cesium3DTileFeature) {
+      return this._silhouette.show(object, options);
+    } else if (object instanceof Entity && object.model) {
       return this._silhouette.show(object, options);
     }
 
