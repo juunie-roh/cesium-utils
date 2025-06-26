@@ -1,5 +1,19 @@
 # @juun-roh/cesium-utils
 
+## 0.0.19
+
+### Patch Changes
+
+- 59f1c7a: 3D Tileset Highlight
+
+  feat: Update silhouette highlight class
+
+  - Apply overload on `show` method.
+    Separate by object type.
+
+  - Add silhouette composite color control.
+    Need to be tested.
+
 ## 0.0.18
 
 ### Patch Changes
