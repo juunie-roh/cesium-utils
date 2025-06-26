@@ -42,13 +42,13 @@ export default class SilhouetteHighlight implements IHighlight {
   }
 
   /**
-   * Highlights a picked object by updating silhouette composite.
+   * Highlights a picked `Cesium3DTileset` by updating silhouette composite.
    * @param object The object to be highlighted.
    * @param options Optional style for the highlight.
    */
   show(object: Cesium3DTileFeature, options?: HighlightOptions): void;
   /**
-   * Highlights a picked object by updating the model properties.
+   * Highlights a picked `Entity` by updating the model properties.
    * @param object The object to be highlighted.
    * @param options Optional style for the highlight.
    */
@@ -56,7 +56,7 @@ export default class SilhouetteHighlight implements IHighlight {
   show(object: Cesium3DTileFeature | Entity, options?: HighlightOptions) {
     if (!defined(object) || this._silhouette.selected[0] === object) return;
     if (object instanceof Cesium3DTileFeature) {
-      this._composite.uniforms.color = options?.color || this._color;
+      this._silhouette.uniforms.color = options?.color || this._color;
       this._silhouette.selected.push(object);
     } else {
       if (!object.model) return;
