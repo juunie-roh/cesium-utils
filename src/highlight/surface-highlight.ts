@@ -20,7 +20,7 @@ import type { HighlightOptions, IHighlight } from './highlight.types.js';
  * @class
  * A flyweight implementation for highlighting 2D surface objects in Cesium.
  *
- * This class provides efficient highlighting for ground-clamped geometries (polygons, polylines, rectangles)
+ * This class provides highlighting for ground-clamped geometries (polygons, polylines, rectangles)
  *
  * **Supported Geometry Types:**
  * - `Entity` with polygon, polyline, or rectangle graphics
