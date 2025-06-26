@@ -29,6 +29,18 @@ This library works in both modern browsers and Node.js environments. It supports
 * ESM (ECMAScript modules)
 * CommonJS (via a bundled .cjs file)
 
+## Modular Exports
+
+This library supports modular exports, which enables for you to import only needed modules.
+Though this library is about 140kB, you can minimize the size for importing this library.
+
+```typescript
+// This imports all modules of the package
+import { Collection } from "@juun-roh/cesium-utils";
+// To minimize the imported modules size, try this:
+import { Highlight } from "@juun-roh/cesium-utils/highlight";
+```
+
 ## Development
 
 ### Building
