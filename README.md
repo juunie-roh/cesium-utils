@@ -31,14 +31,17 @@ This library works in both modern browsers and Node.js environments. It supports
 
 ## Modular Exports
 
-This library supports modular exports, which enables for you to import only needed modules.
-Though this library is about 140kB, you can minimize the size for importing this library.
+This library supports modular exports, enabling you to import only the functionality you need rather than the entire package. This helps reduce bundle size and improves build performance by explicitly avoiding unused code.
 
 ```typescript
-// This imports all modules of the package
-import { Collection } from "@juun-roh/cesium-utils";
-// To minimize the imported modules size, try this:
+// Import everything from the main package
+import { Collection, Highlight, TerrainVisualizer } from "@juun-roh/cesium-utils";
+
+// Or import specific modules to minimize bundle size
+import { Collection } from "@juun-roh/cesium-utils/collection";
 import { Highlight } from "@juun-roh/cesium-utils/highlight";
+import { TerrainVisualizer } from "@juun-roh/cesium-utils/utils";
+import { cloneViewer, syncCamera } from "@juun-roh/cesium-utils/viewer";
 ```
 
 ## Development
