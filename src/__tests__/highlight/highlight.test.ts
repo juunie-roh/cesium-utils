@@ -137,7 +137,7 @@ describe("Highlight", () => {
       mockEntity = new Entity();
       mockGroundPrimitive = new GroundPrimitive();
       mockModelGraphics = new ModelGraphics();
-      mockCesium3DTileFeature = {} as Cesium3DTileFeature;
+      mockCesium3DTileFeature = new Cesium3DTileFeature();
     });
 
     it("should route Entity to surface highlight", () => {
@@ -160,46 +160,41 @@ describe("Highlight", () => {
       });
     });
 
-    // it('should route Cesium3DTileFeature to silhouette highlight', () => {
-    //   const silhouetteShowSpy = vi.spyOn(highlight['_silhouette'], 'show');
-    //   const color = Color.YELLOW;
+    it("should route Cesium3DTileFeature to silhouette highlight", () => {
+      const silhouetteShowSpy = vi.spyOn(highlight["_silhouette"], "show");
+      const color = Color.YELLOW;
 
-    //   highlight.show(mockCesium3DTileFeature, color, undefined);
+      highlight.show(mockCesium3DTileFeature, { color });
 
-    //   expect(silhouetteShowSpy).toHaveBeenCalledWith(
-    //     mockCesium3DTileFeature,
-    //     color,
-    //     undefined,
-    //   );
-    // });
+      expect(silhouetteShowSpy).toHaveBeenCalledWith(mockCesium3DTileFeature, {
+        color,
+      });
+    });
 
-    // it('should route ModelGraphics to silhouette highlight', () => {
-    //   const silhouetteShowSpy = vi.spyOn(highlight['_silhouette'], 'show');
-    //   const color = Color.ORANGE;
+    it("should route ModelGraphics to silhouette highlight", () => {
+      const e = new Entity({ model: mockModelGraphics });
+      const silhouetteShowSpy = vi.spyOn(highlight["_silhouette"], "show");
+      const color = Color.ORANGE;
 
-    //   highlight.show(new Entity({ model: mockModelGraphics }), color);
+      highlight.show(e, { color });
 
-    //   expect(silhouetteShowSpy).toHaveBeenCalledWith(
-    //     mockModelGraphics,
-    //     color,
-    //     undefined,
-    //   );
-    // });
+      expect(silhouetteShowSpy).toHaveBeenCalledWith(e, {
+        color,
+      });
+    });
 
-    // it('should handle entity with model property', () => {
-    //   const entityWithModel = new Entity({
-    //     model: mockModelGraphics,
-    //   });
-    //   const silhouetteShowSpy = vi.spyOn(highlight['_silhouette'], 'show');
+    it("should handle entity with model property", () => {
+      const entityWithModel = new Entity({
+        model: mockModelGraphics,
+      });
+      const silhouetteShowSpy = vi.spyOn(highlight["_silhouette"], "show");
 
-    //   highlight.show(entityWithModel);
+      highlight.show(entityWithModel);
 
-    //   expect(silhouetteShowSpy).toHaveBeenCalledWith(
-    //     mockModelGraphics,
-    //     highlight.color,
-    //     undefined,
-    //   );
-    // });
+      expect(silhouetteShowSpy).toHaveBeenCalledWith(entityWithModel, {
+        color: highlight.color,
+      });
+    });
 
     it("should handle picked object with id property", () => {
       const pickedObject = {
@@ -214,23 +209,21 @@ describe("Highlight", () => {
       });
     });
 
-    // it('should handle picked object with id.model property', () => {
-    //   const entityWithModel = new Entity({
-    //     model: mockModelGraphics,
-    //   });
-    //   const pickedObject = {
-    //     id: entityWithModel,
-    //   } as Picked;
-    //   const silhouetteShowSpy = vi.spyOn(highlight['_silhouette'], 'show');
+    it("should handle picked object with id.model property", () => {
+      const entityWithModel = new Entity({
+        model: mockModelGraphics,
+      });
+      const pickedObject = {
+        id: entityWithModel,
+      } as Picked;
+      const silhouetteShowSpy = vi.spyOn(highlight["_silhouette"], "show");
 
-    //   highlight.show(pickedObject);
+      highlight.show(pickedObject);
 
-    //   expect(silhouetteShowSpy).toHaveBeenCalledWith(
-    //     mockModelGraphics,
-    //     highlight.color,
-    //     undefined,
-    //   );
-    // });
+      expect(silhouetteShowSpy).toHaveBeenCalledWith(entityWithModel, {
+        color: highlight.color,
+      });
+    });
 
     it("should handle picked object with primitive property", () => {
       const pickedObject = {
@@ -324,20 +317,18 @@ describe("Highlight", () => {
       const entity = new Entity();
       const entityWithModel = new Entity({ model: new ModelGraphics() });
       const groundPrimitive = new GroundPrimitive();
-      const cesium3DTileFeature = {} as Cesium3DTileFeature;
+      const cesium3DTileFeature = new Cesium3DTileFeature();
 
       // Test direct entity
       expect(highlight["_getObject"](entity)).toBe(entity);
 
       // // Test entity with model
-      // expect(highlight['_getObject'](entityWithModel)).toBe(
-      //   entityWithModel.model,
-      // );
+      expect(highlight["_getObject"](entityWithModel)).toBe(entityWithModel);
 
       // Test direct Cesium3DTileFeature
-      // expect(highlight['_getObject'](cesium3DTileFeature)).toBe(
-      //   cesium3DTileFeature,
-      // );
+      expect(highlight["_getObject"](cesium3DTileFeature)).toBe(
+        cesium3DTileFeature,
+      );
 
       // Test direct GroundPrimitive
       expect(highlight["_getObject"](groundPrimitive)).toBe(groundPrimitive);
@@ -346,9 +337,9 @@ describe("Highlight", () => {
       expect(highlight["_getObject"]({ id: entity })).toBe(entity);
 
       // Test picked object with id.model
-      // expect(highlight['_getObject']({ id: entityWithModel })).toBe(
-      //   entityWithModel.model,
-      // );
+      expect(highlight["_getObject"]({ id: entityWithModel })).toBe(
+        entityWithModel,
+      );
 
       // Test picked object with primitive
       expect(highlight["_getObject"]({ primitive: groundPrimitive })).toBe(
