@@ -90,7 +90,9 @@ export default class SilhouetteHighlight implements IHighlight {
   hide(): void {
     if (this._silhouette.selected.length > 0) this._silhouette.selected = [];
     if (this._entity?.model) {
-      this._entity.model.silhouetteColor = undefined;
+      this._entity.model.silhouetteColor = new ConstantProperty(
+        Color.TRANSPARENT,
+      );
       this._entity = undefined;
     }
   }
