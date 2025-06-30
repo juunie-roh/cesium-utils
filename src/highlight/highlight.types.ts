@@ -6,7 +6,7 @@ import type {
   GroundPrimitive,
   Model,
   Primitive,
-} from 'cesium';
+} from "cesium";
 
 // highlight.types.ts
 interface IHighlight {

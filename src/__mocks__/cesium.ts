@@ -6,14 +6,14 @@ import {
   Scene as CScene,
   TerrainProvider as CTerrainProvider,
   Viewer as CViewer,
-} from 'cesium';
-import { vi } from 'vitest';
+} from "cesium";
+import { vi } from "vitest";
 
 // Deep merge utility
 function merge(to: any, from?: any) {
   if (!from) return to;
   Object.keys(from).forEach((key) => {
-    if (key === '__proto__' || key === 'constructor') {
+    if (key === "__proto__" || key === "constructor") {
       return; // Skip prototype-polluting keys
     }
     if (from[key] instanceof Object && key in to) {
@@ -42,9 +42,9 @@ function createMock<T>(base: any, overrides?: Partial<T>): Partial<T> {
 const createMockCamera = (overrides?: Partial<CCamera>) =>
   createMock(
     {
-      positionWC: createCloneable('position-clone'),
-      directionWC: createCloneable('direction-clone'),
-      upWC: createCloneable('up-clone'),
+      positionWC: createCloneable("position-clone"),
+      directionWC: createCloneable("direction-clone"),
+      upWC: createCloneable("up-clone"),
       position: {},
       direction: {},
       up: {},
@@ -58,12 +58,12 @@ const createMockCamera = (overrides?: Partial<CCamera>) =>
 const createMockClock = (overrides?: Partial<CClock>) =>
   createMock(
     {
-      startTime: createCloneable('startTime'),
-      stopTime: createCloneable('stopTime'),
-      currentTime: createCloneable('currentTime'),
+      startTime: createCloneable("startTime"),
+      stopTime: createCloneable("stopTime"),
+      currentTime: createCloneable("currentTime"),
       multiplier: 1,
-      clockStep: 'SYSTEM_CLOCK_MULTIPLIER',
-      clockRange: 'LOOP_STOP',
+      clockStep: "SYSTEM_CLOCK_MULTIPLIER",
+      clockRange: "LOOP_STOP",
       shouldAnimate: true,
     },
     overrides,
@@ -77,7 +77,7 @@ const createMockImageryLayers = (
     {
       length: 1,
       get: vi.fn().mockReturnValue({
-        imageryProvider: { id: 'mockImageryProvider' },
+        imageryProvider: { id: "mockImageryProvider" },
       }),
       removeAll: vi.fn(),
       addImageryProvider: vi.fn(),
@@ -112,8 +112,8 @@ const createMockScene = (overrides?: Partial<CScene>) =>
       },
       screenSpaceCameraController: {
         enableCollisionDetection: true,
-        tiltEventTypes: ['type1', 'type2'],
-        zoomEventTypes: ['zoom1', 'zoom2'],
+        tiltEventTypes: ["type1", "type2"],
+        zoomEventTypes: ["zoom1", "zoom2"],
       },
     },
     overrides,
@@ -133,12 +133,12 @@ const createMockViewer = (overrides?: Partial<CViewer>) =>
       fullscreenButton: true,
       infoBox: true,
 
-      container: document.createElement('div'),
+      container: document.createElement("div"),
       camera: createMockCamera(overrides?.camera),
       clock: createMockClock(overrides?.clock),
       entities: createMockEntities(overrides?.entities),
       imageryLayers: createMockImageryLayers(overrides?.imageryLayers),
-      terrainProvider: { id: 'mockTerrainProvider' },
+      terrainProvider: { id: "mockTerrainProvider" },
       scene: createMockScene(overrides?.scene),
     },
     overrides,

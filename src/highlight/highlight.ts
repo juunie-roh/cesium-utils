@@ -5,11 +5,11 @@ import {
   Entity,
   GroundPrimitive,
   Viewer,
-} from 'cesium';
+} from "cesium";
 
-import type { HighlightOptions, Picked } from './highlight.types.js';
-import SilhouetteHighlight from './silhouette-highlight.js';
-import SurfaceHighlight from './surface-highlight.js';
+import type { HighlightOptions, Picked } from "./highlight.types.js";
+import SilhouetteHighlight from "./silhouette-highlight.js";
+import SurfaceHighlight from "./surface-highlight.js";
 
 /**
  * @class

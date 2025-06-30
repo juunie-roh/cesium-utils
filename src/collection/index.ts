@@ -1,4 +1,4 @@
-import Collection from './collection.js';
+import Collection from "./collection.js";
 
 export { Collection };
-export type * from './collection.types.js';
+export type * from "./collection.types.js";

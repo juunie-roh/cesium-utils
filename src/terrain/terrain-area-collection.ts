@@ -1,4 +1,4 @@
-import { TerrainArea } from './terrain-area.js';
+import { TerrainArea } from "./terrain-area.js";
 
 /**
  * @extends Array

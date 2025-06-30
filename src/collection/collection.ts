@@ -1,6 +1,6 @@
-import { defined, EntityCollection } from 'cesium';
+import { defined, EntityCollection } from "cesium";
 
-import { isGetterOnly } from '@/utils/index.js';
+import { isGetterOnly } from "@/utils/index.js";
 
 import type {
   CesiumCollection,
@@ -10,7 +10,7 @@ import type {
   NonFunction,
   Tag,
   WithTag,
-} from './collection.types.js';
+} from "./collection.types.js";
 
 /**
  * @class
@@ -109,7 +109,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * Using a Symbol ensures no property naming conflicts with the item's own properties.
    * @readonly
    */
-  static readonly symbol: unique symbol = Symbol('cesium-item-tag');
+  static readonly symbol: unique symbol = Symbol("cesium-item-tag");
 
   /**
    * Default tag used when adding items without specifying a tag.
@@ -152,7 +152,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * @param options.tag - The default tag to use for items (defaults to 'default')
    */
   constructor({ collection, tag }: { collection: C; tag?: Tag }) {
-    this.tag = tag || 'default';
+    this.tag = tag || "default";
     this.collection = collection;
   }
 
@@ -305,7 +305,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
       this.collection.add(i, idx);
       this._addToTagMap(i, t);
       this._invalidateCache();
-      this._emit('add', { items: [i], tag: t });
+      this._emit("add", { items: [i], tag: t });
     }
 
     return i;
@@ -331,7 +331,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    */
   contains(tag: Tag): boolean;
   contains(target: I | Tag): boolean {
-    if (typeof target === 'object') {
+    if (typeof target === "object") {
       return this.collection.contains(target);
     }
 
@@ -362,12 +362,12 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
   remove(by: Tag[]): boolean;
   remove(target: I | Tag | Tag[]): boolean {
     // Case 1: Object but not array (an item)
-    if (typeof target === 'object' && !Array.isArray(target)) {
+    if (typeof target === "object" && !Array.isArray(target)) {
       const result = this.collection.remove(target);
       if (result) {
         this._removeFromTagMap(target as I & WithTag);
         this._invalidateCache();
-        this._emit('remove', { items: [target] });
+        this._emit("remove", { items: [target] });
       }
       return result;
     }
@@ -407,7 +407,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
     this._tagMap.clear();
     this.collection.removeAll();
     this._invalidateCache();
-    this._emit('clear');
+    this._emit("clear");
   }
 
   /**
@@ -518,7 +518,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
     }
 
     if (items.length > 0) {
-      this._emit('update', { items, tag: to });
+      this._emit("update", { items, tag: to });
     }
 
     return items.length;
@@ -613,7 +613,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
     const items = this.get(by);
 
     for (const item of items) {
-      if (property in item && typeof item[property] !== 'function') {
+      if (property in item && typeof item[property] !== "function") {
         if (isGetterOnly(item, property)) {
           throw Error(
             `Cannot set read-only property '${String(property)}' on ${item.constructor.name}`,

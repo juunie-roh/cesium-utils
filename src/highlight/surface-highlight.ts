@@ -12,9 +12,9 @@ import {
   PolylineGraphics,
   RectangleGraphics,
   Viewer,
-} from 'cesium';
+} from "cesium";
 
-import type { HighlightOptions, IHighlight } from './highlight.types.js';
+import type { HighlightOptions, IHighlight } from "./highlight.types.js";
 
 /**
  * @class
@@ -99,7 +99,7 @@ export default class SurfaceHighlight implements IHighlight {
       this._entity.show = true;
       return this._entity;
     } catch (error) {
-      console.error('Failed to highlight object:', error);
+      console.error("Failed to highlight object:", error);
       return undefined;
     }
   }

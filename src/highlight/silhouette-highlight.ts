@@ -9,9 +9,9 @@ import {
   PostProcessStageComposite,
   PostProcessStageLibrary,
   Viewer,
-} from 'cesium';
+} from "cesium";
 
-import type { HighlightOptions, IHighlight } from './highlight.types.js';
+import type { HighlightOptions, IHighlight } from "./highlight.types.js";
 
 /**
  * @class

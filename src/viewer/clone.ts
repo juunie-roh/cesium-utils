@@ -1,6 +1,6 @@
-import { Viewer } from 'cesium';
+import { Viewer } from "cesium";
 
-import { syncCamera } from './sync-camera.js';
+import { syncCamera } from "./sync-camera.js";
 
 /**
  * Copies configuration and state from one Cesium Viewer to another.

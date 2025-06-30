@@ -1,10 +1,10 @@
-import { EllipsoidTerrainProvider, Request, TerrainProvider } from 'cesium';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { EllipsoidTerrainProvider, Request, TerrainProvider } from "cesium";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { HybridTerrainProvider } from '@/terrain/hybrid-terrain-provider.js';
-import { TileRange } from '@/terrain/terrain.types.js';
-import { TerrainArea } from '@/terrain/terrain-area.js';
-import TerrainAreaCollection from '@/terrain/terrain-area-collection.js';
+import { HybridTerrainProvider } from "@/terrain/hybrid-terrain-provider.js";
+import { TileRange } from "@/terrain/terrain.types.js";
+import { TerrainArea } from "@/terrain/terrain-area.js";
+import TerrainAreaCollection from "@/terrain/terrain-area-collection.js";
 
 const createTileRanges = (): Map<number, TileRange> => {
   const map = new Map<number, TileRange>();
@@ -14,7 +14,7 @@ const createTileRanges = (): Map<number, TileRange> => {
   return map;
 };
 
-describe('HybridTerrainProvider', () => {
+describe("HybridTerrainProvider", () => {
   let terrainProvider: TerrainProvider;
   let fallbackProvider: TerrainProvider;
   let terrainArea: TerrainArea;
@@ -36,8 +36,8 @@ describe('HybridTerrainProvider', () => {
     });
   });
 
-  describe('constructor', () => {
-    it('should create new instance with default values', () => {
+  describe("constructor", () => {
+    it("should create new instance with default values", () => {
       const defaultHybrid = new HybridTerrainProvider({
         terrainAreas: [terrainArea],
         terrainProvider,
@@ -51,7 +51,7 @@ describe('HybridTerrainProvider', () => {
       expect(defaultHybrid.ready).toBe(true);
     });
 
-    it('should create new instance with provided values', () => {
+    it("should create new instance with provided values", () => {
       const provider = new EllipsoidTerrainProvider();
       const fallback = new EllipsoidTerrainProvider();
       const t = new HybridTerrainProvider({
@@ -65,58 +65,58 @@ describe('HybridTerrainProvider', () => {
     });
   });
 
-  describe('property getters', () => {
-    it('should correctly get credit from terrain provider', () => {
+  describe("property getters", () => {
+    it("should correctly get credit from terrain provider", () => {
       expect(hybrid.credit).toBe(terrainProvider.credit);
     });
 
-    it('should correctly get errorEvent from terrain provider', () => {
+    it("should correctly get errorEvent from terrain provider", () => {
       expect(hybrid.errorEvent).toBe(terrainProvider.errorEvent);
     });
 
-    it('should correctly get hasWaterMask from terrain provider', () => {
+    it("should correctly get hasWaterMask from terrain provider", () => {
       expect(hybrid.hasWaterMask).toBe(terrainProvider.hasWaterMask);
     });
 
-    it('should correctly get hasVertexNormals from terrain provider', () => {
+    it("should correctly get hasVertexNormals from terrain provider", () => {
       expect(hybrid.hasVertexNormals).toBe(terrainProvider.hasVertexNormals);
     });
 
-    it('should correctly get availability from terrain provider', () => {
+    it("should correctly get availability from terrain provider", () => {
       expect(hybrid.availability).toBe(terrainProvider.availability);
     });
 
-    it('should return a copy of terrainAreas', () => {
+    it("should return a copy of terrainAreas", () => {
       const areas = hybrid.terrainAreas;
       expect(areas).toContain(terrainArea);
-      expect(hybrid['_terrainAreas']).toBeInstanceOf(TerrainAreaCollection);
-      expect(areas).not.toBe(hybrid['_terrainAreas']);
+      expect(hybrid["_terrainAreas"]).toBeInstanceOf(TerrainAreaCollection);
+      expect(areas).not.toBe(hybrid["_terrainAreas"]);
     });
   });
 
-  describe('getLevelMaximumGeometricError', () => {
-    it('should pass through to terrain provider', () => {
-      const spy = vi.spyOn(terrainProvider, 'getLevelMaximumGeometricError');
+  describe("getLevelMaximumGeometricError", () => {
+    it("should pass through to terrain provider", () => {
+      const spy = vi.spyOn(terrainProvider, "getLevelMaximumGeometricError");
       hybrid.getLevelMaximumGeometricError(5);
       expect(spy).toHaveBeenCalledWith(5);
     });
   });
 
-  describe('loadTileDataAvailability', () => {
-    it('should pass through to terrain provider', () => {
-      const spy = vi.spyOn(terrainProvider, 'loadTileDataAvailability');
+  describe("loadTileDataAvailability", () => {
+    it("should pass through to terrain provider", () => {
+      const spy = vi.spyOn(terrainProvider, "loadTileDataAvailability");
       hybrid.loadTileDataAvailability(0, 0, 0);
       expect(spy).toHaveBeenCalledWith(0, 0, 0);
     });
   });
 
-  describe('getTileDataAvailable', () => {
-    it('should check terrain areas first', () => {
-      const areaSpy = vi.spyOn(terrainArea, 'contains').mockReturnValue(true);
+  describe("getTileDataAvailable", () => {
+    it("should check terrain areas first", () => {
+      const areaSpy = vi.spyOn(terrainArea, "contains").mockReturnValue(true);
       const areaDataSpy = vi
-        .spyOn(terrainArea, 'getTileDataAvailable')
+        .spyOn(terrainArea, "getTileDataAvailable")
         .mockReturnValue(true);
-      const providerSpy = vi.spyOn(terrainProvider, 'getTileDataAvailable');
+      const providerSpy = vi.spyOn(terrainProvider, "getTileDataAvailable");
 
       const result = hybrid.getTileDataAvailable(0, 0, 0);
 
@@ -126,10 +126,10 @@ describe('HybridTerrainProvider', () => {
       expect(result).toBe(true);
     });
 
-    it('should fall back to terrain provider if no terrain area contains the tile', () => {
-      const areaSpy = vi.spyOn(terrainArea, 'contains').mockReturnValue(false);
+    it("should fall back to terrain provider if no terrain area contains the tile", () => {
+      const areaSpy = vi.spyOn(terrainArea, "contains").mockReturnValue(false);
       const providerSpy = vi
-        .spyOn(terrainProvider, 'getTileDataAvailable')
+        .spyOn(terrainProvider, "getTileDataAvailable")
         .mockReturnValue(true);
 
       const result = hybrid.getTileDataAvailable(0, 0, 0);
@@ -140,26 +140,26 @@ describe('HybridTerrainProvider', () => {
     });
   });
 
-  describe('requestTileGeometry', () => {
-    it('should return undefined if not ready', () => {
+  describe("requestTileGeometry", () => {
+    it("should return undefined if not ready", () => {
       // Set ready to false
-      Object.defineProperty(hybrid, '_ready', { get: () => false });
+      Object.defineProperty(hybrid, "_ready", { get: () => false });
 
       const result = hybrid.requestTileGeometry(0, 0, 0);
 
       expect(result).toBeUndefined();
     });
 
-    it('should use terrain area if tile is within an area', () => {
-      const areaSpy = vi.spyOn(terrainArea, 'contains').mockReturnValue(true);
-      const areaRequestSpy = vi.spyOn(terrainArea, 'requestTileGeometry');
+    it("should use terrain area if tile is within an area", () => {
+      const areaSpy = vi.spyOn(terrainArea, "contains").mockReturnValue(true);
+      const areaRequestSpy = vi.spyOn(terrainArea, "requestTileGeometry");
       const defaultProviderSpy = vi.spyOn(
         terrainProvider,
-        'requestTileGeometry',
+        "requestTileGeometry",
       );
       const fallbackProviderSpy = vi.spyOn(
         fallbackProvider,
-        'requestTileGeometry',
+        "requestTileGeometry",
       );
 
       hybrid.requestTileGeometry(0, 0, 0);
@@ -170,18 +170,18 @@ describe('HybridTerrainProvider', () => {
       expect(fallbackProviderSpy).not.toHaveBeenCalled();
     });
 
-    it('should use default provider if tile is available', () => {
-      const areaSpy = vi.spyOn(terrainArea, 'contains').mockReturnValue(false);
+    it("should use default provider if tile is available", () => {
+      const areaSpy = vi.spyOn(terrainArea, "contains").mockReturnValue(false);
       const availableSpy = vi
-        .spyOn(terrainProvider, 'getTileDataAvailable')
+        .spyOn(terrainProvider, "getTileDataAvailable")
         .mockReturnValue(true);
       const defaultProviderSpy = vi.spyOn(
         terrainProvider,
-        'requestTileGeometry',
+        "requestTileGeometry",
       );
       const fallbackProviderSpy = vi.spyOn(
         fallbackProvider,
-        'requestTileGeometry',
+        "requestTileGeometry",
       );
 
       hybrid.requestTileGeometry(0, 0, 0);
@@ -192,18 +192,18 @@ describe('HybridTerrainProvider', () => {
       expect(fallbackProviderSpy).not.toHaveBeenCalled();
     });
 
-    it('should use fallback provider if default provider does not have tile available', () => {
-      const areaSpy = vi.spyOn(terrainArea, 'contains').mockReturnValue(false);
+    it("should use fallback provider if default provider does not have tile available", () => {
+      const areaSpy = vi.spyOn(terrainArea, "contains").mockReturnValue(false);
       const availableSpy = vi
-        .spyOn(terrainProvider, 'getTileDataAvailable')
+        .spyOn(terrainProvider, "getTileDataAvailable")
         .mockReturnValue(false);
       const defaultProviderSpy = vi.spyOn(
         terrainProvider,
-        'requestTileGeometry',
+        "requestTileGeometry",
       );
       const fallbackProviderSpy = vi.spyOn(
         fallbackProvider,
-        'requestTileGeometry',
+        "requestTileGeometry",
       );
 
       hybrid.requestTileGeometry(0, 0, 0);
@@ -214,9 +214,9 @@ describe('HybridTerrainProvider', () => {
       expect(fallbackProviderSpy).toHaveBeenCalledWith(0, 0, 0, undefined);
     });
 
-    it('should pass the request parameter to the appropriate provider', () => {
+    it("should pass the request parameter to the appropriate provider", () => {
       const request = new Request();
-      const areaRequestSpy = vi.spyOn(terrainArea, 'requestTileGeometry');
+      const areaRequestSpy = vi.spyOn(terrainArea, "requestTileGeometry");
 
       hybrid.requestTileGeometry(0, 0, 0, request);
 

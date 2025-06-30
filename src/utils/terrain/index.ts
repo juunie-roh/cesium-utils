@@ -1,3 +1,3 @@
-import { TerrainVisualizer } from './visualizer/terrain-visualizer.js';
+import { TerrainVisualizer } from "./visualizer/terrain-visualizer.js";
 
 export { TerrainVisualizer };
