@@ -16,6 +16,24 @@ import type { HighlightOptions, IHighlight } from "./highlight.types.js";
 /**
  * @class
  * An implementation for highlighting 3D objects in Cesium.
+ *
+ * **Supported Object Types:**
+ * - `Entity` with model graphics. (adjustable outline width)
+ * - `Cesium3DTileset` instances. (fixed outline width)
+ *
+ * Currently supports outline style only.
+ *
+ * @example
+ * ```typescript
+ * const viewer = new Viewer("cesiumContainer");
+ * const silhouetteHighlight = new SilhouetteHighlight(viewer);
+ *
+ * // Highlight an object
+ * const entity = viewer.entities.add(new Entity({
+ *   model: new ModelGraphics(),
+ * }));
+ * silhouetteHighlight.show(entity);
+ * ```
  */
 export default class SilhouetteHighlight implements IHighlight {
   private _color: Color = Color.RED;
