@@ -1,5 +1,9 @@
 import { Collection } from "./collection/index.js";
-import { Highlight } from "./highlight/index.js";
+import {
+  Highlight,
+  SilhouetteHighlight,
+  SurfaceHighlight,
+} from "./highlight/index.js";
 import {
   computeRectangle,
   HybridTerrainProvider,
@@ -14,6 +18,8 @@ export {
   Collection,
   Highlight,
   HybridTerrainProvider,
+  SilhouetteHighlight,
+  SurfaceHighlight,
   TerrainArea,
   TerrainAreaCollection,
   TerrainVisualizer,
