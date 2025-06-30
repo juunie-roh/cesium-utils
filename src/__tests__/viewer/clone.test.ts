@@ -1,21 +1,21 @@
 // src/__tests__/viewer/clone.test.ts
-import { TerrainProvider } from 'cesium';
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { TerrainProvider } from "cesium";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createMockViewer, Viewer } from '@/__mocks__/cesium.js';
-import { cloneViewer, syncCamera } from '@/viewer/index.js';
+import { createMockViewer, Viewer } from "@/__mocks__/cesium.js";
+import { cloneViewer, syncCamera } from "@/viewer/index.js";
 
 // Mock dependencies
-vi.mock('@/viewer/sync-camera.js', () => ({
+vi.mock("@/viewer/sync-camera.js", () => ({
   syncCamera: vi.fn(),
 }));
 
 // Mock Cesium
-vi.mock('cesium', () => {
-  return import('../../__mocks__/cesium.js');
+vi.mock("cesium", () => {
+  return import("../../__mocks__/cesium.js");
 });
 
-describe('cloneViewer', () => {
+describe("cloneViewer", () => {
   let mockSource: any;
   let mockDestination: any;
 
@@ -48,8 +48,8 @@ describe('cloneViewer', () => {
     Viewer.mockReturnValue(mockDestination);
   });
 
-  it('should create a new viewer with copied configuration', () => {
-    const containerElement = 'mockContainer';
+  it("should create a new viewer with copied configuration", () => {
+    const containerElement = "mockContainer";
 
     const result = cloneViewer(mockSource, containerElement);
 
@@ -72,22 +72,22 @@ describe('cloneViewer', () => {
     expect(mockDestination.imageryLayers.removeAll).toHaveBeenCalled();
     expect(
       mockDestination.imageryLayers.addImageryProvider,
-    ).toHaveBeenCalledWith({ id: 'mockImageryProvider' }, 0);
+    ).toHaveBeenCalledWith({ id: "mockImageryProvider" }, 0);
     expect(result).toBe(mockDestination);
   });
 
-  it('should override default options with provided options', () => {
-    const customTerrainProvider = { id: 'customTerrainProvider' };
+  it("should override default options with provided options", () => {
+    const customTerrainProvider = { id: "customTerrainProvider" };
     const customOptions = {
       baseLayerPicker: false,
       requestRenderMode: false,
       terrainProvider: customTerrainProvider as unknown as TerrainProvider,
     };
 
-    cloneViewer(mockSource, 'container', customOptions);
+    cloneViewer(mockSource, "container", customOptions);
 
     expect(Viewer).toHaveBeenCalledWith(
-      'container',
+      "container",
       expect.objectContaining({
         baseLayerPicker: false,
         requestRenderMode: false,
@@ -96,14 +96,14 @@ describe('cloneViewer', () => {
     );
   });
 
-  it('should handle non-array event types', () => {
+  it("should handle non-array event types", () => {
     // Instead of replacing the entire structure, just modify the specific properties
     mockSource.scene.screenSpaceCameraController.tiltEventTypes =
-      'singleTiltType';
+      "singleTiltType";
     mockSource.scene.screenSpaceCameraController.zoomEventTypes =
-      'singleZoomType';
+      "singleZoomType";
 
-    const result = cloneViewer(mockSource, 'container');
+    const result = cloneViewer(mockSource, "container");
 
     // Verify the function executes successfully
     expect(result).toBeDefined();

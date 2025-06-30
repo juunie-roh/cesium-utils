@@ -5,10 +5,10 @@ import {
   Request,
   TerrainData,
   TerrainProvider,
-} from 'cesium';
+} from "cesium";
 
-import { TileRange } from './terrain.types.js';
-import { computeRectangle } from './terrain.utils.js';
+import { TileRange } from "./terrain.types.js";
+import { computeRectangle } from "./terrain.utils.js";
 
 /**
  * @class
@@ -30,7 +30,7 @@ export class TerrainArea {
   constructor(options: TerrainArea.ConstructorOptions) {
     this._terrainProvider = options.terrainProvider;
     this._tileRanges = options.tileRanges;
-    this._credit = options.credit || 'custom';
+    this._credit = options.credit || "custom";
     this._isCustom = options.isCustom !== undefined ? options.isCustom : true;
     this._rectangle = computeRectangle(
       options.terrainProvider.tilingScheme,
@@ -210,7 +210,7 @@ export namespace TerrainArea {
     tileRanges: Map<number, TileRange>,
     options?: CesiumTerrainProvider.ConstructorOptions,
   ): Promise<Awaited<TerrainArea>> {
-    const credit = options?.credit || 'custom';
+    const credit = options?.credit || "custom";
     const provider = await CesiumTerrainProvider.fromUrl(url, {
       ...options,
       credit,

@@ -1,4 +1,4 @@
-import { defined, Viewer } from 'cesium';
+import { defined, Viewer } from "cesium";
 
 /**
  * Copies camera state from source viewer to destination viewer.

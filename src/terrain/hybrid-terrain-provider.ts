@@ -5,10 +5,10 @@ import {
   TerrainProvider,
   TileAvailability,
   TilingScheme,
-} from 'cesium';
+} from "cesium";
 
-import { TerrainArea } from './terrain-area.js';
-import TerrainAreaCollection from './terrain-area-collection.js';
+import { TerrainArea } from "./terrain-area.js";
+import TerrainAreaCollection from "./terrain-area-collection.js";
 
 /**
  * @class

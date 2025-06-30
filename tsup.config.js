@@ -1,24 +1,24 @@
-import { defineConfig } from 'tsup';
+import { defineConfig } from "tsup";
 
 export default defineConfig({
   clean: true,
   dts: true,
   entry: [
-    'src/index.ts',
-    'src/collection/index.ts',
-    'src/terrain/index.ts',
-    'src/utils/index.ts',
-    'src/viewer/index.ts',
+    "src/index.ts",
+    "src/collection/index.ts",
+    "src/terrain/index.ts",
+    "src/utils/index.ts",
+    "src/viewer/index.ts",
   ],
   esbuildOptions(options) {
-    options.platform = 'neutral';
+    options.platform = "neutral";
   },
-  format: ['cjs', 'esm'],
+  format: ["cjs", "esm"],
   minify: true,
-  target: 'esnext',
+  target: "esnext",
   outExtension({ format }) {
     return {
-      js: format === 'cjs' ? '.cjs' : '.js',
+      js: format === "cjs" ? ".cjs" : ".js",
     };
   },
   sourcemap: false,

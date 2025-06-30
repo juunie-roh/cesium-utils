@@ -14,8 +14,8 @@ import type {
   PolylineCollection,
   Primitive,
   PrimitiveCollection,
-} from 'cesium';
-import { Cesium3DTileset, Entity, EntityCollection } from 'cesium';
+} from "cesium";
+import { Cesium3DTileset, Entity, EntityCollection } from "cesium";
 
 type CesiumCollection =
   | BillboardCollection
@@ -47,7 +47,7 @@ interface WithTag {
 /**
  * Collection event types
  */
-type CollectionEventType = 'add' | 'remove' | 'update' | 'clear';
+type CollectionEventType = "add" | "remove" | "update" | "clear";
 
 /**
  * Event handler function type

@@ -1,11 +1,11 @@
-import { EllipsoidTerrainProvider, Terrain } from 'cesium';
+import { EllipsoidTerrainProvider, Terrain } from "cesium";
 
 import {
   cloneViewer,
   HybridTerrainProvider,
   syncCamera,
   TerrainVisualizer,
-} from '../../../dist/index.js';
+} from "../../../dist/index.js";
 
 /** @param {import('cesium').Viewer} viewer  */
 export function testTerrain(viewer) {
@@ -33,7 +33,7 @@ export function testTerrain(viewer) {
       ],
       terrainProvider: new EllipsoidTerrainProvider(),
     });
-    console.log('🚀 ~ terrain.readyEvent.addEventListener ~ hybrid:', hybrid);
+    console.log("🚀 ~ terrain.readyEvent.addEventListener ~ hybrid:", hybrid);
     viewer.terrainProvider = hybrid;
     const visualizer = new TerrainVisualizer(viewer, {
       terrainProvider: hybrid,
@@ -41,7 +41,7 @@ export function testTerrain(viewer) {
 
     window.visualizer = visualizer;
 
-    const viewer2 = cloneViewer(viewer, 'cloneContainer');
+    const viewer2 = cloneViewer(viewer, "cloneContainer");
     window.viewer2 = viewer2;
     viewer.camera.percentageChanged = 0.01;
     viewer.camera.changed.addEventListener(() => syncCamera(viewer, viewer2));

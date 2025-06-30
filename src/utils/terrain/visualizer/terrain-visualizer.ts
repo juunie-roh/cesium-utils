@@ -8,11 +8,11 @@ import {
   TileCoordinatesImageryProvider,
   TilingScheme,
   Viewer,
-} from 'cesium';
-import { TerrainArea } from 'src/terrain/terrain-area.js';
+} from "cesium";
+import { TerrainArea } from "src/terrain/terrain-area.js";
 
-import Collection from '@/collection/collection.js';
-import { HybridTerrainProvider } from '@/terrain/hybrid-terrain-provider.js';
+import Collection from "@/collection/collection.js";
+import { HybridTerrainProvider } from "@/terrain/hybrid-terrain-provider.js";
 
 /**
  * @class
@@ -26,10 +26,10 @@ export class TerrainVisualizer {
   private _level: number = 15;
   private _tileCoordinatesLayer: ImageryLayer | undefined;
   private _colors: Map<string, Color> = new Map([
-    ['custom', Color.RED],
-    ['default', Color.BLUE],
-    ['fallback', Color.GRAY],
-    ['grid', Color.YELLOW],
+    ["custom", Color.RED],
+    ["default", Color.BLUE],
+    ["fallback", Color.GRAY],
+    ["grid", Color.YELLOW],
   ]);
 
   /**
@@ -108,7 +108,7 @@ export class TerrainVisualizer {
 
     const visibleRectangle = this._getVisibleRectangle();
     if (!visibleRectangle || !this._isValidRectangle(visibleRectangle)) {
-      console.warn('Invalid visible rectangle detected, skipping grid display');
+      console.warn("Invalid visible rectangle detected, skipping grid display");
       return;
     }
 
@@ -155,7 +155,7 @@ export class TerrainVisualizer {
         this._collection.add(tile.entity, TerrainVisualizer.tag.grid);
       });
     } catch (error) {
-      console.error('Error displaying tile grid:', error);
+      console.error("Error displaying tile grid:", error);
     }
   }
 
@@ -174,7 +174,7 @@ export class TerrainVisualizer {
     );
 
     if (!start || !end) {
-      throw new Error('Failed to calculate tile bounds');
+      throw new Error("Failed to calculate tile bounds");
     }
 
     return { start, end };
@@ -223,33 +223,33 @@ export class TerrainVisualizer {
       color.withAlpha(0.3),
     );
 
-    entity.properties?.addProperty('tileX', x);
-    entity.properties?.addProperty('tileY', y);
-    entity.properties?.addProperty('tileLevel', level);
+    entity.properties?.addProperty("tileX", x);
+    entity.properties?.addProperty("tileY", y);
+    entity.properties?.addProperty("tileLevel", level);
 
     return entity;
   }
 
   private _getTileColor(x: number, y: number, level: number): Color {
     if (!this._terrainProvider) {
-      return this._colors.get('fallback') || Color.TRANSPARENT;
+      return this._colors.get("fallback") || Color.TRANSPARENT;
     }
 
     // Check terrain areas first
     for (const area of this._terrainProvider.terrainAreas) {
       if (area.contains(x, y, level)) {
         return area.isCustom
-          ? this._colors.get('custom') || Color.RED
-          : this._colors.get('default') || Color.BLUE;
+          ? this._colors.get("custom") || Color.RED
+          : this._colors.get("default") || Color.BLUE;
       }
     }
 
     // Check default provider availability
     if (this._terrainProvider.getTileDataAvailable(x, y, level)) {
-      return this._colors.get('default') || Color.BLUE;
+      return this._colors.get("default") || Color.BLUE;
     }
 
-    return this._colors.get('fallback') || Color.GRAY;
+    return this._colors.get("fallback") || Color.GRAY;
   }
 
   /**
@@ -357,9 +357,9 @@ export namespace TerrainVisualizer {
 
   /** Tag constants for entity collection management. */
   export const tag = {
-    default: 'Terrain Visualizer',
-    boundary: 'Terrain Visualizer Boundary',
-    grid: 'Terrain Visualizer Tile Grid',
+    default: "Terrain Visualizer",
+    boundary: "Terrain Visualizer Boundary",
+    grid: "Terrain Visualizer Tile Grid",
   };
 
   /**
@@ -401,7 +401,7 @@ export namespace TerrainVisualizer {
     viewer: Viewer,
     options?: Options,
   ): Collection<EntityCollection, Entity> {
-    const tag = options?.tag || 'terrain_area_visualization';
+    const tag = options?.tag || "terrain_area_visualization";
     const color = options?.color || Color.RED;
     const maxTilesToShow = options?.maxTilesToShow || 100;
     const show = options?.show ?? true;

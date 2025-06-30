@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 const Collection = vi.fn().mockImplementation(() => ({
   add: vi.fn(),
