@@ -1,5 +1,16 @@
 # @juun-roh/cesium-utils
 
+## 0.1.1
+
+### Patch Changes
+
+- 7ba085c: Bug Fix
+
+  fix: Model entity highlight
+
+  - Setting `entity.model.silhouetteColor` to `undefined` does not properly remove the applied silhouette color.
+    Restore setting it from `undefined` to `Color.TRANSPARENT`.
+
 ## 0.1.0
 
 ### Minor Changes
