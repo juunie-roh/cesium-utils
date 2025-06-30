@@ -1,5 +1,40 @@
 # @juun-roh/cesium-utils
 
+## 0.1.0
+
+### Minor Changes
+
+- cd18941: Release 3D Object Highlight
+
+  feat: 3d object highlight
+
+  - Complete test on highlight class.
+    3D Highlight supports:
+    `Cesium3DTileFeature` which is returned by `scene.pick()` on `Cesium3DTileset` object.
+    `Entity` with specified `model` property.
+    3D Highlight supports outline style only.
+
+  - Both surface and silhouette only supports single highlighting feature currently.
+
+### Patch Changes
+
+- e5c2741: Model Entity Highlight Test
+
+  test: Add test for entity having model property
+
+- cbc6828: Restore Commented-out Sections of Highlight Test
+
+  test: Restore commented out sections
+
+- faad8ee: Test Conducted for Silhouette Highlight
+
+  test: Add new test for silhouette highlight
+
+  - Add tests on class methods besides `show` Entity type.
+
+  - Fix `hide` method
+    From setting `entity.model.silhouetteColor` as `Color.TRANSPARENT` to `undefined`.
+
 ## 0.0.20
 
 ### Patch Changes
