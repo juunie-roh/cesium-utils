@@ -11,15 +11,17 @@ A utility library for Cesium.js that simplifies working with collections, terrai
 
 ## Installation
 
+This library requires `cesium` to run.
+
 ```bash
 # npm
-npm install @juun-roh/cesium-utils
+npm install @juun-roh/cesium-utils cesium
 
 # yarn
-yarn add @juun-roh/cesium-utils
+yarn add @juun-roh/cesium-utils cesium
 
 # pnpm
-pnpm add @juun-roh/cesium-utils
+pnpm add @juun-roh/cesium-utils cesium
 ```
 
 ## Browser Compatibility
