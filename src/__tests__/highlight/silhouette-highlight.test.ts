@@ -153,7 +153,9 @@ describe("Silhouette Highlight", () => {
 
         highlight.hide();
 
-        expect(entity.model?.silhouetteColor).toBeUndefined();
+        expect(entity.model?.silhouetteColor?.getValue()).toEqual(
+          Color.TRANSPARENT,
+        );
         expect(highlight["_entity"]).toBeUndefined();
       });
     });
