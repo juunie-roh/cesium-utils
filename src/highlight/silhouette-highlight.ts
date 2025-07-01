@@ -93,6 +93,7 @@ export default class SilhouetteHighlight implements IHighlight {
       this._entity.model.silhouetteColor = new ConstantProperty(
         Color.TRANSPARENT,
       );
+      this._entity.model.silhouetteSize = new ConstantProperty(0.0);
       this._entity = undefined;
     }
   }
