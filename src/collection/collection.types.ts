@@ -1,43 +1,34 @@
 import type {
   Billboard,
-  BillboardCollection,
   DataSource,
   DataSourceCollection,
   GroundPrimitive,
   ImageryLayer,
   ImageryLayerCollection,
   Label,
-  LabelCollection,
   PointPrimitive,
-  PointPrimitiveCollection,
   Polyline,
-  PolylineCollection,
   Primitive,
   PrimitiveCollection,
 } from "cesium";
 import { Cesium3DTileset, Entity, EntityCollection } from "cesium";
 
 type CesiumCollection =
-  | BillboardCollection
   | DataSourceCollection
   | EntityCollection
   | ImageryLayerCollection
-  | LabelCollection
-  | PointPrimitiveCollection
-  | PolylineCollection
   | PrimitiveCollection;
 
-type Primitives = Primitive | Cesium3DTileset | GroundPrimitive;
-
-type CesiumCollectionItem =
+type Primitives =
   | Billboard
-  | DataSource
-  | Entity
-  | ImageryLayer
+  | Cesium3DTileset
+  | GroundPrimitive
   | Label
   | PointPrimitive
   | Polyline
-  | Primitives;
+  | Primitive;
+
+type CesiumCollectionItem = DataSource | Entity | ImageryLayer | Primitives;
 
 type Tag = string | number;
 

@@ -1,4 +1,10 @@
-import { defined, EntityCollection } from "cesium";
+import {
+  DataSourceCollection,
+  defined,
+  EntityCollection,
+  ImageryLayerCollection,
+  PrimitiveCollection,
+} from "cesium";
 
 import { isGetterOnly } from "@/utils/index.js";
 
@@ -145,6 +151,12 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
   >();
 
   /**
+   * For cleaning up the instances
+   * @private
+   */
+  private _eventCleanupFunctions: Array<() => void> = [];
+
+  /**
    * Creates a new Collection instance.
    *
    * @param options - Configuration options
@@ -154,6 +166,8 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
   constructor({ collection, tag }: { collection: C; tag?: Tag }) {
     this.tag = tag || "default";
     this.collection = collection;
+
+    this._setupCacheInvalidator(collection);
   }
 
   /**
@@ -230,8 +244,66 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    *
    * @private
    */
-  private _invalidateCache(): void {
+  private _invalidateCache = (): void => {
     this._valuesCache = null;
+  };
+
+  /**
+   * Sets up automatic cache invalidation by registering event listeners on the underlying Cesium collection.
+   *
+   * @private
+   * @param collection - The Cesium collection to monitor for changes
+   *
+   * @see {@link destroy} For cleanup of event listeners
+   * @see {@link _invalidateCache} For the actual cache invalidation logic
+   */
+  private _setupCacheInvalidator(collection: C) {
+    if (collection instanceof EntityCollection) {
+      collection.collectionChanged.addEventListener(this._invalidateCache);
+      this._eventCleanupFunctions.push(() =>
+        collection.collectionChanged.removeEventListener(this._invalidateCache),
+      );
+    } else if (collection instanceof PrimitiveCollection) {
+      collection.primitiveAdded.addEventListener(this._invalidateCache);
+      collection.primitiveRemoved.addEventListener(this._invalidateCache);
+      this._eventCleanupFunctions.push(
+        () =>
+          collection.primitiveAdded.removeEventListener(this._invalidateCache),
+        () =>
+          collection.primitiveRemoved.removeEventListener(
+            this._invalidateCache,
+          ),
+      );
+    } else if (collection instanceof DataSourceCollection) {
+      collection.dataSourceAdded.addEventListener(this._invalidateCache);
+      collection.dataSourceMoved.addEventListener(this._invalidateCache);
+      collection.dataSourceRemoved.addEventListener(this._invalidateCache);
+      this._eventCleanupFunctions.push(
+        () =>
+          collection.dataSourceAdded.removeEventListener(this._invalidateCache),
+        () =>
+          collection.dataSourceMoved.removeEventListener(this._invalidateCache),
+        () =>
+          collection.dataSourceRemoved.removeEventListener(
+            this._invalidateCache,
+          ),
+      );
+    } else if (collection instanceof ImageryLayerCollection) {
+      collection.layerAdded.addEventListener(this._invalidateCache);
+      collection.layerMoved.addEventListener(this._invalidateCache);
+      collection.layerRemoved.addEventListener(this._invalidateCache);
+      collection.layerShownOrHidden.addEventListener(this._invalidateCache);
+      this._eventCleanupFunctions.push(
+        () => collection.layerAdded.removeEventListener(this._invalidateCache),
+        () => collection.layerMoved.removeEventListener(this._invalidateCache),
+        () =>
+          collection.layerRemoved.removeEventListener(this._invalidateCache),
+        () =>
+          collection.layerShownOrHidden.removeEventListener(
+            this._invalidateCache,
+          ),
+      );
+    }
   }
 
   /**
@@ -411,21 +483,47 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
   }
 
   /**
+   * Permanently destroys this Collection instance.
+   * Removes all event listeners and clears internal state.
+   * The Collection instance should not be used after calling this method.
+   */
+  destroy(): void {
+    // Remove all event listeners
+    this._eventCleanupFunctions.forEach((cleanup) => cleanup());
+    this._eventCleanupFunctions = [];
+
+    // Clear internal state
+    this._tagMap.clear();
+    this._eventListeners.clear();
+    this._valuesCache = null;
+  }
+
+  /**
    * Gets all item instances in the collection.
    * This array should not be modified directly.
    *
    * @returns An array of all items in the collection
    */
   get values(): I[] {
-    if (this.collection instanceof EntityCollection) {
-      return this.collection.values as I[];
-    } else {
-      const arr: I[] = [];
-      for (let i = 0; i < this.collection.length; i++) {
-        arr.push(this.collection.get(i) as I);
-      }
-      return arr;
+    // Use cache if available
+    if (this._valuesCache !== null) {
+      return this._valuesCache;
     }
+
+    // Build values array
+    let values: I[];
+    if (this.collection instanceof EntityCollection) {
+      values = this.collection.values as I[];
+    } else {
+      values = [];
+      for (let i = 0; i < this.collection.length; i++) {
+        values.push(this.collection.get(i) as I);
+      }
+    }
+
+    // Cache and return
+    this._valuesCache = values;
+    return values;
   }
 
   /**
