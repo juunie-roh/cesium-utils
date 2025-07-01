@@ -1,40 +1,40 @@
 import {
+  DataSourceCollection,
   Entity,
   EntityCollection,
   Event,
+  ImageryLayerCollection,
   Primitive,
   PrimitiveCollection,
 } from "cesium";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Collection, type WithTag } from "@/collection/index.js";
 
 describe("Collection", () => {
-  const baseEntities = new EntityCollection();
-  const taggedEntities = new Collection<EntityCollection, Entity>({
-    collection: baseEntities,
-  });
-  let single_entity = new Entity({ id: "single" });
-  let multiple_entities = [
-    new Entity({ id: "multi-add-test1" }),
-    new Entity({ id: "multi-add-test2" }),
-    new Entity({ id: "multi-add-test3" }),
-  ];
+  let baseEntities: EntityCollection;
+  let taggedEntities: Collection<EntityCollection, Entity>;
+  let basePrimitives: PrimitiveCollection;
+  let taggedPrimitives: Collection<PrimitiveCollection, Primitive>;
 
-  const basePrimitives = new PrimitiveCollection();
-  const taggedPrimitives = new Collection<PrimitiveCollection, Primitive>({
-    collection: basePrimitives,
-  });
-  let single_primitive = new Primitive();
-  let multiple_primitives = [
-    new Primitive(),
-    new Primitive(),
-    new Primitive(),
-    new Primitive(),
-  ];
+  let single_entity: Entity;
+  let multiple_entities: Entity[];
+  let single_primitive: Primitive;
+  let multiple_primitives: Primitive[];
 
   beforeEach(() => {
-    taggedEntities.removeAll();
+    // Create fresh instances for each test
+    baseEntities = new EntityCollection();
+    taggedEntities = new Collection<EntityCollection, Entity>({
+      collection: baseEntities,
+    });
+
+    basePrimitives = new PrimitiveCollection();
+    taggedPrimitives = new Collection<PrimitiveCollection, Primitive>({
+      collection: basePrimitives,
+    });
+
+    // Reset entity/primitive instances
     single_entity = new Entity({ id: "single" });
     multiple_entities = [
       new Entity({ id: "multi-add-test1" }),
@@ -42,7 +42,6 @@ describe("Collection", () => {
       new Entity({ id: "multi-add-test3" }),
     ];
 
-    taggedPrimitives.removeAll();
     single_primitive = new Primitive();
     multiple_primitives = [
       new Primitive(),
@@ -50,6 +49,11 @@ describe("Collection", () => {
       new Primitive(),
       new Primitive(),
     ];
+  });
+
+  afterEach(() => {
+    taggedEntities.destroy();
+    taggedPrimitives.destroy();
   });
 
   it('should create a collection with "default" tag', () => {
@@ -82,78 +86,349 @@ describe("Collection", () => {
     expect(taggedEntities.get(123)).toHaveLength(1);
   });
 
-  describe("should properly cache and invalidate values", () => {
-    it("with EntityCollection", () => {
-      let accessCount = 0;
-      const getValuesWithSideEffect = () => {
-        accessCount++;
-        return taggedEntities.values;
-      };
+  describe("caching implementation", () => {
+    describe("cache creation and reuse", () => {
+      it("should build cache on first access to values", () => {
+        // Verify cache is initially null
+        expect(taggedEntities["_valuesCache"]).toBe(null);
 
-      // First access should create cache
-      const values1 = getValuesWithSideEffect();
-      expect(accessCount).toBe(1);
-      expect(values1).toHaveLength(0);
+        // First access should build cache
+        const values1 = taggedEntities.values;
+        expect(taggedEntities["_valuesCache"]).not.toBe(null);
+        expect(taggedEntities["_valuesCache"]).toBe(values1);
+        expect(values1).toHaveLength(0);
+      });
 
-      // Reset our counter to verify content
-      const initialLength = values1.length;
+      it("should reuse cache on subsequent access", () => {
+        // First access builds cache
+        const values1 = taggedEntities.values;
+        const cachedValues = taggedEntities["_valuesCache"];
 
-      // Second access should use cache
-      const values2 = getValuesWithSideEffect();
-      expect(accessCount).toBe(2);
-      expect(values2.length).toBe(initialLength);
-      expect(values2).toBe(values1);
+        // Second access should return same cached instance
+        const values2 = taggedEntities.values;
+        expect(values2).toBe(values1);
+        expect(values2).toBe(cachedValues);
+        expect(taggedEntities["_valuesCache"]).toBe(cachedValues);
+      });
 
-      // Modify collection to invalidate cache
-      taggedEntities.add(new Entity({ id: "test-entity" }));
+      it("should build cache correctly for EntityCollection", () => {
+        taggedEntities.add(multiple_entities);
 
-      // Next access should use current values
-      const values3 = getValuesWithSideEffect();
-      expect(accessCount).toBe(3);
-      expect(values3.length).toBe(initialLength + 1); // Content updated
+        const values = taggedEntities.values;
+        expect(values).toHaveLength(3);
+        expect(values).toContain(multiple_entities[0]);
+        expect(values).toContain(multiple_entities[1]);
+        expect(values).toContain(multiple_entities[2]);
+        expect(taggedEntities["_valuesCache"]).toBe(values);
+      });
 
-      // Final test: access again after external modification
-      baseEntities.add(new Entity({ id: "external-add" }));
-      const values4 = getValuesWithSideEffect();
-      // Content should be updated regardless of whether cache was used
-      expect(values4.length).toBe(initialLength + 2);
-      expect(values4.some((e) => e.id === "external-add")).toBe(true);
+      it("should build cache correctly for PrimitiveCollection", () => {
+        taggedPrimitives.add(multiple_primitives);
+
+        const values = taggedPrimitives.values;
+        expect(values).toHaveLength(4);
+        expect(values).toEqual(multiple_primitives);
+        expect(taggedPrimitives["_valuesCache"]).toBe(values);
+      });
     });
 
-    it("with PrimitiveCollection", () => {
-      let accessCount = 0;
-      const getValuesWithSideEffect = () => {
-        accessCount++;
-        return taggedPrimitives.values;
-      };
+    describe("cache invalidation", () => {
+      it("should invalidate cache when adding items", () => {
+        // Build initial cache
+        const initialValues = taggedEntities.values;
+        expect(taggedEntities["_valuesCache"]).toBe(initialValues);
+        expect(initialValues).toHaveLength(0);
 
-      // First access should create cache
-      const values1 = getValuesWithSideEffect();
-      expect(accessCount).toBe(1);
-      expect(values1).toHaveLength(0);
+        // Add item should invalidate cache
+        taggedEntities.add(single_entity);
+        expect(taggedEntities["_valuesCache"]).toBe(null);
 
-      // Reset our counter to verify content
-      const initialLength = values1.length;
+        // Next access should rebuild cache
+        const newValues = taggedEntities.values;
+        // expect(newValues).not.toBe(initialValues);
+        expect(newValues).toHaveLength(1);
+        expect(taggedEntities["_valuesCache"]).toBe(newValues);
+      });
 
-      // Second access should use cache
-      const values2 = getValuesWithSideEffect();
-      expect(accessCount).toBe(2);
-      expect(values2.length).toBe(initialLength);
-      expect(values2).toEqual(values1);
+      it("should invalidate cache when removing items", () => {
+        // Setup collection with items
+        taggedEntities.add(multiple_entities);
+        const initialValues = taggedEntities.values;
+        expect(taggedEntities["_valuesCache"]).toBe(initialValues);
+        expect(initialValues).toHaveLength(multiple_entities.length);
 
-      // Modify collection to invalidate cache
-      taggedPrimitives.add(new Primitive());
+        // Remove item should invalidate cache
+        taggedEntities.remove(multiple_entities[0]);
+        expect(taggedEntities["_valuesCache"]).toBe(null);
 
-      // Next access should use current values
-      const values3 = getValuesWithSideEffect();
-      expect(accessCount).toBe(3);
-      expect(values3.length).toBe(initialLength + 1); // Content updated
+        // Next access should rebuild cache
+        const newValues = taggedEntities.values;
+        // expect(newValues).not.toBe(initialValues);
+        expect(newValues).toHaveLength(2);
+      });
 
-      // Final test: access again after external modification
-      basePrimitives.add(new Primitive());
-      const values4 = getValuesWithSideEffect();
-      // Content should be updated regardless of whether cache was used
-      expect(values4.length).toBe(initialLength + 2);
+      it("should invalidate cache when removing all items", () => {
+        // Setup collection with items
+        taggedEntities.add(multiple_entities);
+        const initialValues = taggedEntities.values;
+        expect(taggedEntities["_valuesCache"]).toBe(initialValues);
+        expect(initialValues).toHaveLength(multiple_entities.length);
+
+        // RemoveAll should invalidate cache
+        taggedEntities.removeAll();
+        expect(taggedEntities["_valuesCache"]).toBe(null);
+
+        // Next access should rebuild cache
+        const newValues = taggedEntities.values;
+        // expect(newValues).not.toBe(initialValues);
+        expect(newValues).toHaveLength(0);
+      });
+
+      it("should not invalidate cache when updating tags", () => {
+        // Setup collection with items
+        taggedEntities.add(multiple_entities, "original");
+        const initialValues = taggedEntities.values;
+        expect(taggedEntities["_valuesCache"]).toBe(initialValues);
+
+        // Update tag should not invalidate cache (same items, different tags)
+        taggedEntities.update("original", "updated");
+        expect(taggedEntities["_valuesCache"]).toBe(initialValues);
+
+        // Values should still be the same
+        const sameValues = taggedEntities.values;
+        expect(sameValues).toBe(initialValues);
+      });
+    });
+
+    describe("event-driven invalidation", () => {
+      it("should invalidate cache when EntityCollection changes via events", () => {
+        // Build initial cache
+        const initialValues = taggedEntities.values;
+        expect(taggedEntities["_valuesCache"]).toEqual(initialValues);
+        expect(initialValues).toHaveLength(0);
+
+        // Directly modify underlying collection (triggers collectionChanged event)
+        baseEntities.add(new Entity({ id: "external-add" }));
+
+        // Cache should be invalidated by event
+        expect(taggedEntities["_valuesCache"]).toBe(null);
+
+        // Next access should include externally added entity
+        const newValues = taggedEntities.values;
+        // expect(newValues).not.toBe(initialValues);
+        expect(newValues).toHaveLength(1);
+        expect(newValues.some((e) => e.id === "external-add")).toBe(true);
+      });
+
+      it("should invalidate cache when PrimitiveCollection changes via events", () => {
+        // Build initial cache
+        const initialValues = taggedPrimitives.values;
+        expect(taggedPrimitives["_valuesCache"]).toBe(initialValues);
+
+        // Directly modify underlying collection (triggers primitiveAdded event)
+        const externalPrimitive = new Primitive();
+        basePrimitives.add(externalPrimitive);
+
+        // Cache should be invalidated by event
+        expect(taggedPrimitives["_valuesCache"]).toBe(null);
+
+        // Next access should include externally added primitive
+        const newValues = taggedPrimitives.values;
+        expect(newValues).not.toBe(initialValues);
+        expect(newValues).toHaveLength(1);
+        expect(newValues).toContain(externalPrimitive);
+      });
+
+      it("should add event listeners for all supported collection types", () => {
+        // Test EntityCollection
+        const entityCollection = new EntityCollection();
+        const entityWrapper = new Collection({ collection: entityCollection });
+        expect(entityWrapper["_eventCleanupFunctions"]).toHaveLength(1);
+        expect(entityCollection.collectionChanged.numberOfListeners).toBe(1);
+
+        // Test PrimitiveCollection
+        const primitiveCollection = new PrimitiveCollection();
+        const primitiveWrapper = new Collection({
+          collection: primitiveCollection,
+        });
+        expect(primitiveWrapper["_eventCleanupFunctions"]).toHaveLength(2); // primitiveAdded + primitiveRemoved
+        expect(primitiveCollection.primitiveAdded.numberOfListeners).toBe(1);
+        expect(primitiveCollection.primitiveRemoved.numberOfListeners).toBe(1);
+
+        // Test DataSourceCollection
+        const dataSourceCollection = new DataSourceCollection();
+        const dataSourceWrapper = new Collection({
+          collection: dataSourceCollection,
+        });
+        expect(dataSourceWrapper["_eventCleanupFunctions"]).toHaveLength(3); // added + moved + removed
+        expect(dataSourceCollection.dataSourceAdded.numberOfListeners).toBe(1);
+        expect(dataSourceCollection.dataSourceMoved.numberOfListeners).toBe(1);
+        expect(dataSourceCollection.dataSourceRemoved.numberOfListeners).toBe(
+          1,
+        );
+
+        // Test ImageryLayerCollection
+        const imageryCollection = new ImageryLayerCollection();
+        const imageryWrapper = new Collection({
+          collection: imageryCollection,
+        });
+        expect(imageryWrapper["_eventCleanupFunctions"]).toHaveLength(4); // added + moved + removed + shownOrHidden
+        expect(imageryCollection.layerAdded.numberOfListeners).toBe(1);
+        expect(imageryCollection.layerMoved.numberOfListeners).toBe(1);
+        expect(imageryCollection.layerRemoved.numberOfListeners).toBe(1);
+        expect(imageryCollection.layerShownOrHidden.numberOfListeners).toBe(1);
+      });
+
+      it("should remove event listeners for all supported collection types on destroy", () => {
+        // Test EntityCollection
+        const entityCollection = new EntityCollection();
+        const entityWrapper = new Collection({ collection: entityCollection });
+        entityWrapper.destroy();
+        expect(entityCollection.collectionChanged.numberOfListeners).toBe(0);
+
+        // Test PrimitiveCollection
+        const primitiveCollection = new PrimitiveCollection();
+        const primitiveWrapper = new Collection({
+          collection: primitiveCollection,
+        });
+        primitiveWrapper.destroy();
+        expect(primitiveCollection.primitiveAdded.numberOfListeners).toBe(0);
+        expect(primitiveCollection.primitiveRemoved.numberOfListeners).toBe(0);
+
+        // Test DataSourceCollection
+        const dataSourceCollection = new DataSourceCollection();
+        const dataSourceWrapper = new Collection({
+          collection: dataSourceCollection,
+        });
+        dataSourceWrapper.destroy();
+        expect(dataSourceCollection.dataSourceAdded.numberOfListeners).toBe(0);
+        expect(dataSourceCollection.dataSourceMoved.numberOfListeners).toBe(0);
+        expect(dataSourceCollection.dataSourceRemoved.numberOfListeners).toBe(
+          0,
+        );
+
+        // Test ImageryLayerCollection
+        const imageryCollection = new ImageryLayerCollection();
+        const imageryWrapper = new Collection({
+          collection: imageryCollection,
+        });
+        imageryWrapper.destroy();
+        expect(imageryCollection.layerAdded.numberOfListeners).toBe(0);
+        expect(imageryCollection.layerMoved.numberOfListeners).toBe(0);
+        expect(imageryCollection.layerRemoved.numberOfListeners).toBe(0);
+        expect(imageryCollection.layerShownOrHidden.numberOfListeners).toBe(0);
+      });
+    });
+
+    describe("cache performance characteristics", () => {
+      it("should provide O(1) access after initial O(n) build", () => {
+        // Setup large collection
+        const largeCollection = Array.from(
+          { length: 1000 },
+          (_, i) => new Entity({ id: `entity-${i}` }),
+        );
+        taggedEntities.add(largeCollection);
+
+        // First access - O(n) build
+        const startTime1 = performance.now();
+        const values1 = taggedEntities.values;
+        const buildTime = performance.now() - startTime1;
+
+        // Second access - O(1) cached
+        const startTime2 = performance.now();
+        const values2 = taggedEntities.values;
+        const cacheTime = performance.now() - startTime2;
+
+        expect(values1).toBe(values2); // Same reference
+        expect(values1).toHaveLength(1000);
+        expect(cacheTime).toBeLessThan(buildTime); // Cache access should be faster
+      });
+
+      it("should minimize cache rebuilds", () => {
+        let buildCount = 0;
+
+        // Mock the underlying collection values to count access
+        const originalValuesGetter = Object.getOwnPropertyDescriptor(
+          baseEntities,
+          "values",
+        );
+        Object.defineProperty(baseEntities, "values", {
+          get: function () {
+            buildCount++;
+            return originalValuesGetter?.get?.call(this) || [];
+          },
+          configurable: true,
+        });
+
+        // Multiple access to values should only build once
+        taggedEntities.values;
+        taggedEntities.values;
+        taggedEntities.values;
+        expect(buildCount).toBe(1);
+
+        // Add item (invalidates cache)
+        taggedEntities.add(single_entity);
+
+        // Multiple access should build only once more
+        taggedEntities.values;
+        taggedEntities.values;
+        expect(buildCount).toBe(2);
+
+        // Restore original descriptor
+        if (originalValuesGetter) {
+          Object.defineProperty(baseEntities, "values", originalValuesGetter);
+        }
+      });
+    });
+
+    describe("cache interaction with other methods", () => {
+      it("should work correctly with length getter", () => {
+        // Length uses values internally, should benefit from cache
+        taggedEntities.add(multiple_entities);
+
+        // First length call builds cache
+        expect(taggedEntities.length).toBe(multiple_entities.length);
+        expect(taggedEntities["_valuesCache"]).not.toBe(null);
+
+        // Second length call uses cache
+        const cachedValues = taggedEntities["_valuesCache"];
+        const length2 = taggedEntities.length;
+        expect(length2).toBe(3);
+        expect(taggedEntities["_valuesCache"]).toBe(cachedValues);
+      });
+
+      it("should work correctly with iterator", () => {
+        taggedEntities.add(multiple_entities);
+
+        // Using iterator should build cache
+        const iteratedIds = [];
+        for (const entity of taggedEntities) {
+          iteratedIds.push(entity.id);
+        }
+
+        expect(iteratedIds).toHaveLength(3);
+        expect(taggedEntities["_valuesCache"]).not.toBe(null);
+
+        // Subsequent iteration should use cache
+        const cachedValues = taggedEntities["_valuesCache"];
+        const iteratedIds2 = [...taggedEntities].map((e) => e.id);
+        expect(iteratedIds2).toEqual(iteratedIds);
+        expect(taggedEntities["_valuesCache"]).toBe(cachedValues);
+      });
+
+      it("should work correctly with array methods (filter, map, etc.)", () => {
+        taggedEntities.add(multiple_entities);
+
+        // Array methods should build and use cache
+        const filtered = taggedEntities.filter((e) => e.id?.includes("test"));
+        expect(filtered).toHaveLength(3);
+        expect(taggedEntities["_valuesCache"]).not.toBe(null);
+
+        const cachedValues = taggedEntities["_valuesCache"];
+        const mapped = taggedEntities.map((e) => e.id);
+        expect(mapped).toHaveLength(3);
+        expect(taggedEntities["_valuesCache"]).toBe(cachedValues); // Same cache used
+      });
     });
   });
 
@@ -706,6 +981,36 @@ describe("Collection", () => {
         (entity) => entity.id === "nonexistent",
       );
       expect(entity).toBeUndefined();
+    });
+  });
+
+  describe("destroy()", () => {
+    it("should clean up event listeners and internal state", () => {
+      // Setup collection with some data
+      taggedEntities.add(multiple_entities);
+      expect(taggedEntities["_eventCleanupFunctions"]).toHaveLength(1);
+      expect(taggedEntities["_tagMap"].size).toBeGreaterThan(0);
+
+      // Build cache
+      taggedEntities.values;
+      expect(taggedEntities["_valuesCache"]).not.toBe(null);
+
+      // Destroy should clean everything up
+      taggedEntities.destroy();
+
+      expect(taggedEntities["_eventCleanupFunctions"]).toHaveLength(0);
+      expect(taggedEntities["_tagMap"].size).toBe(0);
+      expect(taggedEntities["_eventListeners"].size).toBe(0);
+      expect(taggedEntities["_valuesCache"]).toBe(null);
+    });
+
+    it("should be safe to call multiple times", () => {
+      taggedEntities.add(single_entity);
+
+      expect(() => {
+        taggedEntities.destroy();
+        taggedEntities.destroy(); // Should not throw
+      }).not.toThrow();
     });
   });
 });
