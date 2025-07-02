@@ -1,5 +1,37 @@
 # @juun-roh/cesium-utils
 
+## 0.1.2
+
+### Patch Changes
+
+- 59b41d0: Collection Caching Strategy Improvement
+
+  perf: Improve caching strategy
+
+  - Add event-driven caching strategy.
+    The caching strategy takes advantage of
+    Cesium collections' internal events,
+    such as `collectionChanged` in `EntityCollection`.
+    The cache will be created when the `values()` method is called,
+    invalidated whenever the underlying collection event is provoked.
+
+  - Remove the inidividual calls of `_invalidateCache`.
+    This may be restored in the future, for the sake of defensive programming.
+
+  - Add an instance clean up process.
+
+  - Update test to cover newly implemented caching feature.
+
+- c8605db: Collection Types Reorganization
+
+  refactor: Collection types reorganization
+
+  - `CesiumCollection`:
+    Narrowed it down to 4 types from various collection types, since other items (such as `Billboard`, `Label`) are eventually added to `viewer.primitives`.
+
+  - `Primitives`:
+    Likewise, this type has expanded to contain more collection item types.
+
 ## 0.1.1
 
 ### Patch Changes

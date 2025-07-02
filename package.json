@@ -1,6 +1,6 @@
 {
   "name": "@juun-roh/cesium-utils",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Utilities to handle Cesium classes easier.",
   "keywords": [
     "3d",
@@ -116,7 +116,7 @@
     "jsdom": "^26.1.0",
     "rimraf": "^6.0.1",
     "tsup": "^8.5.0",
-    "typedoc": "^0.28.6",
+    "typedoc": "^0.28.7",
     "typescript": "^5.8.3",
     "vite": "^7.0.0",
     "vitest": "^3.2.4"
