@@ -6,6 +6,7 @@ export default defineConfig({
   entry: [
     "src/index.ts",
     "src/collection/index.ts",
+    "src/highlight/index.ts",
     "src/terrain/index.ts",
     "src/utils/index.ts",
     "src/viewer/index.ts",
