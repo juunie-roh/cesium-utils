@@ -342,27 +342,27 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * @param item - The item to add to the collection
    * @param tag - Tag to associate with this item (defaults to the collection's default tag)
    * @param index - The index to add the item at (if supported by the collection)
-   * @returns The added item for chaining
+   * @returns The collection instance for method chaining
    *
    * @example
    * const entity = collection.add(new Entity({ ... }), 'landmarks');
    */
-  add(item: I, tag?: Tag, index?: number): I;
+  add(item: I, tag?: Tag, index?: number): this;
   /**
    * Adds multiple items with the same tag to the collection.
    *
    * @param items - The array of items to add to the collection
    * @param tag - Tag to associate with this item (defaults to the collection's default tag)
-   * @returns The array of added items
+   * @returns The collection instance for method chaining
    *
    * @example
    * // Add multiple entities with the same tag
    * const entities = [new Entity({ ... }), new Entity({ ... })];
    * const addedEntities = collection.add(entities, 'buildings');
    */
-  add(items: I[], tag?: Tag): I[];
+  add(items: I[], tag?: Tag): this;
 
-  add(i: I | I[], t: Tag = this.tag, idx?: number): I | I[] {
+  add(i: I | I[], t: Tag = this.tag, idx?: number): this {
     if (Array.isArray(i)) {
       i.forEach((i) => {
         this.add(i, t);
@@ -380,7 +380,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
       this._emit("add", { items: [i], tag: t });
     }
 
-    return i;
+    return this;
   }
 
   /**
@@ -415,24 +415,24 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * Removes an item from the collection.
    *
    * @param item - The item to remove
-   * @returns True if the item was removed, false if it wasn't found
+   * @returns The collection instance for method chaining
    */
-  remove(item: I): boolean;
+  remove(item: I): this;
   /**
    * Removes all items with the specified tag from the collection.
    *
    * @param by - The tag identifying which items to remove
-   * @returns True if the item was removed, false if it wasn't found
+   * @returns The collection instance for method chaining
    */
-  remove(by: Tag): boolean;
+  remove(by: Tag): this;
   /**
    * Removes all items with the array of tags from the collection.
    *
    * @param by - The tags identifying which items to remove
-   * @returns True if the item was removed, false if it wasn't found
+   * @returns The collection instance for method chaining
    */
-  remove(by: Tag[]): boolean;
-  remove(target: I | Tag | Tag[]): boolean {
+  remove(by: Tag[]): this;
+  remove(target: I | Tag | Tag[]): this {
     // Case 1: Object but not array (an item)
     if (typeof target === "object" && !Array.isArray(target)) {
       const result = this.collection.remove(target);
@@ -441,35 +441,26 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
         this._invalidateCache();
         this._emit("remove", { items: [target] });
       }
-      return result;
     }
 
     // Case 2: Array of tags
     if (Array.isArray(target)) {
-      if (target.length === 0) return false;
+      if (target.length === 0) return this;
 
-      let anyRemoved = false;
       for (const tag of target) {
-        // Track if any tag removal succeeded
-        if (this.remove(tag)) {
-          anyRemoved = true;
-        }
+        this.remove(tag);
       }
-      return anyRemoved;
     }
 
     // Case 3: Single tag
     const items = this.get(target as Tag);
-    if (items.length === 0) return false;
+    if (items.length === 0) return this;
 
-    let anyRemoved = false;
     for (const item of items) {
-      // Track if any item removal succeeded
-      if (this.remove(item)) {
-        anyRemoved = true;
-      }
+      this.remove(item);
     }
-    return anyRemoved;
+
+    return this;
   }
 
   /**
@@ -697,7 +688,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * @param by - The tag identifying which items to update
    * @param property - The property name to set
    * @param value - The value to set
-   * @returns The number of items updated
+   * @returns The collection itself.
    *
    * @example
    * // Change color of all buildings to red

@@ -26,13 +26,13 @@ describe("TerrainAreaCollection", () => {
   describe(".add()", () => {
     it("should add an existing terrain area", () => {
       const area = create(option(0));
-      expect(areas.add(area)).toEqual(areas.length);
+      expect(areas.add(area)).toHaveLength(1);
     });
 
     it("should add a new terrain area", () => {
-      expect(areas.add(option(0))).toEqual(areas.length);
-      expect(areas.add(option(1))).toEqual(areas.length);
-      expect(areas.add(option(2))).toEqual(areas.length);
+      expect(areas.add(option(0)).add(option(1)).add(option(2))).toHaveLength(
+        3,
+      );
     });
 
     it("should add multiple areas", () => {
@@ -45,7 +45,7 @@ describe("TerrainAreaCollection", () => {
           arr.push(create(option(i)));
         }
       }
-      expect(areas.add(arr)).toEqual(areas.length);
+      expect(areas.add(arr)).toHaveLength(arr.length);
     });
   });
 

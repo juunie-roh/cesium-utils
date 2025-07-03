@@ -79,9 +79,6 @@ export default class SurfaceHighlight implements IHighlight {
   ): Entity | undefined {
     if (!defined(object) || !this._entity) return undefined;
 
-    // Clear any previous highlight geometries
-    this._clearGeometries();
-
     try {
       if (
         object instanceof Entity &&
