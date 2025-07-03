@@ -11,23 +11,23 @@ export default class TerrainAreaCollection extends Array<TerrainArea> {
    * @param area A TerrainArea instance or constructor options
    * @returns The index of the added item
    */
-  add(area: TerrainArea | TerrainArea.ConstructorOptions): number;
+  add(area: TerrainArea | TerrainArea.ConstructorOptions): this;
   /**
    * Adds terrain areas to the collection.
    * @param areas An array of TerrainArea instance or constructor options
    * @returns The index of the added item
    */
-  add(areas: (TerrainArea | TerrainArea.ConstructorOptions)[]): number;
+  add(areas: (TerrainArea | TerrainArea.ConstructorOptions)[]): this;
   add(
     target:
       | (TerrainArea | TerrainArea.ConstructorOptions)
       | (TerrainArea | TerrainArea.ConstructorOptions)[],
-  ): number {
+  ): this {
     if (Array.isArray(target)) {
       for (const t of target) {
         this.add(t);
       }
-      return this.length;
+      return this;
     }
 
     let terrainArea: TerrainArea;
@@ -39,7 +39,8 @@ export default class TerrainAreaCollection extends Array<TerrainArea> {
     }
 
     // Add to collection after terrain area is ready
-    return this.push(terrainArea);
+    this.push(terrainArea);
+    return this;
   }
 
   /**

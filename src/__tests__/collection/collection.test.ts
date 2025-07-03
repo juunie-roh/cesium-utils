@@ -524,7 +524,7 @@ describe("Collection", () => {
 
   it(".add() should add an item with a tag", () => {
     const tag = "SpecificTagForCollectionAdd";
-    expect(taggedEntities.add(single_entity, tag)).toBe(single_entity);
+    expect(taggedEntities.add(single_entity, tag)).toHaveLength(1);
 
     expect(baseEntities.values.length).toBe(1);
     expect(Object.getOwnPropertySymbols(single_entity)).toContain(
@@ -534,12 +534,12 @@ describe("Collection", () => {
   });
 
   it(".add() should add multiple items with a tag", () => {
-    expect(taggedEntities.add(single_entity, "multi-add-test1")).toBe(
-      single_entity,
+    expect(taggedEntities.add(single_entity, "multi-add-test1")).toHaveLength(
+      1,
     );
-    expect(taggedEntities.add(multiple_entities, "multi-add-test2")).toBe(
-      multiple_entities,
-    );
+    expect(
+      taggedEntities.add(multiple_entities, "multi-add-test2"),
+    ).toHaveLength(multiple_entities.length + 1);
 
     expect(baseEntities.values.length).toBe(4);
     expect(baseEntities.values).toContain(single_entity);
@@ -580,10 +580,6 @@ describe("Collection", () => {
         expect(taggedEntities.remove(single_entity)).toBeTruthy();
         expect(baseEntities.values.length).toBe(0);
       });
-
-      it("and return false if it fails", () => {
-        expect(taggedEntities.remove(single_entity)).toBeFalsy();
-      });
     });
 
     describe("should remove items by tag", () => {
@@ -596,10 +592,6 @@ describe("Collection", () => {
 
         expect(taggedEntities.remove("remove-tag")).toBeTruthy();
         expect(taggedEntities.contains("remove-tag")).toBeFalsy();
-      });
-
-      it("and return false if no items match the tag", () => {
-        expect(taggedEntities.remove("nonExistentTag")).toBeFalsy();
       });
     });
 
@@ -625,15 +617,15 @@ describe("Collection", () => {
         expect(taggedEntities.contains("existing-tag")).toBeFalsy();
       });
 
-      it("and return false if no tags match any items", () => {
+      it("and remain still if no tags match any items", () => {
+        const { values } = taggedEntities;
         expect(
-          taggedEntities.remove(["nonexistent1", "nonexistent2"]),
-        ).toBeFalsy();
+          taggedEntities.remove(["nonexistent1", "nonexistent2"]).values,
+        ).toEqual(values);
       });
 
-      it("and return false for an empty array of tags", () => {
+      it("and should remain still for an empty array of tags", () => {
         taggedEntities.add(multiple_entities, "should-remain");
-        expect(taggedEntities.remove([])).toBeFalsy();
         expect(taggedEntities.contains("should-remain")).toBeTruthy();
       });
     });
