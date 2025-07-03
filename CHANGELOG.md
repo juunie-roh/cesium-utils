@@ -1,5 +1,20 @@
 # @juun-roh/cesium-utils
 
+## 0.1.3
+
+### Patch Changes
+
+- 539d646: Update Return Values for Collection Methods
+
+  refactor: Update return values
+
+  - `Collection` class methods:
+    `add`, `remove` methods now return `this`
+    to support method chaining.
+
+  - `TerrainAreaCollection` class methods:
+    Likewise, `add` method now returns `this`.
+
 ## 0.1.2
 
 ### Patch Changes
