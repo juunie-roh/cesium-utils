@@ -65,6 +65,12 @@ pnpm test
 
 Working on the demonstration at [Cesium Utils Demo](https://juun.vercel.app/cesium-utils).
 
+Run a local live demonstration where you can see changes directly by:
+
+```bash
+pnpm dev
+```
+
 ### Documentation
 
 Generate API documentation:
