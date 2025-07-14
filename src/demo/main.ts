@@ -1,29 +1,15 @@
-import {
-  CameraEventType,
-  Cartesian3,
-  CzmlDataSource,
-  defined,
-  formatError,
-  GeoJsonDataSource,
-  GpxDataSource,
-  ImageryLayer,
-  KeyboardEventModifier,
-  KmlDataSource,
-  Math as CesiumMath,
-  objectToQuery,
-  queryToObject,
-  Terrain,
-  TileMapServiceImageryProvider,
-  Viewer,
-  viewerCesiumInspectorMixin,
-  viewerDragDropMixin,
-} from "cesium";
+import * as Cesium from "cesium";
 
-import { testTerrain } from "./terrain";
+declare global {
+  export interface Window {
+    CESIUM_BASE_URL: string;
+    cesium_viewer: Cesium.Viewer;
+  }
+}
 
 window.CESIUM_BASE_URL = window.CESIUM_BASE_URL
   ? window.CESIUM_BASE_URL
-  : "../../node_modules/cesium/Build/Cesium/";
+  : "../../node_modules/cesium/Build/Cesium";
 
 async function main() {
   /*
@@ -45,26 +31,30 @@ async function main() {
                            [height,heading,pitch,roll] default is looking straight down, [300,0,-90,0]
        saveCamera=false    Don't automatically update the camera view in the URL when it changes.
      */
-  const endUserOptions = queryToObject(window.location.search.substring(1));
+  const endUserOptions = Cesium.queryToObject(
+    window.location.search.substring(1),
+  );
 
   let baseLayer;
-  if (defined(endUserOptions.tmsImageryUrl)) {
-    baseLayer = ImageryLayer.fromProviderAsync(
-      TileMapServiceImageryProvider.fromUrl(endUserOptions.tmsImageryUrl),
+  if (Cesium.defined(endUserOptions.tmsImageryUrl)) {
+    baseLayer = Cesium.ImageryLayer.fromProviderAsync(
+      Cesium.TileMapServiceImageryProvider.fromUrl(
+        endUserOptions.tmsImageryUrl,
+      ),
     );
   }
 
   const loadingIndicator = document.getElementById("loadingIndicator");
-  const hasBaseLayerPicker = !defined(baseLayer);
+  const hasBaseLayerPicker = !Cesium.defined(baseLayer);
 
-  const terrain = Terrain.fromWorldTerrain({
+  const terrain = Cesium.Terrain.fromWorldTerrain({
     requestWaterMask: true,
     requestVertexNormals: true,
   });
 
   let viewer;
   try {
-    viewer = new Viewer("cesiumContainer", {
+    viewer = new Cesium.Viewer("cesiumContainer", {
       baseLayer: baseLayer,
       baseLayerPicker: hasBaseLayerPicker,
       scene3DOnly: endUserOptions.scene3DOnly,
@@ -74,22 +64,22 @@ async function main() {
 
     // Set tilt event type as RIGHT_DRAG
     viewer.scene.screenSpaceCameraController.tiltEventTypes = [
-      CameraEventType.RIGHT_DRAG,
-      CameraEventType.PINCH,
+      Cesium.CameraEventType.RIGHT_DRAG,
+      Cesium.CameraEventType.PINCH,
       {
-        eventType: CameraEventType.LEFT_DRAG,
-        modifier: KeyboardEventModifier.CTRL,
+        eventType: Cesium.CameraEventType.LEFT_DRAG,
+        modifier: Cesium.KeyboardEventModifier.CTRL,
       },
       {
-        eventType: CameraEventType.RIGHT_DRAG,
-        modifier: KeyboardEventModifier.CTRL,
+        eventType: Cesium.CameraEventType.RIGHT_DRAG,
+        modifier: Cesium.KeyboardEventModifier.CTRL,
       },
     ];
     // Set zoom event type as MIDDLE_DRAG
     viewer.scene.screenSpaceCameraController.zoomEventTypes = [
-      CameraEventType.MIDDLE_DRAG,
-      CameraEventType.WHEEL,
-      CameraEventType.PINCH,
+      Cesium.CameraEventType.MIDDLE_DRAG,
+      Cesium.CameraEventType.WHEEL,
+      Cesium.CameraEventType.PINCH,
     ];
 
     if (hasBaseLayerPicker) {
@@ -97,8 +87,8 @@ async function main() {
       viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
     }
   } catch (exception) {
-    loadingIndicator.style.display = "none";
-    const message = formatError(exception);
+    if (loadingIndicator) loadingIndicator.style.display = "none";
+    const message = Cesium.formatError(exception);
     console.error(message);
     if (!document.querySelector(".cesium-widget-errorPanel")) {
       window.alert(message);
@@ -106,36 +96,25 @@ async function main() {
     return;
   }
 
-  viewer.extend(viewerDragDropMixin);
+  viewer.extend(Cesium.viewerDragDropMixin);
   if (endUserOptions.inspector) {
-    viewer.extend(viewerCesiumInspectorMixin);
+    viewer.extend(Cesium.viewerCesiumInspectorMixin);
   }
 
-  const showLoadError = function (name, error) {
+  const showLoadError = function (name: string, error: any) {
     const title = `An error occurred while loading the file: ${name}`;
     const message =
       "An error occurred while loading the file, which may indicate that it is invalid.  A detailed error report is below:";
     viewer.cesiumWidget.showErrorPanel(title, message, error);
   };
 
-  viewer.dropError.addEventListener(function (viewerArg, name, error) {
-    showLoadError(name, error);
-  });
-
   const scene = viewer.scene;
-  const context = scene.context;
-  if (endUserOptions.debug) {
-    context.validateShaderProgram = true;
-    context.validateFramebuffer = true;
-    context.logShaderCompilation = true;
-    context.throwOnWebGLError = true;
-  }
 
   const view = endUserOptions.view;
   const source = endUserOptions.source;
-  if (defined(source)) {
+  if (Cesium.defined(source)) {
     let sourceType = endUserOptions.sourceType;
-    if (!defined(sourceType)) {
+    if (!Cesium.defined(sourceType)) {
       // autodetect using file extension if not specified
       if (/\.czml$/i.test(source)) {
         sourceType = "czml";
@@ -154,34 +133,34 @@ async function main() {
 
     let loadPromise;
     if (sourceType === "czml") {
-      loadPromise = CzmlDataSource.load(source);
+      loadPromise = Cesium.CzmlDataSource.load(source);
     } else if (sourceType === "geojson") {
-      loadPromise = GeoJsonDataSource.load(source);
+      loadPromise = Cesium.GeoJsonDataSource.load(source);
     } else if (sourceType === "kml") {
-      loadPromise = KmlDataSource.load(source, {
+      loadPromise = Cesium.KmlDataSource.load(source, {
         camera: scene.camera,
         canvas: scene.canvas,
         screenOverlayContainer: viewer.container,
       });
     } else if (sourceType === "gpx") {
-      loadPromise = GpxDataSource.load(source);
+      loadPromise = Cesium.GpxDataSource.load(source);
     } else {
       showLoadError(source, "Unknown format.");
     }
 
-    if (defined(loadPromise)) {
+    if (Cesium.defined(loadPromise)) {
       try {
         const dataSource = await viewer.dataSources.add(loadPromise);
         const lookAt = endUserOptions.lookAt;
-        if (defined(lookAt)) {
+        if (Cesium.defined(lookAt)) {
           const entity = dataSource.entities.getById(lookAt);
-          if (defined(entity)) {
+          if (Cesium.defined(entity)) {
             viewer.trackedEntity = entity;
           } else {
             const error = `No entity with id "${lookAt}" exists in the provided data source.`;
             showLoadError(source, error);
           }
-        } else if (!defined(view) && endUserOptions.flyTo !== "false") {
+        } else if (!Cesium.defined(view) && endUserOptions.flyTo !== "false") {
           viewer.flyTo(dataSource);
         }
       } catch (error) {
@@ -195,7 +174,7 @@ async function main() {
   }
 
   const theme = endUserOptions.theme;
-  if (defined(theme)) {
+  if (Cesium.defined(theme)) {
     if (endUserOptions.theme === "lighter") {
       document.body.classList.add("cesium-lighter");
       viewer.animation.applyThemeChanges();
@@ -205,7 +184,7 @@ async function main() {
     }
   }
 
-  if (defined(view)) {
+  if (Cesium.defined(view)) {
     const splitQuery = view.split(/[ ,]+/);
     if (splitQuery.length > 1) {
       const longitude = !isNaN(+splitQuery[0]) ? +splitQuery[0] : 0.0;
@@ -216,19 +195,19 @@ async function main() {
           : 300.0;
       const heading =
         splitQuery.length > 3 && !isNaN(+splitQuery[3])
-          ? CesiumMath.toRadians(+splitQuery[3])
+          ? Cesium.Math.toRadians(+splitQuery[3])
           : undefined;
       const pitch =
         splitQuery.length > 4 && !isNaN(+splitQuery[4])
-          ? CesiumMath.toRadians(+splitQuery[4])
+          ? Cesium.Math.toRadians(+splitQuery[4])
           : undefined;
       const roll =
         splitQuery.length > 5 && !isNaN(+splitQuery[5])
-          ? CesiumMath.toRadians(+splitQuery[5])
+          ? Cesium.Math.toRadians(+splitQuery[5])
           : undefined;
 
       viewer.camera.setView({
-        destination: Cartesian3.fromDegrees(longitude, latitude, height),
+        destination: Cesium.Cartesian3.fromDegrees(longitude, latitude, height),
         orientation: {
           heading: heading,
           pitch: pitch,
@@ -242,18 +221,22 @@ async function main() {
   function saveCamera() {
     const position = camera.positionCartographic;
     let hpr = "";
-    if (defined(camera.heading)) {
-      hpr = `,${CesiumMath.toDegrees(camera.heading)},${CesiumMath.toDegrees(
+    if (Cesium.defined(camera.heading)) {
+      hpr = `,${Cesium.Math.toDegrees(camera.heading)},${Cesium.Math.toDegrees(
         camera.pitch,
-      )},${CesiumMath.toDegrees(camera.roll)}`;
+      )},${Cesium.Math.toDegrees(camera.roll)}`;
     }
-    endUserOptions.view = `${CesiumMath.toDegrees(
+    endUserOptions.view = `${Cesium.Math.toDegrees(
       position.longitude,
-    )},${CesiumMath.toDegrees(position.latitude)},${position.height}${hpr}`;
-    history.replaceState(undefined, "", `?${objectToQuery(endUserOptions)}`);
+    )},${Cesium.Math.toDegrees(position.latitude)},${position.height}${hpr}`;
+    history.replaceState(
+      undefined,
+      "",
+      `?${Cesium.objectToQuery(endUserOptions)}`,
+    );
   }
 
-  let timeout;
+  let timeout: number | undefined;
   if (endUserOptions.saveCamera !== "false") {
     camera.changed.addEventListener(function () {
       window.clearTimeout(timeout);
@@ -261,10 +244,7 @@ async function main() {
     });
   }
 
-  loadingIndicator.style.display = "none";
-
-  // Terrain visualizer
-  testTerrain(viewer);
+  if (loadingIndicator) loadingIndicator.style.display = "none";
 }
 
 main();
