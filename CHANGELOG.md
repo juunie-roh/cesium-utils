@@ -1,5 +1,46 @@
 # @juun-roh/cesium-utils
 
+## 0.1.3
+
+### Patch Changes
+
+- 35fc8f3: Test Expansion
+
+  test: Test expansion
+
+  - Add object tracking optimization tests for both `SurfaceHighlight` and `SilhouetteHighlight`.
+
+  - Add return type test for `Collection`.
+
+- 94ac8a5: Highlight Performance Optimization
+
+  fix: Eliminate flickering and delay in mouse movement highlighting
+
+  - Add object tracking to both `SurfaceHighlight` and `SilhouetteHighlight` classes.
+    The classes now track the currently highlighted object and options to prevent redundant geometry updates.
+
+  - Skip geometry clearing and recreation when highlighting the same object with identical options.
+    This eliminates the flickering effect during rapid mouse movements over the same entity.
+
+  - Implement robust comparison of `HighlightOptions` including proper color equality checks.
+    Handle edge cases with undefined colors and default values correctly.
+
+  - Add proper cleanup of tracking state in `hide()` and `destroy()` methods.
+    Clear tracking variables on error conditions to prevent stale state.
+
+  - Add `currentObject` getter to both highlight classes for debugging and state inspection.
+
+- 539d646: Update Return Values for Collection Methods
+
+  refactor: Update return values
+
+  - `Collection` class methods:
+    `add`, `remove` methods now return `this`
+    to support method chaining.
+
+  - `TerrainAreaCollection` class methods:
+    Likewise, `add` method now returns `this`.
+
 ## 0.1.2
 
 ### Patch Changes
