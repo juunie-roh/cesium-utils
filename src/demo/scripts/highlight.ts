@@ -6,9 +6,7 @@ const { viewer } = window;
 const highlight = Highlight.getInstance(viewer);
 
 viewer.dataSources.add(
-  Cesium.GeoJsonDataSource.load("/data/ne_10m_us_states.topojson", {
-    // clampToGround: true,
-  }),
+  Cesium.GeoJsonDataSource.load("/data/ne_10m_us_states.topojson"),
 );
 // Set camera
 viewer.camera.lookAt(

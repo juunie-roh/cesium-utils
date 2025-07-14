@@ -47,11 +47,6 @@ async function main() {
   const loadingIndicator = document.getElementById("loadingIndicator");
   const hasBaseLayerPicker = !Cesium.defined(baseLayer);
 
-  const terrain = Cesium.Terrain.fromWorldTerrain({
-    requestWaterMask: true,
-    requestVertexNormals: true,
-  });
-
   let viewer: Cesium.Viewer;
   try {
     viewer = new Cesium.Viewer("cesiumContainer", {
@@ -65,7 +60,6 @@ async function main() {
       scene3DOnly: endUserOptions.scene3DOnly,
       selectionIndicator: false,
       requestRenderMode: true,
-      terrain: terrain,
     });
 
     // Set tilt event type as RIGHT_DRAG
@@ -93,6 +87,7 @@ async function main() {
       viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
     }
 
+    viewer.bottomContainer.remove();
     (viewer.timeline.container as HTMLElement).style.display = "none";
     (viewer.animation.container as HTMLElement).style.display = "none";
   } catch (exception) {
@@ -254,6 +249,12 @@ async function main() {
   }
 
   if (loadingIndicator) loadingIndicator.style.display = "none";
+
+  // Set terrain
+  const t = Cesium.Terrain.fromWorldTerrain();
+  t.readyEvent.addEventListener((provider) => {
+    viewer.terrainProvider = provider;
+  });
 
   window.viewer = viewer;
 }
