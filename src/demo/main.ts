@@ -3,7 +3,7 @@ import * as Cesium from "cesium";
 declare global {
   export interface Window {
     CESIUM_BASE_URL: string;
-    cesium_viewer: Cesium.Viewer;
+    viewer: Cesium.Viewer;
   }
 }
 
@@ -52,12 +52,18 @@ async function main() {
     requestVertexNormals: true,
   });
 
-  let viewer;
+  let viewer: Cesium.Viewer;
   try {
     viewer = new Cesium.Viewer("cesiumContainer", {
       baseLayer: baseLayer,
       baseLayerPicker: hasBaseLayerPicker,
+      fullscreenButton: false,
+      geocoder: false,
+      homeButton: false,
+      infoBox: false,
+      navigationHelpButton: false,
       scene3DOnly: endUserOptions.scene3DOnly,
+      selectionIndicator: false,
       requestRenderMode: true,
       terrain: terrain,
     });
@@ -86,6 +92,9 @@ async function main() {
       const viewModel = viewer.baseLayerPicker.viewModel;
       viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
     }
+
+    (viewer.timeline.container as HTMLElement).style.display = "none";
+    (viewer.animation.container as HTMLElement).style.display = "none";
   } catch (exception) {
     if (loadingIndicator) loadingIndicator.style.display = "none";
     const message = Cesium.formatError(exception);
@@ -245,6 +254,8 @@ async function main() {
   }
 
   if (loadingIndicator) loadingIndicator.style.display = "none";
+
+  window.viewer = viewer;
 }
 
 main();
