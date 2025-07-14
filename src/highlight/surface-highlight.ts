@@ -50,6 +50,8 @@ export default class SurfaceHighlight implements IHighlight {
   private _color: Color = Color.RED;
   private _entity: Entity;
   private _entities: EntityCollection;
+  private _currentObject: Entity | GroundPrimitive | undefined;
+  private _currentOptions: HighlightOptions | undefined;
 
   /**
    * Creates a new `SurfaceHighlight` instance.
@@ -79,6 +81,18 @@ export default class SurfaceHighlight implements IHighlight {
   ): Entity | undefined {
     if (!defined(object) || !this._entity) return undefined;
 
+    // Check if we're highlighting the same object with the same options
+    if (
+      this._currentObject === object &&
+      this._optionsEqual(this._currentOptions, options)
+    ) {
+      // Same object and options - no need to update
+      return this._entity;
+    }
+
+    // Clear any previous highlight geometries
+    this._clearGeometries();
+
     try {
       if (
         object instanceof Entity &&
@@ -89,16 +103,46 @@ export default class SurfaceHighlight implements IHighlight {
         this._update(object, options);
       } else {
         // No supported geometry found
+        this._currentObject = undefined;
+        this._currentOptions = undefined;
         return undefined;
       }
+
+      // Store current object and options for next comparison
+      this._currentObject = object;
+      this._currentOptions = options ? { ...options } : undefined;
 
       // Show the highlight entity
       this._entity.show = true;
       return this._entity;
     } catch (error) {
       console.error("Failed to highlight object:", error);
+      this._currentObject = undefined;
+      this._currentOptions = undefined;
       return undefined;
     }
+  }
+
+  /**
+   * Compares two HighlightOptions objects for equality
+   * @private
+   */
+  private _optionsEqual(
+    options1: HighlightOptions | undefined,
+    options2: HighlightOptions | undefined,
+  ): boolean {
+    // Both undefined
+    if (!options1 && !options2) return true;
+
+    // One undefined, one defined
+    if (!options1 || !options2) return false;
+
+    // Compare properties
+    return (
+      options1.outline === options2.outline &&
+      options1.width === options2.width &&
+      Color.equals(options1.color || this._color, options2.color || this._color)
+    );
   }
 
   /**
@@ -275,6 +319,9 @@ export default class SurfaceHighlight implements IHighlight {
     if (this._entity) {
       this._entity.show = false;
     }
+    // Clear tracking of current object
+    this._currentObject = undefined;
+    this._currentOptions = undefined;
   }
 
   /** Clean up the instances */
@@ -282,6 +329,8 @@ export default class SurfaceHighlight implements IHighlight {
     if (this._entities.contains(this._entity)) {
       this._entities.remove(this._entity);
     }
+    this._currentObject = undefined;
+    this._currentOptions = undefined;
   }
 
   /** Gets the highlight color. */
@@ -297,5 +346,10 @@ export default class SurfaceHighlight implements IHighlight {
   /** Gets the highlight entity */
   get entity(): Entity {
     return this._entity;
+  }
+
+  /** Gets the currently highlighted object */
+  get currentObject(): Entity | GroundPrimitive | undefined {
+    return this._currentObject;
   }
 }

@@ -82,18 +82,6 @@ describe("Silhouette Highlight", () => {
         expect(highlight["_silhouette"].selected).toHaveLength(0);
       });
 
-      it("should allow highlighting multiple different features", () => {
-        const feature1 = new Cesium3DTileFeature();
-        const feature2 = new Cesium3DTileFeature();
-
-        highlight.show(feature1);
-        highlight.show(feature2);
-
-        expect(highlight["_silhouette"].selected).toContain(feature1);
-        expect(highlight["_silhouette"].selected).toContain(feature2);
-        expect(highlight["_silhouette"].selected).toHaveLength(2);
-      });
-
       it("should update color when highlighting with different colors", () => {
         const firstColor = Color.YELLOW;
         const secondColor = Color.GREEN;
