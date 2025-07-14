@@ -608,13 +608,15 @@ describe("Collection", () => {
         expect(taggedEntities.contains(tag2)).toBeFalsy();
       });
 
-      it("and return true if only some tags had items", () => {
+      it("and return itself after the removal", () => {
         taggedEntities.add(multiple_entities, "existing-tag");
 
         expect(
           taggedEntities.remove(["existing-tag", "nonexistent-tag"]),
-        ).toBeTruthy();
+        ).toEqual(taggedEntities);
         expect(taggedEntities.contains("existing-tag")).toBeFalsy();
+
+        expect(taggedEntities.remove([])).toEqual(taggedEntities);
       });
 
       it("and remain still if no tags match any items", () => {
