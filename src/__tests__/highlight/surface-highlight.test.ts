@@ -381,5 +381,176 @@ describe("Highlight", () => {
     });
   });
 
+  describe("object tracking optimization", () => {
+    let entity1: Entity;
+    let entity2: Entity;
+
+    beforeEach(() => {
+      entity1 = new Entity({
+        id: "entity1",
+        polygon: new PolygonGraphics({
+          hierarchy: new PolygonHierarchy([
+            new Cartesian3(1, 2, 3),
+            new Cartesian3(4, 5, 6),
+            new Cartesian3(7, 8, 9),
+          ]),
+        }),
+      });
+
+      entity2 = new Entity({
+        id: "entity2",
+        polygon: new PolygonGraphics({
+          hierarchy: new PolygonHierarchy([
+            new Cartesian3(10, 11, 12),
+            new Cartesian3(13, 14, 15),
+            new Cartesian3(16, 17, 18),
+          ]),
+        }),
+      });
+    });
+
+    it("should not update when showing the same object repeatedly", () => {
+      const updateSpy = vi.spyOn(surface as any, "_update");
+      const clearSpy = vi.spyOn(surface as any, "_clearGeometries");
+
+      // First call should update
+      surface.show(entity1);
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+      expect(clearSpy).toHaveBeenCalledTimes(1);
+      expect(surface.currentObject).toBe(entity1);
+
+      // Reset spies
+      updateSpy.mockClear();
+      clearSpy.mockClear();
+
+      // Second call with same object should not update
+      surface.show(entity1);
+      expect(updateSpy).not.toHaveBeenCalled();
+      expect(clearSpy).not.toHaveBeenCalled();
+      expect(surface.currentObject).toBe(entity1);
+    });
+
+    it("should update when showing a different object", () => {
+      const updateSpy = vi.spyOn(surface as any, "_update");
+      const clearSpy = vi.spyOn(surface as any, "_clearGeometries");
+
+      // First object
+      surface.show(entity1);
+      expect(surface.currentObject).toBe(entity1);
+
+      // Reset spies
+      updateSpy.mockClear();
+      clearSpy.mockClear();
+
+      // Different object should trigger update
+      surface.show(entity2);
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+      expect(clearSpy).toHaveBeenCalledTimes(1);
+      expect(surface.currentObject).toBe(entity2);
+    });
+
+    it("should update when showing same object with different options", () => {
+      const updateSpy = vi.spyOn(surface as any, "_update");
+      const clearSpy = vi.spyOn(surface as any, "_clearGeometries");
+
+      // First call with default options
+      surface.show(entity1);
+      expect(surface.currentObject).toBe(entity1);
+
+      // Reset spies
+      updateSpy.mockClear();
+      clearSpy.mockClear();
+
+      // Same object but different options should trigger update
+      surface.show(entity1, { color: Color.BLUE, outline: true });
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+      expect(clearSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not update when showing same object with equivalent options", () => {
+      const options1 = { color: Color.RED, outline: false, width: 2 };
+      const options2 = { color: Color.RED, outline: false, width: 2 };
+
+      const updateSpy = vi.spyOn(surface as any, "_update");
+
+      surface.show(entity1, options1);
+      updateSpy.mockClear();
+
+      // Same options should not trigger update
+      surface.show(entity1, options2);
+      expect(updateSpy).not.toHaveBeenCalled();
+    });
+
+    it("should clear tracking when hiding", () => {
+      surface.show(entity1);
+      expect(surface.currentObject).toBe(entity1);
+
+      surface.hide();
+      expect(surface.currentObject).toBeUndefined();
+    });
+
+    it("should clear tracking on error", () => {
+      // Mock _update to throw error
+      vi.spyOn(surface as any, "_update").mockImplementation(() => {
+        throw new Error("Test error");
+      });
+
+      surface.show(entity1);
+      expect(surface.currentObject).toBeUndefined();
+    });
+
+    it("should handle rapid mouse movements efficiently", () => {
+      const updateSpy = vi.spyOn(surface as any, "_update");
+
+      // Simulate rapid mouse movements over the same entity
+      for (let i = 0; i < 100; i++) {
+        surface.show(entity1);
+      }
+
+      // Should only update once
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // Add this to test options comparison edge cases
+  describe("_optionsEqual", () => {
+    it("should handle undefined colors correctly", () => {
+      const entity = new Entity({
+        polygon: new PolygonGraphics({
+          hierarchy: new PolygonHierarchy([new Cartesian3(1, 2, 3)]),
+        }),
+      });
+
+      const options1 = { outline: false };
+      const options2 = { outline: false, color: undefined };
+
+      const updateSpy = vi.spyOn(surface as any, "_update");
+
+      surface.show(entity, options1);
+      updateSpy.mockClear();
+
+      // Should not trigger update (both use default color)
+      surface.show(entity, options2);
+      expect(updateSpy).not.toHaveBeenCalled();
+    });
+
+    it("should detect color differences correctly", () => {
+      const entity = new Entity({
+        polygon: new PolygonGraphics({
+          hierarchy: new PolygonHierarchy([new Cartesian3(1, 2, 3)]),
+        }),
+      });
+
+      const updateSpy = vi.spyOn(surface as any, "_update");
+
+      surface.show(entity, { color: Color.RED });
+      updateSpy.mockClear();
+
+      // Different color should trigger update
+      surface.show(entity, { color: Color.BLUE });
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
   afterAll(() => vi.clearAllMocks());
 });

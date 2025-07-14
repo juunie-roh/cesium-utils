@@ -41,6 +41,8 @@ export default class SilhouetteHighlight implements IHighlight {
   private _composite: PostProcessStageComposite;
   private _stages: PostProcessStageCollection;
   private _entity?: Entity;
+  private _currentObject: Cesium3DTileFeature | Entity | undefined;
+  private _currentOptions: HighlightOptions | undefined;
 
   /**
    * Creates a new `Silhouette` instance.
@@ -72,23 +74,76 @@ export default class SilhouetteHighlight implements IHighlight {
    */
   show(object: Entity, options?: HighlightOptions): void;
   show(object: Cesium3DTileFeature | Entity, options?: HighlightOptions) {
-    if (!defined(object) || this._silhouette.selected[0] === object) return;
-    if (object instanceof Cesium3DTileFeature) {
-      this._silhouette.uniforms.color = options?.color || this._color;
-      this._silhouette.selected.push(object);
-    } else {
-      if (!object.model) return;
-      this._entity = object;
-      object.model.silhouetteSize = new ConstantProperty(options?.width || 2);
-      object.model.silhouetteColor = new ConstantProperty(
-        options?.color || this._color,
-      );
+    if (!defined(object)) return;
+
+    // Check if we're highlighting the same object with the same options
+    if (
+      this._currentObject === object &&
+      this._optionsEqual(this._currentOptions, options)
+    ) {
+      // Same object and options - no need to update
+      return;
+    }
+
+    // Clear previous highlights before setting new one
+    this._clearHighlights();
+
+    try {
+      if (object instanceof Cesium3DTileFeature) {
+        this._silhouette.uniforms.color = options?.color || this._color;
+        this._silhouette.selected.push(object);
+      } else {
+        if (!object.model) return;
+        this._entity = object;
+        object.model.silhouetteSize = new ConstantProperty(options?.width || 2);
+        object.model.silhouetteColor = new ConstantProperty(
+          options?.color || this._color,
+        );
+      }
+
+      // Store current object and options for next comparison
+      this._currentObject = object;
+      this._currentOptions = options ? { ...options } : undefined;
+    } catch (error) {
+      console.error("Failed to highlight object:", error);
+      this._currentObject = undefined;
+      this._currentOptions = undefined;
     }
   }
 
-  /** Clears the current highlight */
-  hide(): void {
-    if (this._silhouette.selected.length > 0) this._silhouette.selected = [];
+  /**
+   * Compares two HighlightOptions objects for equality
+   * @private
+   */
+  private _optionsEqual(
+    options1: HighlightOptions | undefined,
+    options2: HighlightOptions | undefined,
+  ): boolean {
+    // Both undefined
+    if (!options1 && !options2) return true;
+
+    // One undefined, one defined
+    if (!options1 || !options2) return false;
+
+    // Compare properties
+    return (
+      options1.outline === options2.outline &&
+      options1.width === options2.width &&
+      Color.equals(options1.color || this._color, options2.color || this._color)
+    );
+  }
+
+  /**
+   * Clears all current highlights
+   * @private
+   */
+  private _clearHighlights(): void {
+    // Clear silhouette selection
+    if (this._silhouette.selected.length > 0) {
+      this._silhouette.selected = [];
+    }
+
+    // Clear entity model highlight
     if (this._entity?.model) {
       this._entity.model.silhouetteColor = new ConstantProperty(
         Color.TRANSPARENT,
@@ -98,20 +153,37 @@ export default class SilhouetteHighlight implements IHighlight {
     }
   }
 
+  /** Clears the current highlight */
+  hide(): void {
+    this._clearHighlights();
+
+    // Clear tracking of current object
+    this._currentObject = undefined;
+    this._currentOptions = undefined;
+  }
+
   /** Clean up the instances */
   destroy(): void {
     this.hide();
     if (this._composite) {
       this._stages.remove(this._composite);
     }
+    this._currentObject = undefined;
+    this._currentOptions = undefined;
   }
 
   /** Gets the highlight color. */
   get color(): Color {
     return this._color;
   }
+
   /** Sets the highlight color. */
   set color(color: Color) {
     this._color = color;
+  }
+
+  /** Gets the currently highlighted object */
+  get currentObject(): Cesium3DTileFeature | Entity | undefined {
+    return this._currentObject;
   }
 }

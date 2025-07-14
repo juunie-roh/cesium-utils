@@ -92,7 +92,6 @@ export default class Highlight {
    * @see {@link HighlightOptions}
    */
   show(picked: Picked, options: HighlightOptions = { color: this._color }) {
-    this.hide();
     const object = this._getObject(picked);
     if (!defined(object)) return;
     if (object instanceof Cesium3DTileFeature) {
