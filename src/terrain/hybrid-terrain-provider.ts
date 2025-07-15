@@ -33,7 +33,7 @@ import TerrainArea from "./terrain-area.js";
  * ```
  */
 class HybridTerrainProvider implements TerrainProvider {
-  private _terrainAreas = new TerrainArea.Collection();
+  private _terrainAreas: TerrainArea.Collection;
   private _terrainProvider: TerrainProvider;
   private _fallbackProvider: TerrainProvider;
   private _tilingScheme: TilingScheme;
