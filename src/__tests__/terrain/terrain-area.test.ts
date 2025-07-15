@@ -7,21 +7,20 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TerrainArea } from "@/terrain/index.js";
-import type { TileRange } from "@/terrain/terrain.types.js";
 
 describe("TerrainArea", () => {
   // Create a simple terrain provider for testing
   let provider: TerrainProvider;
 
   // Setup a tile range map for testing
-  let tileRanges: Map<number, TileRange>;
+  let tileRanges: Map<number, TerrainArea.TileRange>;
 
   beforeEach(() => {
     // Initialize a new terrain provider before each test
     provider = new EllipsoidTerrainProvider();
 
     // Initialize tile ranges
-    tileRanges = new Map<number, TileRange>();
+    tileRanges = new Map<number, TerrainArea.TileRange>();
     tileRanges.set(0, { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } });
     tileRanges.set(1, { start: { x: 0, y: 0 }, end: { x: 3, y: 3 } });
   });
@@ -63,7 +62,7 @@ describe("TerrainArea", () => {
         },
       };
 
-      const tileRanges = new Map<number, TileRange>();
+      const tileRanges = new Map<number, TerrainArea.TileRange>();
       tileRanges.set(0, { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } });
 
       const area = new TerrainArea({
@@ -121,7 +120,7 @@ describe("TerrainArea", () => {
 
     // it('should check rectangle intersection when no tile ranges are specified', () => {
     //   // Create a terrain area without tile ranges
-    //   const emptyRanges = new Map<number, TileRange>();
+    //   const emptyRanges = new Map<number, TerrainArea.TileRange>();
     //   const areaWithoutRanges = new TerrainArea({
     //     terrainProvider: provider,
     //     tileRanges: emptyRanges,
@@ -176,7 +175,7 @@ describe("TerrainArea", () => {
 
     // it('should defer to the terrain provider when no tile ranges are specified', () => {
     //   // Create a terrain area without tile ranges
-    //   const emptyRanges = new Map<number, TileRange>();
+    //   const emptyRanges = new Map<number, TerrainArea.TileRange>();
     //   const areaWithoutRanges = new TerrainArea({
     //     terrainProvider: provider,
     //     tileRanges: emptyRanges,
@@ -230,7 +229,7 @@ describe("TerrainArea", () => {
     });
 
     it("should handle empty tile ranges", () => {
-      const emptyRanges = new Map<number, TileRange>();
+      const emptyRanges = new Map<number, TerrainArea.TileRange>();
       const area = new TerrainArea({
         terrainProvider: provider,
         tileRanges: emptyRanges,
@@ -282,7 +281,7 @@ describe("TerrainArea", () => {
     });
 
     it("should create terrain area from URL with default options", async () => {
-      const tileRanges = new Map<number, TileRange>();
+      const tileRanges = new Map<number, TerrainArea.TileRange>();
       tileRanges.set(0, { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } });
 
       const terrainArea = await TerrainArea.fromUrl(
@@ -305,7 +304,7 @@ describe("TerrainArea", () => {
     });
 
     it("should create terrain area from URL with additional options", async () => {
-      const tileRanges = new Map<number, TileRange>();
+      const tileRanges = new Map<number, TerrainArea.TileRange>();
       tileRanges.set(0, { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } });
 
       const terrainArea = await TerrainArea.fromUrl(
@@ -329,7 +328,7 @@ describe("TerrainArea", () => {
     });
 
     it("should use custom credit when provided", async () => {
-      const tileRanges = new Map<number, TileRange>();
+      const tileRanges = new Map<number, TerrainArea.TileRange>();
       tileRanges.set(0, { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } });
 
       const terrainArea = await TerrainArea.fromUrl(
@@ -356,7 +355,7 @@ describe("TerrainArea", () => {
           throw new Error("Test error");
         });
 
-        const tileRanges = new Map<number, TileRange>();
+        const tileRanges = new Map<number, TerrainArea.TileRange>();
         tileRanges.set(0, { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } });
 
         await expect(

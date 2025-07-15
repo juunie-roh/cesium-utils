@@ -9,10 +9,10 @@ import {
   TilingScheme,
   Viewer,
 } from "cesium";
-import { TerrainArea } from "src/terrain/terrain-area.js";
 
 import Collection from "@/collection/collection.js";
-import { HybridTerrainProvider } from "@/terrain/hybrid-terrain-provider.js";
+import HybridTerrainProvider from "@/terrain/hybrid-terrain-provider.js";
+import TerrainArea from "@/terrain/terrain-area.js";
 
 /**
  * @class

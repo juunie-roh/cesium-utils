@@ -3,3 +3,4 @@ import { isGetterOnly } from "./type-check.js";
 
 export { TerrainVisualizer };
 export { isGetterOnly };
+export type * from "./type-check.js";

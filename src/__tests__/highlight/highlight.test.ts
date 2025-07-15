@@ -12,7 +12,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createMockScene, createMockViewer } from "@/__mocks__/cesium.js";
 import Highlight from "@/highlight/highlight.js";
-import type { Picked } from "@/highlight/highlight.types.js";
 
 describe("Highlight", () => {
   let viewer: Viewer;
@@ -199,7 +198,7 @@ describe("Highlight", () => {
     it("should handle picked object with id property", () => {
       const pickedObject = {
         id: mockEntity,
-      } as Picked;
+      } as Highlight.Picked;
       const surfaceShowSpy = vi.spyOn(highlight["_surface"], "show");
 
       highlight.show(pickedObject);
@@ -215,7 +214,7 @@ describe("Highlight", () => {
       });
       const pickedObject = {
         id: entityWithModel,
-      } as Picked;
+      } as Highlight.Picked;
       const silhouetteShowSpy = vi.spyOn(highlight["_silhouette"], "show");
 
       highlight.show(pickedObject);
@@ -228,7 +227,7 @@ describe("Highlight", () => {
     it("should handle picked object with primitive property", () => {
       const pickedObject = {
         primitive: mockGroundPrimitive,
-      } as Picked;
+      } as Highlight.Picked;
       const surfaceShowSpy = vi.spyOn(highlight["_surface"], "show");
 
       highlight.show(pickedObject);
@@ -261,7 +260,7 @@ describe("Highlight", () => {
       const surfaceShowSpy = vi.spyOn(highlight["_surface"], "show");
       const silhouetteShowSpy = vi.spyOn(highlight["_silhouette"], "show");
 
-      highlight.show(undefined as unknown as Picked);
+      highlight.show(undefined as unknown as Highlight.Picked);
 
       expect(surfaceShowSpy).not.toHaveBeenCalled();
       expect(silhouetteShowSpy).not.toHaveBeenCalled();
@@ -270,7 +269,7 @@ describe("Highlight", () => {
     it("should handle empty picked objects gracefully", () => {
       const surfaceShowSpy = vi.spyOn(highlight["_surface"], "show");
       const silhouetteShowSpy = vi.spyOn(highlight["_silhouette"], "show");
-      const emptyPicked = {} as Picked;
+      const emptyPicked = {} as Highlight.Picked;
 
       highlight.show(emptyPicked);
 
@@ -348,7 +347,7 @@ describe("Highlight", () => {
 
       // Test undefined
       expect(
-        highlight["_getObject"](undefined as unknown as Picked),
+        highlight["_getObject"](undefined as unknown as Highlight.Picked),
       ).toBeUndefined();
     });
   });

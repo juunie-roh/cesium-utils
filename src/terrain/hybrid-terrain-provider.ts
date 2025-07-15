@@ -1,14 +1,14 @@
-import {
-  EllipsoidTerrainProvider,
+import type {
+  Credit,
   Request,
   TerrainData,
   TerrainProvider,
   TileAvailability,
   TilingScheme,
 } from "cesium";
+import { EllipsoidTerrainProvider, Rectangle } from "cesium";
 
-import { TerrainArea } from "./terrain-area.js";
-import TerrainAreaCollection from "./terrain-area-collection.js";
+import TerrainArea from "./terrain-area.js";
 
 /**
  * @class
@@ -19,7 +19,7 @@ import TerrainAreaCollection from "./terrain-area-collection.js";
  * @example
  * ``` typescript
  * // Set up tile ranges
- * const tileRanges = new Map<number, TileRange>;
+ * const tileRanges = new Map<number, TerrainArea.TileRange>;
  * tileRanges.set(15, { start: { x: 55852, y: 9556 }, end: { x: 55871, y: 9575 } });
  * // Set up tile areas
  * const area = new TerrainArea({ terrainProvider: provider, tileRanges });
@@ -32,8 +32,8 @@ import TerrainAreaCollection from "./terrain-area-collection.js";
  * viewer.terrainProvider = hybridTerrain;
  * ```
  */
-export class HybridTerrainProvider implements TerrainProvider {
-  private _terrainAreas = new TerrainAreaCollection();
+class HybridTerrainProvider implements TerrainProvider {
+  private _terrainAreas = new TerrainArea.Collection();
   private _terrainProvider: TerrainProvider;
   private _fallbackProvider: TerrainProvider;
   private _tilingScheme: TilingScheme;
@@ -50,7 +50,7 @@ export class HybridTerrainProvider implements TerrainProvider {
     this._fallbackProvider =
       options.fallbackProvider || new EllipsoidTerrainProvider();
     this._tilingScheme = options.terrainProvider.tilingScheme;
-    this._terrainAreas = new TerrainAreaCollection(...options.terrainAreas);
+    this._terrainAreas = new TerrainArea.Collection(...options.terrainAreas);
     this._availability = options.terrainProvider.availability;
     this._ready = true;
   }
@@ -98,7 +98,7 @@ export class HybridTerrainProvider implements TerrainProvider {
    * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
    * the source of the terrain.
    */
-  get credit(): any {
+  get credit(): Credit {
     return this._terrainProvider?.credit;
   }
   /**
@@ -199,9 +199,9 @@ export class HybridTerrainProvider implements TerrainProvider {
 
 /**
  * @namespace
- * Contains types and factory methods for creating `HybridTerrainProvider` instance.
+ * Contains types and factory methods for `HybridTerrainProvider` instance.
  */
-export namespace HybridTerrainProvider {
+namespace HybridTerrainProvider {
   /** Initialization options for `HybridTerrainProvider` constructor. */
   export interface ConstructorOptions {
     /** An array of terrain areas to include in the hybrid terrain. */
@@ -211,4 +211,50 @@ export namespace HybridTerrainProvider {
     /** Optional fallback provider when data is not available from default provider. @default EllipsoidTerrainProvider */
     fallbackProvider?: TerrainProvider;
   }
+
+  export /**
+   * Calculates a bounding rectangle that encompasses all the specified tile ranges.
+   * @param tilingScheme The tiling scheme to use for calculation.
+   * @param from Tile ranges to calculate from.
+   */
+  function computeRectangle(
+    tilingScheme: TilingScheme,
+    from: Map<number, TerrainArea.TileRange>,
+  ): Rectangle {
+    if (from.size === 0) return new Rectangle();
+
+    let west = Number.POSITIVE_INFINITY;
+    let south = Number.POSITIVE_INFINITY;
+    let east = Number.NEGATIVE_INFINITY;
+    let north = Number.NEGATIVE_INFINITY;
+
+    const levels = Array.from(from.keys());
+    const minimumLevel = Math.min(...levels);
+    const tileRange = from.get(minimumLevel);
+
+    if (tileRange) {
+      const { start, end } = tileRange;
+
+      const startRect = tilingScheme.tileXYToRectangle(
+        start.x,
+        start.y,
+        minimumLevel,
+      );
+
+      const endRect = tilingScheme.tileXYToRectangle(
+        end.x,
+        end.y,
+        minimumLevel,
+      );
+
+      west = Math.min(startRect.west, west);
+      south = Math.min(endRect.south, south);
+      east = Math.max(endRect.east, east);
+      north = Math.max(startRect.north, north);
+    }
+
+    return new Rectangle(west, south, east, north);
+  }
 }
+
+export default HybridTerrainProvider;

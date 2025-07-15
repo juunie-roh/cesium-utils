@@ -11,11 +11,9 @@ describe('ECMA Script Module import test with Cesium', () => {
     expect(utils.Collection).toBeDefined();
     expect(utils.HybridTerrainProvider).toBeDefined();
     expect(utils.TerrainArea).toBeDefined();
-    expect(utils.TerrainAreaCollection).toBeDefined();
     expect(utils.TerrainVisualizer).toBeDefined();
 
     expect(utils.cloneViewer).toBeDefined();
-    expect(utils.computeRectangle).toBeDefined();
     expect(utils.isGetterOnly).toBeDefined();
     expect(utils.syncCamera).toBeDefined();
   });

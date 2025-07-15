@@ -1,3 +1,15 @@
+import type {
+  Billboard,
+  Cesium3DTileset,
+  DataSource,
+  Entity,
+  GroundPrimitive,
+  ImageryLayer,
+  Label,
+  PointPrimitive,
+  Polyline,
+  Primitive,
+} from "cesium";
 import {
   DataSourceCollection,
   defined,
@@ -6,17 +18,7 @@ import {
   PrimitiveCollection,
 } from "cesium";
 
-import { isGetterOnly } from "@/utils/index.js";
-
-import type {
-  CesiumCollection,
-  CesiumCollectionItem,
-  CollectionEventType,
-  EventHandler,
-  NonFunction,
-  Tag,
-  WithTag,
-} from "./collection.types.js";
+import { isGetterOnly, type NonFunction } from "@/utils/index.js";
 
 /**
  * @class
@@ -109,7 +111,7 @@ import type {
  *   }
  * }
  */
-class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
+class Collection<C extends Collection.Base, I extends Collection.Item> {
   /**
    * Symbol used as a property key to store tags on collection items.
    * Using a Symbol ensures no property naming conflicts with the item's own properties.
@@ -121,7 +123,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * Default tag used when adding items without specifying a tag.
    * @protected
    */
-  protected tag: Tag;
+  protected tag: Collection.Tag;
 
   /**
    * The underlying Cesium collection being wrapped.
@@ -139,15 +141,15 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * Tag to items map for faster lookups
    * @private
    */
-  private _tagMap = new Map<Tag, Set<I>>();
+  private _tagMap = new Map<Collection.Tag, Set<I>>();
 
   /**
    * Event listeners
    * @private
    */
   private _eventListeners = new Map<
-    CollectionEventType,
-    Set<EventHandler<I>>
+    Collection.Event,
+    Set<Collection.EventHandler<I>>
   >();
 
   /**
@@ -163,7 +165,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * @param options.collection - The Cesium collection to wrap
    * @param options.tag - The default tag to use for items (defaults to 'default')
    */
-  constructor({ collection, tag }: { collection: C; tag?: Tag }) {
+  constructor({ collection, tag }: { collection: C; tag?: Collection.Tag }) {
     this.tag = tag || "default";
     this.collection = collection;
 
@@ -197,8 +199,8 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * @param data - Additional event data
    */
   private _emit(
-    type: CollectionEventType,
-    data?: { items?: I[]; tag?: Tag },
+    type: Collection.Event,
+    data?: { items?: I[]; tag?: Collection.Tag },
   ): void {
     const listeners = this._eventListeners.get(type);
     if (listeners) {
@@ -214,7 +216,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * @param item - The item to add
    * @param tag - The tag to associate with the item
    */
-  private _addToTagMap(item: I, tag: Tag): void {
+  private _addToTagMap(item: I, tag: Collection.Tag): void {
     if (!this._tagMap.has(tag)) {
       this._tagMap.set(tag, new Set());
     }
@@ -227,7 +229,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * @private
    * @param item - The item to remove
    */
-  private _removeFromTagMap(item: I & WithTag): void {
+  private _removeFromTagMap(item: I & Collection.WithTag): void {
     const tag = item[Collection.symbol];
     const itemSet = this._tagMap.get(tag);
     if (itemSet) {
@@ -313,7 +315,10 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * @param handler - The callback function
    * @returns The collection instance for method chaining
    */
-  addEventListener(type: CollectionEventType, handler: EventHandler<I>): this {
+  addEventListener(
+    type: Collection.Event,
+    handler: Collection.EventHandler<I>,
+  ): this {
     if (!this._eventListeners.has(type)) {
       this._eventListeners.set(type, new Set());
     }
@@ -329,8 +334,8 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * @returns The collection instance for method chaining
    */
   removeEventListener(
-    type: CollectionEventType,
-    handler: EventHandler<I>,
+    type: Collection.Event,
+    handler: Collection.EventHandler<I>,
   ): this {
     this._eventListeners.get(type)?.delete(handler);
     return this;
@@ -347,7 +352,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * @example
    * const entity = collection.add(new Entity({ ... }), 'landmarks');
    */
-  add(item: I, tag?: Tag, index?: number): this;
+  add(item: I, tag?: Collection.Tag, index?: number): this;
   /**
    * Adds multiple items with the same tag to the collection.
    *
@@ -360,9 +365,9 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * const entities = [new Entity({ ... }), new Entity({ ... })];
    * const addedEntities = collection.add(entities, 'buildings');
    */
-  add(items: I[], tag?: Tag): this;
+  add(items: I[], tag?: Collection.Tag): this;
 
-  add(i: I | I[], t: Tag = this.tag, idx?: number): this {
+  add(i: I | I[], t: Collection.Tag = this.tag, idx?: number): this {
     if (Array.isArray(i)) {
       i.forEach((i) => {
         this.add(i, t);
@@ -401,8 +406,8 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    *   console.log('Temporary items exist');
    * }
    */
-  contains(tag: Tag): boolean;
-  contains(target: I | Tag): boolean {
+  contains(tag: Collection.Tag): boolean;
+  contains(target: I | Collection.Tag): boolean {
     if (typeof target === "object") {
       return this.collection.contains(target);
     }
@@ -424,20 +429,20 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * @param by - The tag identifying which items to remove
    * @returns The collection instance for method chaining
    */
-  remove(by: Tag): this;
+  remove(by: Collection.Tag): this;
   /**
    * Removes all items with the array of tags from the collection.
    *
    * @param by - The tags identifying which items to remove
    * @returns The collection instance for method chaining
    */
-  remove(by: Tag[]): this;
-  remove(target: I | Tag | Tag[]): this {
+  remove(by: Collection.Tag[]): this;
+  remove(target: I | Collection.Tag | Collection.Tag[]): this {
     // Case 1: Object but not array (an item)
     if (typeof target === "object" && !Array.isArray(target)) {
       const result = this.collection.remove(target);
       if (result) {
-        this._removeFromTagMap(target as I & WithTag);
+        this._removeFromTagMap(target as I & Collection.WithTag);
         this._invalidateCache();
         this._emit("remove", { items: [target] });
       }
@@ -453,7 +458,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
     }
 
     // Case 3: Single tag
-    const items = this.get(target as Tag);
+    const items = this.get(target as Collection.Tag);
     if (items.length === 0) return this;
 
     for (const item of items) {
@@ -537,7 +542,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * // Get all buildings
    * const buildings = collection.get('buildings');
    */
-  get(by: Tag): I[] {
+  get(by: Collection.Tag): I[] {
     const items = this._tagMap.get(by);
     return items ? Array.from(items) : [];
   }
@@ -553,7 +558,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * // Get the first building
    * const firstBuilding = collection.first('buildings');
    */
-  first(by: Tag): I | undefined {
+  first(by: Collection.Tag): I | undefined {
     const items = this._tagMap.get(by);
     if (items && items.size > 0) {
       return items.values().next().value;
@@ -571,7 +576,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * const tags = collection.tags;
    * console.log(`Collection has these tags: ${tags.join(', ')}`);
    */
-  get tags(): Tag[] {
+  get tags(): Collection.Tag[] {
     return Array.from(this._tagMap.keys());
   }
 
@@ -587,12 +592,12 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * const count = collection.update('temp', 'temporary');
    * console.log(`Updated ${count} items`);
    */
-  update(from: Tag, to: Tag): number {
+  update(from: Collection.Tag, to: Collection.Tag): number {
     const items = this.get(from);
 
     for (const item of items) {
       // Remove from old tag map
-      this._removeFromTagMap(item as I & WithTag);
+      this._removeFromTagMap(item as I & Collection.WithTag);
 
       // Update tag
       Object.defineProperty(item, Collection.symbol, {
@@ -624,7 +629,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * // Show all buildings
    * collection.show('buildings');
    */
-  show(by: Tag): this {
+  show(by: Collection.Tag): this {
     const items = this.get(by);
 
     for (const item of items) {
@@ -647,7 +652,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * // Hide all buildings
    * collection.hide('buildings');
    */
-  hide(by: Tag): this {
+  hide(by: Collection.Tag): this {
     const items = this.get(by);
 
     for (const item of items) {
@@ -670,7 +675,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    * // Toggle visibility of all buildings
    * collection.toggle('buildings');
    */
-  toggle(by: Tag): this {
+  toggle(by: Collection.Tag): this {
     const items = this.get(by);
 
     for (const item of items) {
@@ -685,6 +690,8 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
   /**
    * Sets a property value on all items with the specified tag.
    *
+   * @template K - A type
+   *
    * @param by - The tag identifying which items to update
    * @param property - The property name to set
    * @param value - The value to set
@@ -697,7 +704,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
   setProperty<K extends NonFunction<I>>(
     property: K,
     value: I[K],
-    by: Tag = this.tag,
+    by: Collection.Tag = this.tag,
   ): this {
     const items = this.get(by);
 
@@ -731,7 +738,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    *   'buildings'
    * );
    */
-  filter(predicate: (item: I) => boolean, by?: Tag): I[] {
+  filter(predicate: (item: I) => boolean, by?: Collection.Tag): I[] {
     const items = by ? this.get(by) : this.values;
     return items.filter(predicate);
   }
@@ -751,7 +758,10 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    *   }
    * }, 'buildings');
    */
-  forEach(callback: (value: I, index: number) => void, by?: Tag): void {
+  forEach(
+    callback: (value: I, index: number) => void,
+    by?: Collection.Tag,
+  ): void {
     const items = by ? this.get(by) : this.values;
     items.forEach((item, index) => callback(item, index));
   }
@@ -774,7 +784,7 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    *   'buildings'
    * );
    */
-  map<R>(callbackfn: (value: I, index: number) => R, by?: Tag): R[] {
+  map<R>(callbackfn: (value: I, index: number) => R, by?: Collection.Tag): R[] {
     const items = by ? this.get(by) : this.values;
     return items.map(callbackfn);
   }
@@ -797,10 +807,62 @@ class Collection<C extends CesiumCollection, I extends CesiumCollectionItem> {
    *   'buildings'
    * );
    */
-  find(predicate: (value: I) => boolean, by?: Tag): I | undefined {
+  find(predicate: (value: I) => boolean, by?: Collection.Tag): I | undefined {
     const items = by ? this.get(by) : this.values;
     return items.find(predicate);
   }
+}
+
+/**
+ * @namespace
+ */
+namespace Collection {
+  /**
+   * The underlying Cesium collection type being wrapped.
+   */
+  export type Base =
+    | DataSourceCollection
+    | EntityCollection
+    | ImageryLayerCollection
+    | PrimitiveCollection;
+
+  /**
+   * The item types that can be added to the `PrimitiveCollection` instance.
+   */
+  type Primitives =
+    | Billboard
+    | Cesium3DTileset
+    | GroundPrimitive
+    | Label
+    | PointPrimitive
+    | Polyline
+    | Primitive;
+
+  /**
+   * Cesium item type that can be added to the {@link Collection.Base} instance.
+   */
+  export type Item = DataSource | Entity | ImageryLayer | Primitives;
+  /**
+   * Collection tag type.
+   */
+  export type Tag = string | number;
+
+  export interface WithTag {
+    [key: symbol]: Tag;
+  }
+
+  /**
+   * Collection event types
+   */
+  export type Event = "add" | "remove" | "update" | "clear";
+  /**
+   * Event handler function type
+   */
+  export type EventHandler<I> = (event: {
+    type: Event;
+    items?: I[];
+    tag?: Collection.Tag;
+  }) => void;
 }
 
 export default Collection;
