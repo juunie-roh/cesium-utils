@@ -1,13 +1,12 @@
+import type { Cesium3DTileset, Model, Primitive, Viewer } from "cesium";
 import {
   Cesium3DTileFeature,
   Color,
   defined,
   Entity,
   GroundPrimitive,
-  Viewer,
 } from "cesium";
 
-import type { HighlightOptions, Picked } from "./highlight.types.js";
 import SilhouetteHighlight from "./silhouette-highlight.js";
 import SurfaceHighlight from "./surface-highlight.js";
 
@@ -37,7 +36,7 @@ import SurfaceHighlight from "./surface-highlight.js";
  * viewer2.destroy();
  * ```
  */
-export default class Highlight {
+class Highlight {
   private static instances = new WeakMap<Element, Highlight>();
   private _surface: SurfaceHighlight;
   private _silhouette: SilhouetteHighlight;
@@ -89,9 +88,12 @@ export default class Highlight {
    * Highlights a picked object or a direct instance.
    * @param picked The result of `Scene.pick()` or direct instance to be highlighted.
    * @param options Optional style for the highlight.
-   * @see {@link HighlightOptions}
+   * @see {@link Highlight.Options}
    */
-  show(picked: Picked, options: HighlightOptions = { color: this._color }) {
+  show(
+    picked: Highlight.Picked,
+    options: Highlight.Options = { color: this._color },
+  ) {
     const object = this._getObject(picked);
     if (!defined(object)) return;
     if (object instanceof Cesium3DTileFeature) {
@@ -104,7 +106,7 @@ export default class Highlight {
   }
 
   private _getObject(
-    picked: Picked,
+    picked: Highlight.Picked,
   ): Entity | GroundPrimitive | Cesium3DTileFeature | undefined {
     if (!defined(picked)) return;
 
@@ -139,3 +141,38 @@ export default class Highlight {
     this._silhouette.color = color;
   }
 }
+
+namespace Highlight {
+  export interface Base {
+    show(object: any, options?: Highlight.Options): void;
+    hide(): void;
+    destroy(): void;
+    color: Color;
+  }
+
+  export interface Options {
+    /** Color of the highlight */
+    color?: Color;
+    /** To apply outline style for the highlight */
+    outline?: boolean;
+    /** Outline width */
+    width?: number;
+  }
+
+  type PickedObject = {
+    id?: Entity;
+    primitive?: Primitive | GroundPrimitive | Model | Cesium3DTileset;
+    tileset?: Cesium3DTileset;
+    detail?: {
+      model?: Model;
+    };
+  };
+
+  export type Picked =
+    | Entity
+    | Cesium3DTileFeature
+    | GroundPrimitive
+    | PickedObject;
+}
+
+export default Highlight;

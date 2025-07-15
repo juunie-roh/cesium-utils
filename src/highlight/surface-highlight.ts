@@ -1,20 +1,19 @@
+import type { EntityCollection, Viewer } from "cesium";
 import {
   Cartesian3,
   ClassificationType,
   Color,
   defined,
   Entity,
-  EntityCollection,
   GroundPrimitive,
   HeightReference,
   PolygonGraphics,
   PolygonHierarchy,
   PolylineGraphics,
   RectangleGraphics,
-  Viewer,
 } from "cesium";
 
-import type { HighlightOptions, IHighlight } from "./highlight.types.js";
+import Highlight from "./highlight";
 
 /**
  * @class
@@ -46,12 +45,12 @@ import type { HighlightOptions, IHighlight } from "./highlight.types.js";
  * surfaceHighlight.show(entity);
  * ```
  */
-export default class SurfaceHighlight implements IHighlight {
+export default class SurfaceHighlight implements Highlight.Base {
   private _color: Color = Color.RED;
   private _entity: Entity;
   private _entities: EntityCollection;
   private _currentObject: Entity | GroundPrimitive | undefined;
-  private _currentOptions: HighlightOptions | undefined;
+  private _currentOptions: Highlight.Options | undefined;
 
   /**
    * Creates a new `SurfaceHighlight` instance.
@@ -73,11 +72,11 @@ export default class SurfaceHighlight implements IHighlight {
    * Highlights a picked object by updating the reusable entity
    * @param object The object to be highlighted.
    * @param options Optional style for the highlight.
-   * @see {@link HighlightOptions}
+   * @see {@link Highlight.Options}
    */
   show(
     object: Entity | GroundPrimitive,
-    options?: HighlightOptions,
+    options?: Highlight.Options,
   ): Entity | undefined {
     if (!defined(object) || !this._entity) return undefined;
 
@@ -124,12 +123,12 @@ export default class SurfaceHighlight implements IHighlight {
   }
 
   /**
-   * Compares two HighlightOptions objects for equality
+   * Compares two Highlight.Options objects for equality
    * @private
    */
   private _optionsEqual(
-    options1: HighlightOptions | undefined,
-    options2: HighlightOptions | undefined,
+    options1: Highlight.Options | undefined,
+    options2: Highlight.Options | undefined,
   ): boolean {
     // Both undefined
     if (!options1 && !options2) return true;
@@ -159,12 +158,12 @@ export default class SurfaceHighlight implements IHighlight {
    * Updates the highlight entity from an Entity object
    * @private
    */
-  private _update(from: Entity, options?: HighlightOptions): void;
+  private _update(from: Entity, options?: Highlight.Options): void;
   /**
    * Updates the highlight entity from a GroundPrimitive
    * @private
    */
-  private _update(from: GroundPrimitive, options?: HighlightOptions): void;
+  private _update(from: GroundPrimitive, options?: Highlight.Options): void;
   private _update(
     from: Entity | GroundPrimitive,
     options = { color: this._color, outline: false, width: 2 },

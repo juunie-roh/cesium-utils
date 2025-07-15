@@ -11,7 +11,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createMockViewer } from "@/__mocks__/cesium.js";
-import { HighlightOptions } from "@/highlight/highlight.types.js";
+import { Highlight } from "@/highlight";
 import SilhouetteHighlight from "@/highlight/silhouette-highlight.js";
 
 describe("Silhouette Highlight", () => {
@@ -59,7 +59,7 @@ describe("Silhouette Highlight", () => {
 
       it("should highlight a Cesium3DTileFeature with custom color", () => {
         const customColor = Color.BLUE;
-        const options: HighlightOptions = { color: customColor };
+        const options: Highlight.Options = { color: customColor };
 
         highlight.show(object, options);
 

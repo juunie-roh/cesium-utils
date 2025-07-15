@@ -9,7 +9,7 @@ import {
 } from "cesium";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Collection, type WithTag } from "@/collection/index.js";
+import { Collection } from "@/collection/index.js";
 
 describe("Collection", () => {
   let baseEntities: EntityCollection;
@@ -61,23 +61,25 @@ describe("Collection", () => {
     expect(taggedEntities).toBeInstanceOf(Collection);
     expect(baseEntities.values.length).toBe(0);
     taggedEntities.add(single_entity);
-    expect((single_entity as Entity & WithTag)[Collection.symbol]).toBe(
-      "default",
-    );
+    expect(
+      (single_entity as Entity & Collection.WithTag)[Collection.symbol],
+    ).toBe("default");
 
     expect(taggedPrimitives).toBeInstanceOf(Collection);
     expect(basePrimitives.length).toBe(0);
     taggedPrimitives.add(single_primitive);
-    expect((single_primitive as Primitive & WithTag)[Collection.symbol]).toBe(
-      "default",
-    );
+    expect(
+      (single_primitive as Primitive & Collection.WithTag)[Collection.symbol],
+    ).toBe("default");
   });
 
   it("should create a collection with a specific tag", () => {
     const tag = "SpecificTagForNewCollection";
     const tmp = new Collection({ collection: new EntityCollection(), tag });
     tmp.add(single_entity);
-    expect((single_entity as Entity & WithTag)[Collection.symbol]).toBe(tag);
+    expect(
+      (single_entity as Entity & Collection.WithTag)[Collection.symbol],
+    ).toBe(tag);
   });
 
   it("should support numeric tags", () => {
@@ -530,7 +532,9 @@ describe("Collection", () => {
     expect(Object.getOwnPropertySymbols(single_entity)).toContain(
       Collection.symbol,
     );
-    expect((single_entity as Entity & WithTag)[Collection.symbol]).toBe(tag);
+    expect(
+      (single_entity as Entity & Collection.WithTag)[Collection.symbol],
+    ).toBe(tag);
   });
 
   it(".add() should add multiple items with a tag", () => {
@@ -545,7 +549,7 @@ describe("Collection", () => {
     expect(baseEntities.values).toContain(single_entity);
     multiple_entities.forEach((entity) => {
       expect(baseEntities.values).toContain(entity);
-      expect((entity as Entity & WithTag)[Collection.symbol]).toBe(
+      expect((entity as Entity & Collection.WithTag)[Collection.symbol]).toBe(
         "multi-add-test2",
       );
     });
@@ -757,9 +761,9 @@ describe("Collection", () => {
       expect(taggedEntities.update("oldTag", "newTag")).toBe(2);
       expect(taggedEntities.contains("oldTag")).toBeFalsy();
       expect(taggedEntities.contains("newTag")).toBeTruthy();
-      expect((single_entity as Entity & WithTag)[Collection.symbol]).toBe(
-        "newTag",
-      );
+      expect(
+        (single_entity as Entity & Collection.WithTag)[Collection.symbol],
+      ).toBe("newTag");
     });
 
     it("should return 0 if no items match the old tag", () => {
@@ -770,9 +774,9 @@ describe("Collection", () => {
       taggedEntities.add(single_entity, "sameTag");
       expect(taggedEntities.update("sameTag", "sameTag")).toBe(1);
       expect(taggedEntities.contains("sameTag")).toBeTruthy();
-      expect((single_entity as Entity & WithTag)[Collection.symbol]).toBe(
-        "sameTag",
-      );
+      expect(
+        (single_entity as Entity & Collection.WithTag)[Collection.symbol],
+      ).toBe("sameTag");
     });
   });
 

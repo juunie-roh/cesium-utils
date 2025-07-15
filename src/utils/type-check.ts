@@ -28,4 +28,12 @@ function isGetterOnly(o: object, k: string | number | symbol): boolean {
   return isGetterOnly;
 }
 
+/**
+ * Runtime type validator to identify the non-function property.
+ */
+type NonFunction<T> = {
+  [K in keyof T]: T[K] extends Function ? never : K;
+}[keyof T];
+
 export { isGetterOnly };
+export type { NonFunction };

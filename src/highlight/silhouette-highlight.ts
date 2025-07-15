@@ -1,17 +1,19 @@
+import type {
+  Entity,
+  PostProcessStage,
+  PostProcessStageCollection,
+  PostProcessStageComposite,
+  Viewer,
+} from "cesium";
 import {
   Cesium3DTileFeature,
   Color,
   ConstantProperty,
   defined,
-  Entity,
-  PostProcessStage,
-  PostProcessStageCollection,
-  PostProcessStageComposite,
   PostProcessStageLibrary,
-  Viewer,
 } from "cesium";
 
-import type { HighlightOptions, IHighlight } from "./highlight.types.js";
+import Highlight from "./highlight.js";
 
 /**
  * @class
@@ -35,14 +37,14 @@ import type { HighlightOptions, IHighlight } from "./highlight.types.js";
  * silhouetteHighlight.show(entity);
  * ```
  */
-export default class SilhouetteHighlight implements IHighlight {
+export default class SilhouetteHighlight implements Highlight.Base {
   private _color: Color = Color.RED;
   private _silhouette: PostProcessStage;
   private _composite: PostProcessStageComposite;
   private _stages: PostProcessStageCollection;
   private _entity?: Entity;
   private _currentObject: Cesium3DTileFeature | Entity | undefined;
-  private _currentOptions: HighlightOptions | undefined;
+  private _currentOptions: Highlight.Options | undefined;
 
   /**
    * Creates a new `Silhouette` instance.
@@ -66,14 +68,14 @@ export default class SilhouetteHighlight implements IHighlight {
    * @param object The object to be highlighted.
    * @param options Optional style for the highlight.
    */
-  show(object: Cesium3DTileFeature, options?: HighlightOptions): void;
+  show(object: Cesium3DTileFeature, options?: Highlight.Options): void;
   /**
    * Highlights a picked `Entity` by updating the model properties.
    * @param object The object to be highlighted.
    * @param options Optional style for the highlight.
    */
-  show(object: Entity, options?: HighlightOptions): void;
-  show(object: Cesium3DTileFeature | Entity, options?: HighlightOptions) {
+  show(object: Entity, options?: Highlight.Options): void;
+  show(object: Cesium3DTileFeature | Entity, options?: Highlight.Options) {
     if (!defined(object)) return;
 
     // Check if we're highlighting the same object with the same options
@@ -112,12 +114,12 @@ export default class SilhouetteHighlight implements IHighlight {
   }
 
   /**
-   * Compares two HighlightOptions objects for equality
+   * Compares two Highlight.Options objects for equality
    * @private
    */
   private _optionsEqual(
-    options1: HighlightOptions | undefined,
-    options2: HighlightOptions | undefined,
+    options1: Highlight.Options | undefined,
+    options2: Highlight.Options | undefined,
   ): boolean {
     // Both undefined
     if (!options1 && !options2) return true;

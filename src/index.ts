@@ -4,12 +4,7 @@ import {
   SilhouetteHighlight,
   SurfaceHighlight,
 } from "./highlight/index.js";
-import {
-  computeRectangle,
-  HybridTerrainProvider,
-  TerrainArea,
-  TerrainAreaCollection,
-} from "./terrain/index.js";
+import { HybridTerrainProvider, TerrainArea } from "./terrain/index.js";
 import { isGetterOnly, TerrainVisualizer } from "./utils/index.js";
 import { cloneViewer, syncCamera } from "./viewer/index.js";
 
@@ -21,14 +16,11 @@ export {
   SilhouetteHighlight,
   SurfaceHighlight,
   TerrainArea,
-  TerrainAreaCollection,
   TerrainVisualizer,
 };
 
 // Functions
-export { cloneViewer, computeRectangle, isGetterOnly, syncCamera };
+export { cloneViewer, isGetterOnly, syncCamera };
 
 // Types
-export type * from "./collection/collection.types.js";
-export type * from "./highlight/highlight.types.js";
-export type * from "./terrain/terrain.types.js";
+export type * from "./utils/type-check.js";

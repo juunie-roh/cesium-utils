@@ -1,13 +1,11 @@
 import { EllipsoidTerrainProvider, Request, TerrainProvider } from "cesium";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { HybridTerrainProvider } from "@/terrain/hybrid-terrain-provider.js";
-import { TileRange } from "@/terrain/terrain.types.js";
-import { TerrainArea } from "@/terrain/terrain-area.js";
-import TerrainAreaCollection from "@/terrain/terrain-area-collection.js";
+import HybridTerrainProvider from "@/terrain/hybrid-terrain-provider.js";
+import TerrainArea from "@/terrain/terrain-area.js";
 
-const createTileRanges = (): Map<number, TileRange> => {
-  const map = new Map<number, TileRange>();
+const createTileRanges = (): Map<number, TerrainArea.TileRange> => {
+  const map = new Map<number, TerrainArea.TileRange>();
   for (let i = 0; i < 5; ++i) {
     map.set(i, { start: { x: 0, y: 0 }, end: { x: i, y: i } });
   }
@@ -19,7 +17,7 @@ describe("HybridTerrainProvider", () => {
   let fallbackProvider: TerrainProvider;
   let terrainArea: TerrainArea;
   let hybrid: HybridTerrainProvider;
-  let tileRanges: Map<number, TileRange>;
+  let tileRanges: Map<number, TerrainArea.TileRange>;
 
   beforeEach(() => {
     terrainProvider = new EllipsoidTerrainProvider();
@@ -89,7 +87,7 @@ describe("HybridTerrainProvider", () => {
     it("should return a copy of terrainAreas", () => {
       const areas = hybrid.terrainAreas;
       expect(areas).toContain(terrainArea);
-      expect(hybrid["_terrainAreas"]).toBeInstanceOf(TerrainAreaCollection);
+      expect(hybrid["_terrainAreas"]).toBeInstanceOf(TerrainArea.Collection);
       expect(areas).not.toBe(hybrid["_terrainAreas"]);
     });
   });
