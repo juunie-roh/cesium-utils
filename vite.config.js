@@ -29,7 +29,6 @@ export default defineConfig({
       exclude: [
         "**/index.*",
         "src/demo/**",
-        "**/*.types.*",
         "src/__tests__/**",
         "**/__mocks__/**",
       ],
