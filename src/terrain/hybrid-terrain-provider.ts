@@ -212,12 +212,12 @@ namespace HybridTerrainProvider {
     fallbackProvider?: TerrainProvider;
   }
 
-  export /**
+  /**
    * Calculates a bounding rectangle that encompasses all the specified tile ranges.
    * @param tilingScheme The tiling scheme to use for calculation.
    * @param from Tile ranges to calculate from.
    */
-  function computeRectangle(
+  export function computeRectangle(
     tilingScheme: TilingScheme,
     from: Map<number, TerrainArea.TileRange>,
   ): Rectangle {
