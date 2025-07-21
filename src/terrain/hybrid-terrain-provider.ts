@@ -120,7 +120,7 @@ class HybridTerrainProvider implements TerrainProvider {
    * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
    * are passed an instance of `TileProviderError`.
    */
-  get errorEvent(): any {
+  get errorEvent(): typeof this._defaultProvider.errorEvent {
     return this._defaultProvider.errorEvent;
   }
   /**

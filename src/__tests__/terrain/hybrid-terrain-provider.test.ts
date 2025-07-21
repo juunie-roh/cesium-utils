@@ -298,35 +298,39 @@ describe("HybridTerrainProvider", () => {
     });
 
     it("should check tile coordinates correctly", () => {
-      const tileRanges = new Map();
-      tileRanges.set(5, { x: [0, 10], y: [0, 10] });
-      tileRanges.set(6, { x: [0, 20], y: [0, 20] });
-
-      const region: HybridTerrainProvider.TerrainRegion = {
-        provider: new EllipsoidTerrainProvider(),
-        tiles: tileRanges,
-      };
-
-      expect(hybrid["_regionContains"](region, 5, 5, 5)).toBe(true);
-      expect(hybrid["_regionContains"](region, 15, 15, 5)).toBe(false);
-      expect(hybrid["_regionContains"](region, 15, 15, 6)).toBe(true); // level 6 has larger range
-      expect(hybrid["_regionContains"](region, 5, 5, 7)).toBe(false); // level 7 not defined
+      expect(hybrid["_regionContains"](tileRegion, 5, 5, 5)).toBe(true);
+      expect(hybrid["_regionContains"](tileRegion, 15, 15, 5)).toBe(false);
+      expect(hybrid["_regionContains"](tileRegion, 11, 11, 6)).toBe(true); // level 6 has larger range
+      expect(hybrid["_regionContains"](tileRegion, 5, 5, 7)).toBe(false); // level 7 not defined
     });
 
     it("should check level constraints", () => {
-      const tileRanges = new Map();
-      tileRanges.set(5, { x: [0, 10], y: [0, 10] });
-      tileRanges.set(6, { x: [0, 20], y: [0, 20] });
+      tileRegion.levels = [5, 6];
+      expect(hybrid["_regionContains"](tileRegion, 5, 5, 5)).toBe(true);
+      expect(hybrid["_regionContains"](tileRegion, 11, 11, 6)).toBe(true);
+      expect(hybrid["_regionContains"](tileRegion, 5, 5, 7)).toBe(false); // level not in constraints
+    });
+
+    it("should properly handle single tile range", () => {
+      const tiles: HybridTerrainProvider.TerrainRegion["tiles"] = new Map();
+      tiles.set(1, { x: 1, y: 1 });
 
       const region: HybridTerrainProvider.TerrainRegion = {
         provider: new EllipsoidTerrainProvider(),
-        tiles: tileRanges,
-        levels: [5, 6], // only allow levels 5 and 6
+        tiles,
       };
 
-      expect(hybrid["_regionContains"](region, 5, 5, 5)).toBe(true);
-      expect(hybrid["_regionContains"](region, 15, 15, 6)).toBe(true);
-      expect(hybrid["_regionContains"](region, 5, 5, 7)).toBe(false); // level not in constraints
+      expect(hybrid["_regionContains"](region, 1, 1, 1)).toBe(true);
+      expect(hybrid["_regionContains"](region, 1, 2, 1)).toBe(false);
+    });
+
+    it("should return false on level only regions", () => {
+      const region: HybridTerrainProvider.TerrainRegion = {
+        provider: new EllipsoidTerrainProvider(),
+        levels: [0, 1, 2],
+      };
+
+      expect(hybrid["_regionContains"](region, 1, 2, 1)).toBe(false);
     });
   });
 });
