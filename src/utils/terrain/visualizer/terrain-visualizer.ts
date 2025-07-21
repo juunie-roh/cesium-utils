@@ -235,12 +235,12 @@ export class TerrainVisualizer {
       return this._colors.get("fallback") || Color.TRANSPARENT;
     }
 
-    // Check terrain areas first
-    for (const area of this._terrainProvider.terrainAreas) {
-      if (area.contains(x, y, level)) {
-        return area.isCustom
-          ? this._colors.get("custom") || Color.RED
-          : this._colors.get("default") || Color.BLUE;
+    // Check terrain regions first
+    for (const region of this._terrainProvider.regions) {
+      // Use private method to check if region contains the tile
+      if ((this._terrainProvider as any)._regionContains(region, x, y, level)) {
+        // For backward compatibility, assume all regions are custom
+        return this._colors.get("custom") || Color.RED;
       }
     }
 

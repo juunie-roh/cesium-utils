@@ -7,10 +7,18 @@ import {
   TerrainProvider,
 } from "cesium";
 
-import HybridTerrainProvider from "./hybrid-terrain-provider";
+import HybridTerrainProvider from "./hybrid-terrain-provider.js";
 
 /**
  * @class
+ * @deprecated Use HybridTerrainProvider.TerrainRegion instead.
+ * This class is maintained for backward compatibility but will be removed in a future version.
+ *
+ * For migration:
+ * - Replace TerrainArea with HybridTerrainProvider.TerrainRegion
+ * - Use Rectangle.fromDegrees() for bounds instead of tile ranges
+ * - Simplify HybridTerrainProvider constructor to use regions directly
+ *
  * Represents a geographic area with a specific terrain provider.
  * `TerrainArea` pairs a provider with geographic bounds and level constraints.
  */

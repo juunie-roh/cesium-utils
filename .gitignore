@@ -1,5 +1,6 @@
-# module
+# dependencies
 node_modules
+.pnpm-store
 
 # build
 dist
@@ -7,3 +8,12 @@ dist
 
 # test
 coverage
+
+# typescript
+*.tsbuildinfo
+
+# misc
+CLAUDE.md
+.DS_Store
+*.pem
+.eslintcache
