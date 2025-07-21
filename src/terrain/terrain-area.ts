@@ -7,7 +7,7 @@ import {
   TerrainProvider,
 } from "cesium";
 
-import HybridTerrainProvider from "./hybrid-terrain-provider";
+import HybridTerrainProvider from "./hybrid-terrain-provider.js";
 
 /**
  * @class

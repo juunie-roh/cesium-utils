@@ -13,7 +13,7 @@ import {
   RectangleGraphics,
 } from "cesium";
 
-import Highlight from "./highlight";
+import Highlight from "./highlight.js";
 
 /**
  * @class
