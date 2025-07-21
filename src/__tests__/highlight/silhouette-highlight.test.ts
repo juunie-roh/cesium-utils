@@ -11,7 +11,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createMockViewer } from "@/__mocks__/cesium.js";
-import { Highlight } from "@/highlight";
+import type { Highlight } from "@/highlight/index.js";
 import SilhouetteHighlight from "@/highlight/silhouette-highlight.js";
 
 describe("Silhouette Highlight", () => {
