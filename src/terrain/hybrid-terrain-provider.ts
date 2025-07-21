@@ -8,8 +8,6 @@ import type {
 } from "cesium";
 import { EllipsoidTerrainProvider, Rectangle } from "cesium";
 
-import TerrainArea from "./terrain-area.js";
-
 /**
  * @class
  * Provides terrain by delegating requests to different terrain providers
@@ -18,23 +16,39 @@ import TerrainArea from "./terrain-area.js";
  *
  * @example
  * ``` typescript
- * // Set up tile ranges
- * const tileRanges = new Map<number, TerrainArea.TileRange>;
- * tileRanges.set(15, { start: { x: 55852, y: 9556 }, end: { x: 55871, y: 9575 } });
- * // Set up tile areas
- * const area = new TerrainArea({ terrainProvider: provider, tileRanges });
+ * // Simple rectangle-based regions
+ * const hybridTerrain = new HybridTerrainProvider({
+ *   regions: [
+ *     {
+ *       provider: customProvider,
+ *       bounds: Rectangle.fromDegrees(-120, 30, -100, 50),
+ *       levels: [10, 15] // optional
+ *     }
+ *   ],
+ *   defaultProvider: worldTerrain
+ * });
+ *
+ * // Or tile-coordinate based for precise control (multiple levels)
+ * const tileRanges = new Map();
+ * tileRanges.set(15, { x: [55852, 55871], y: [9556, 9575] });
+ * tileRanges.set(16, { x: [111704, 111742], y: [19112, 19150] });
  *
  * const hybridTerrain = new HybridTerrainProvider({
- *   terrainAreas: [area],
- *   terrainProvider: new EllipsoidTerrainProvider(),
+ *   regions: [
+ *     {
+ *       provider: customProvider,
+ *       tiles: tileRanges
+ *     }
+ *   ],
+ *   defaultProvider: worldTerrain
  * });
  *
  * viewer.terrainProvider = hybridTerrain;
  * ```
  */
 class HybridTerrainProvider implements TerrainProvider {
-  private _terrainAreas: TerrainArea.Collection;
-  private _terrainProvider: TerrainProvider;
+  private _regions: HybridTerrainProvider.TerrainRegion[];
+  private _defaultProvider: TerrainProvider;
   private _fallbackProvider: TerrainProvider;
   private _tilingScheme: TilingScheme;
   private _ready: boolean = false;
@@ -46,12 +60,12 @@ class HybridTerrainProvider implements TerrainProvider {
    * @returns A new `HybridTerrainProvider` instance.
    */
   constructor(options: HybridTerrainProvider.ConstructorOptions) {
-    this._terrainProvider = options.terrainProvider;
+    this._defaultProvider = options.defaultProvider;
     this._fallbackProvider =
       options.fallbackProvider || new EllipsoidTerrainProvider();
-    this._tilingScheme = options.terrainProvider.tilingScheme;
-    this._terrainAreas = new TerrainArea.Collection(...options.terrainAreas);
-    this._availability = options.terrainProvider.availability;
+    this._tilingScheme = options.defaultProvider.tilingScheme;
+    this._regions = options.regions || [];
+    this._availability = options.defaultProvider.availability;
     this._ready = true;
   }
 
@@ -76,16 +90,16 @@ class HybridTerrainProvider implements TerrainProvider {
     return this._availability;
   }
   /**
-   * Gets the list of terrain areas managed by this provider.
+   * Gets the list of terrain regions managed by this provider.
    */
-  get terrainAreas(): readonly TerrainArea[] {
-    return [...this._terrainAreas];
+  get regions(): readonly HybridTerrainProvider.TerrainRegion[] {
+    return [...this._regions];
   }
   /**
    * Gets the default terrain provider.
    */
   get defaultProvider(): TerrainProvider {
-    return this._terrainProvider;
+    return this._defaultProvider;
   }
   /**
    * Gets the fallback terrain provider.
@@ -99,7 +113,7 @@ class HybridTerrainProvider implements TerrainProvider {
    * the source of the terrain.
    */
   get credit(): Credit {
-    return this._terrainProvider?.credit;
+    return this._defaultProvider?.credit;
   }
   /**
    * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
@@ -107,7 +121,7 @@ class HybridTerrainProvider implements TerrainProvider {
    * are passed an instance of `TileProviderError`.
    */
   get errorEvent(): any {
-    return this._terrainProvider.errorEvent;
+    return this._defaultProvider.errorEvent;
   }
   /**
    * Gets a value indicating whether or not the provider includes a water mask.  The water mask
@@ -115,11 +129,11 @@ class HybridTerrainProvider implements TerrainProvider {
    * as a reflective surface with animated waves.
    */
   get hasWaterMask(): boolean {
-    return this._terrainProvider.hasWaterMask;
+    return this._defaultProvider.hasWaterMask;
   }
   /** Gets a value indicating whether or not the requested tiles include vertex normals. */
   get hasVertexNormals(): boolean {
-    return this._terrainProvider.hasVertexNormals;
+    return this._defaultProvider.hasVertexNormals;
   }
   /**
    * Makes sure we load availability data for a tile
@@ -133,7 +147,7 @@ class HybridTerrainProvider implements TerrainProvider {
     y: number,
     level: number,
   ): Promise<void> | undefined {
-    return this._terrainProvider.loadTileDataAvailability(x, y, level);
+    return this._defaultProvider.loadTileDataAvailability(x, y, level);
   }
   /**
    * Gets the maximum geometric error allowed in a tile at a given level.
@@ -141,7 +155,7 @@ class HybridTerrainProvider implements TerrainProvider {
    * @returns The maximum geometric error.
    */
   getLevelMaximumGeometricError(level: number): number {
-    return this._terrainProvider.getLevelMaximumGeometricError(level);
+    return this._defaultProvider.getLevelMaximumGeometricError(level);
   }
 
   /**
@@ -160,21 +174,24 @@ class HybridTerrainProvider implements TerrainProvider {
   ): Promise<Awaited<TerrainData>> | undefined {
     if (!this._ready) return undefined;
 
-    for (const area of this._terrainAreas) {
-      if (area.contains(x, y, level)) {
-        return area.requestTileGeometry(x, y, level, request);
+    // Check regions for a match
+    for (const region of this._regions) {
+      if (this._regionContains(region, x, y, level)) {
+        return region.provider.requestTileGeometry(x, y, level, request);
       }
     }
 
-    if (this._terrainProvider.getTileDataAvailable(x, y, level)) {
-      return this._terrainProvider.requestTileGeometry(x, y, level, request);
+    // Fall back to default provider
+    if (this._defaultProvider.getTileDataAvailable(x, y, level)) {
+      return this._defaultProvider.requestTileGeometry(x, y, level, request);
     }
 
+    // Final fallback
     return this._fallbackProvider.requestTileGeometry(x, y, level, request);
   }
 
   /**
-   * Determines whether data for a tile is available to be loaded. Checks the specified terrain areas first.
+   * Determines whether data for a tile is available to be loaded. Checks the specified terrain regions first.
    * @param x - The X coordinate of the tile for which to request geometry.
    * @param y - The Y coordinate of the tile for which to request geometry.
    * @param level - The level of the tile for which to request geometry.
@@ -185,15 +202,54 @@ class HybridTerrainProvider implements TerrainProvider {
     y: number,
     level: number,
   ): boolean | undefined {
-    // First check if any terrain area contains this tile
-    for (const area of this._terrainAreas) {
-      if (area.contains(x, y, level)) {
-        return area.getTileDataAvailable(x, y, level);
+    // First check if any terrain region contains this tile
+    for (const region of this._regions) {
+      if (this._regionContains(region, x, y, level)) {
+        return region.provider.getTileDataAvailable(x, y, level);
       }
     }
 
-    // Don't force to true - let the provider determine actual availability
-    return this._terrainProvider.getTileDataAvailable(x, y, level);
+    // Fall back to default provider
+    return this._defaultProvider.getTileDataAvailable(x, y, level);
+  }
+
+  /**
+   * Checks if a terrain region contains the specified tile.
+   * @private
+   */
+  private _regionContains(
+    region: HybridTerrainProvider.TerrainRegion,
+    x: number,
+    y: number,
+    level: number,
+  ): boolean {
+    // Check level constraints if specified
+    if (region.levels && !region.levels.includes(level)) {
+      return false;
+    }
+
+    // Tile-coordinate based bounds
+    if (region.tiles) {
+      const tileRange = region.tiles.get(level);
+      if (!tileRange) return false;
+
+      const [xMin, xMax] = Array.isArray(tileRange.x)
+        ? tileRange.x
+        : [tileRange.x, tileRange.x];
+      const [yMin, yMax] = Array.isArray(tileRange.y)
+        ? tileRange.y
+        : [tileRange.y, tileRange.y];
+
+      return x >= xMin && x <= xMax && y >= yMin && y <= yMax;
+    }
+
+    // Rectangle-based bounds
+    if (region.bounds) {
+      const tileRectangle = this._tilingScheme.tileXYToRectangle(x, y, level);
+      return Rectangle.intersection(tileRectangle, region.bounds) !== undefined;
+    }
+
+    return false;
   }
 }
 
@@ -204,22 +260,96 @@ class HybridTerrainProvider implements TerrainProvider {
 namespace HybridTerrainProvider {
   /** Initialization options for `HybridTerrainProvider` constructor. */
   export interface ConstructorOptions {
-    /** An array of terrain areas to include in the hybrid terrain. */
-    terrainAreas: TerrainArea[];
-    /** Default provider to use outside of specified terrain areas.  */
-    terrainProvider: TerrainProvider;
+    /** An array of terrain regions to include in the hybrid terrain. */
+    regions?: TerrainRegion[];
+    /** Default provider to use outside of specified terrain regions. */
+    defaultProvider: TerrainProvider;
     /** Optional fallback provider when data is not available from default provider. @default EllipsoidTerrainProvider */
     fallbackProvider?: TerrainProvider;
   }
 
+  /** Represents a terrain region with provider and geographic bounds. */
+  export interface TerrainRegion {
+    /** The terrain provider for this region. */
+    provider: TerrainProvider;
+    /** Rectangle-based geographic bounds (simpler). */
+    bounds?: Rectangle;
+    /**
+     * Tile-coordinate based bounds (precise control).
+     * Map of level to tile coordinate ranges for that level.
+     */
+    tiles?: Map<
+      number,
+      {
+        /** X tile coordinate range [min, max] or single value. */
+        x: number | [number, number];
+        /** Y tile coordinate range [min, max] or single value. */
+        y: number | [number, number];
+      }
+    >;
+    /** Optional level constraints. If specified, region only applies to these levels. */
+    levels?: number[];
+  }
+
   /**
+   * Creates a HybridTerrainProvider from rectangle-based regions.
+   * @param regions Array of regions with rectangle bounds
+   * @param defaultProvider Default terrain provider
+   * @param fallbackProvider Optional fallback provider
+   */
+  export function fromRectangles(
+    regions: Array<{
+      provider: TerrainProvider;
+      bounds: Rectangle;
+      levels?: number[];
+    }>,
+    defaultProvider: TerrainProvider,
+    fallbackProvider?: TerrainProvider,
+  ): HybridTerrainProvider {
+    return new HybridTerrainProvider({
+      regions: regions.map((r) => ({ ...r })),
+      defaultProvider,
+      fallbackProvider,
+    });
+  }
+
+  /**
+   * Creates a HybridTerrainProvider from tile-coordinate based regions.
+   * @param regions Array of regions with tile-coordinate bounds
+   * @param defaultProvider Default terrain provider
+   * @param fallbackProvider Optional fallback provider
+   */
+  export function fromTileRanges(
+    regions: Array<{
+      provider: TerrainProvider;
+      tiles: Map<
+        number,
+        {
+          x: number | [number, number];
+          y: number | [number, number];
+        }
+      >;
+      levels?: number[];
+    }>,
+    defaultProvider: TerrainProvider,
+    fallbackProvider?: TerrainProvider,
+  ): HybridTerrainProvider {
+    return new HybridTerrainProvider({
+      regions: regions.map((r) => ({ ...r })),
+      defaultProvider,
+      fallbackProvider,
+    });
+  }
+
+  /**
+   * @deprecated Use Rectangle.fromDegrees() instead. This method is maintained for backward compatibility.
    * Calculates a bounding rectangle that encompasses all the specified tile ranges.
    * @param tilingScheme The tiling scheme to use for calculation.
    * @param from Tile ranges to calculate from.
    */
   export function computeRectangle(
     tilingScheme: TilingScheme,
-    from: Map<number, TerrainArea.TileRange>,
+    from: Map<number, any>,
   ): Rectangle {
     if (from.size === 0) return new Rectangle();
 
@@ -258,3 +388,7 @@ namespace HybridTerrainProvider {
 }
 
 export default HybridTerrainProvider;
+
+// Legacy support - re-export TerrainArea for backward compatibility
+// @deprecated Use HybridTerrainProvider.TerrainRegion instead
+export { default as TerrainArea } from "./terrain-area.js";
