@@ -1,6 +1,6 @@
 import * as Cesium from "cesium";
 
-import { Highlight } from "@/highlight";
+import { Highlight } from "@/highlight/index.js";
 
 const { viewer } = window;
 const highlight = Highlight.getInstance(viewer);
