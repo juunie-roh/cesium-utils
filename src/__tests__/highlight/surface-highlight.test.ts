@@ -89,7 +89,9 @@ describe("Highlight", () => {
     it("should log an error and return undefined when update fails", () => {
       // Force an error in the _update method
       surface["_update"] = vi.fn().mockImplementation(() => {
-        throw new Error("Test error");
+        throw new Error("Test error", {
+          cause: "Test",
+        });
       });
       const errorSpy = vi.spyOn(console, "error");
 

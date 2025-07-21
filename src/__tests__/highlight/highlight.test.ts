@@ -445,12 +445,12 @@ describe("Highlight", () => {
       }
 
       expect(showSpy).toHaveBeenCalledTimes(10);
-      // expect(hideSpy).toHaveBeenCalledTimes(10);
+      expect(hideSpy).toHaveBeenCalledTimes(10);
     });
 
     it("should handle switching between different object types", () => {
       const entity = new Entity();
-      const cesium3DTileFeature = {} as Cesium3DTileFeature;
+      const cesium3DTileFeature = new Cesium3DTileFeature();
 
       const surfaceShowSpy = vi.spyOn(highlight["_surface"], "show");
       const silhouetteShowSpy = vi.spyOn(highlight["_silhouette"], "show");
@@ -461,7 +461,7 @@ describe("Highlight", () => {
       highlight.show(entity, { color: Color.GREEN });
 
       expect(surfaceShowSpy).toHaveBeenCalledTimes(2);
-      // expect(silhouetteShowSpy).toHaveBeenCalledTimes(1);
+      expect(silhouetteShowSpy).toHaveBeenCalledTimes(1);
     });
 
     it("should handle color changes between highlights", () => {
@@ -484,15 +484,15 @@ describe("Highlight", () => {
   });
 
   describe("error handling", () => {
-    // it('should handle errors from surface highlight gracefully', () => {
+    // it("should handle errors from surface highlight gracefully", () => {
     //   const entity = new Entity();
     //   const consoleSpy = vi
-    //     .spyOn(console, 'error')
+    //     .spyOn(console, "error")
     //     .mockImplementation(() => {});
 
     //   // Mock surface highlight to throw error
-    //   vi.spyOn(highlight['_surface'], 'show').mockImplementation(() => {
-    //     throw new Error('Surface highlight error');
+    //   vi.spyOn(highlight["_surface"], "show").mockImplementation(() => {
+    //     throw new Error("Surface highlight error");
     //   });
 
     //   // Should not throw, but may log error depending on implementation
