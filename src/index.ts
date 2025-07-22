@@ -5,7 +5,6 @@ import {
   SurfaceHighlight,
 } from "./highlight/index.js";
 import { HybridTerrainProvider, TerrainArea } from "./terrain/index.js";
-import { isGetterOnly, TerrainVisualizer } from "./utils/index.js";
 import { cloneViewer, syncCamera } from "./viewer/index.js";
 
 // Classes & namespaces
@@ -16,11 +15,7 @@ export {
   SilhouetteHighlight,
   SurfaceHighlight,
   TerrainArea, // Deprecated
-  TerrainVisualizer,
 };
 
 // Functions
-export { cloneViewer, isGetterOnly, syncCamera };
-
-// Types
-export type * from "./utils/type-check.js";
+export { cloneViewer, syncCamera };

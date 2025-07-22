@@ -37,14 +37,27 @@ This library supports modular exports, enabling you to import only the functiona
 
 ```typescript
 // Import everything from the main package
-import { Collection, Highlight, TerrainVisualizer } from "@juun-roh/cesium-utils";
+import { Collection, Highlight, HybridTerrainProvider } from "@juun-roh/cesium-utils";
 
 // Or import specific modules to minimize bundle size
 import { Collection } from "@juun-roh/cesium-utils/collection";
 import { Highlight } from "@juun-roh/cesium-utils/highlight";
-import { TerrainVisualizer } from "@juun-roh/cesium-utils/utils";
+import { HybridTerrainProvider } from "@juun-roh/cesium-utils/terrain";
 import { cloneViewer, syncCamera } from "@juun-roh/cesium-utils/viewer";
 ```
+
+## Development Utilities
+
+For development and testing purposes, this library provides additional utilities through the `/utils` module. These utilities include deprecation warnings, terrain visualization helpers, and type checking functions.
+
+```typescript
+// Import development utilities (not part of main API)
+import { Deprecate, TerrainVisualizer, isGetterOnly } from "@juun-roh/cesium-utils/utils";
+```
+
+**Note**: These utilities are intentionally not exported from the main package as they are primarily intended for development, testing, and advanced terrain configuration.
+
+For detailed usage and examples, see [Development Utilities Documentation](src/utils/README.md).
 
 ## Development
 
