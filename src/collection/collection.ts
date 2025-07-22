@@ -111,7 +111,7 @@ import { isGetterOnly, type NonFunction } from "@/utils/index.js";
  *   }
  * }
  */
-class Collection<C extends Collection.Base, I extends Collection.Item> {
+class Collection<C extends Collection.Base, I extends Collection.ItemFor<C>> {
   /**
    * Symbol used as a property key to store tags on collection items.
    * Using a Symbol ensures no property naming conflicts with the item's own properties.
@@ -842,6 +842,19 @@ namespace Collection {
    * Cesium item type that can be added to the {@link Collection.Base} instance.
    */
   export type Item = DataSource | Entity | ImageryLayer | Primitives;
+
+  /**
+   * Gets the item type for a given collection type
+   */
+  export type ItemFor<C extends Base> = C extends DataSourceCollection
+    ? DataSource
+    : C extends EntityCollection
+      ? Entity
+      : C extends ImageryLayerCollection
+        ? ImageryLayer
+        : C extends PrimitiveCollection
+          ? Primitives
+          : never;
   /**
    * Collection tag type.
    */
