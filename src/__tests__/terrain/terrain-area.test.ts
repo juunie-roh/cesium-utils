@@ -7,6 +7,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TerrainArea } from "@/terrain/index.js";
+import Deprecate from "@/utils/deprecation.js";
 
 describe("TerrainArea", () => {
   // Create a simple terrain provider for testing
@@ -23,6 +24,12 @@ describe("TerrainArea", () => {
     tileRanges = new Map<number, TerrainArea.TileRange>();
     tileRanges.set(0, { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } });
     tileRanges.set(1, { start: { x: 0, y: 0 }, end: { x: 3, y: 3 } });
+
+    // Clear deprecation warnings for each test
+    Deprecate.clear();
+
+    // Mock console.warn to prevent deprecation warnings from cluttering test output
+    vi.spyOn(console, "warn").mockImplementation(() => {});
   });
 
   describe("constructor", () => {
@@ -272,6 +279,8 @@ describe("TerrainArea", () => {
     });
 
     afterEach(() => {
+      // Restore console.warn
+      vi.restoreAllMocks();
       // Restore the original method after each test
       CesiumTerrainProvider.fromUrl = originalFromUrl;
     });

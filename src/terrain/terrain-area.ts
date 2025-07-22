@@ -7,6 +7,8 @@ import {
   TerrainProvider,
 } from "cesium";
 
+import Deprecate from "@/utils/deprecation.js";
+
 import HybridTerrainProvider from "./hybrid-terrain-provider.js";
 
 /**
@@ -35,6 +37,10 @@ class TerrainArea {
    * @param options Object describing initialization options
    */
   constructor(options: TerrainArea.ConstructorOptions) {
+    Deprecate.warn(
+      "TerrainArea is deprecated. Use HybridTerrainProvider.TerrainRegion instead.",
+      { removeInVersion: "v0.3.0" },
+    );
     this._terrainProvider = options.terrainProvider;
     this._tileRanges = options.tileRanges;
     this._credit = options.credit || "custom";

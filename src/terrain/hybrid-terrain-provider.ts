@@ -8,6 +8,8 @@ import type {
 } from "cesium";
 import { EllipsoidTerrainProvider, Rectangle } from "cesium";
 
+import Deprecate from "@/utils/deprecation.js";
+
 /**
  * @class
  * Provides terrain by delegating requests to different terrain providers
@@ -351,6 +353,11 @@ namespace HybridTerrainProvider {
     tilingScheme: TilingScheme,
     from: Map<number, any>,
   ): Rectangle {
+    Deprecate.warn(
+      "computeRectangle() is deprecated. Use Rectangle.fromDegrees() instead.",
+      { removeInVersion: "v0.3.0" },
+    );
+
     if (from.size === 0) return new Rectangle();
 
     let west = Number.POSITIVE_INFINITY;
