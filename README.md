@@ -57,7 +57,7 @@ import { Deprecate, TerrainVisualizer, isGetterOnly } from "@juun-roh/cesium-uti
 
 **Note**: These utilities are intentionally not exported from the main package as they are primarily intended for development, testing, and advanced terrain configuration.
 
-For detailed usage and examples, see [Development Utilities Documentation](src/utils/README.md).
+For detailed usage and examples, see [Development Utilities Documentation](src/dev/README.md).
 
 ## Development
 
