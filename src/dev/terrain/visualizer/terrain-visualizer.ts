@@ -12,7 +12,6 @@ import {
 
 import Collection from "@/collection/collection.js";
 import HybridTerrainProvider from "@/terrain/hybrid-terrain-provider.js";
-import TerrainArea from "@/terrain/terrain-area.js";
 
 /**
  * @class
@@ -279,12 +278,11 @@ export class TerrainVisualizer {
   }
 
   /**
-   * Flies the camera to focus on a terrain area.
-   * @param area The terrain area to focus on.
+   * Flies the camera to focus on a rectangle.
+   * @param rectangle The rectangle to focus on.
    * @param options {@link Viewer.flyTo}
    */
-  flyTo(area: TerrainArea, options?: { duration?: number }): void {
-    const { rectangle } = area;
+  flyTo(rectangle: Rectangle, options?: { duration?: number }): void {
     this._viewer.camera.flyTo({
       destination: rectangle,
       ...options,
@@ -390,18 +388,18 @@ export namespace TerrainVisualizer {
   }
 
   /**
-   * Visualizes a specific terrain area in a viewer.
-   * @param terrain The terrain area to visualize.
+   * Visualizes a terrain region in a viewer.
+   * @param region The terrain region to visualize.
    * @param viewer The Cesium viewer.
    * @param options Visualization options.
    * @returns Collection of created entities.
    */
   export function visualize(
-    area: TerrainArea,
+    region: HybridTerrainProvider.TerrainRegion,
     viewer: Viewer,
     options?: Options,
   ): Collection<EntityCollection, Entity> {
-    const tag = options?.tag || "terrain_area_visualization";
+    const tag = options?.tag || "terrain_region_visualization";
     const color = options?.color || Color.RED;
     const maxTilesToShow = options?.maxTilesToShow || 100;
     const show = options?.show ?? true;
@@ -413,25 +411,29 @@ export namespace TerrainVisualizer {
       tag,
     });
 
-    const { rectangle } = area;
-    collection.add(
-      TerrainVisualizer.createRectangle(rectangle, color.withAlpha(alpha)),
-      tag,
-    );
+    // Visualize the region bounds if available
+    if (region.bounds) {
+      collection.add(
+        TerrainVisualizer.createRectangle(
+          region.bounds,
+          color.withAlpha(alpha),
+        ),
+        tag,
+      );
+    }
 
-    if (show && area.tileRanges.size > 0) {
-      const { tilingScheme } = area.terrainProvider;
+    if (show && region.tiles && region.tiles.size > 0) {
+      const tilingScheme = region.provider.tilingScheme;
 
       let count = 0;
-      area.tileRanges.forEach((range, level) => {
-        for (
-          let x = range.start.x;
-          x <= range.end.x && count < maxTilesToShow;
-          x++
-        ) {
+      region.tiles.forEach((range, level) => {
+        const xRange = Array.isArray(range.x) ? range.x : [range.x, range.x];
+        const yRange = Array.isArray(range.y) ? range.y : [range.y, range.y];
+
+        for (let x = xRange[0]; x <= xRange[1] && count < maxTilesToShow; x++) {
           for (
-            let y = range.start.y;
-            y <= range.end.y && count < maxTilesToShow;
+            let y = yRange[0];
+            y <= yRange[1] && count < maxTilesToShow;
             y++
           ) {
             const rect = tilingScheme.tileXYToRectangle(x, y, level);

@@ -18,7 +18,7 @@ import {
   PrimitiveCollection,
 } from "cesium";
 
-import { isGetterOnly, type NonFunction } from "@/utils/index.js";
+import { isGetterOnly, type NonFunction } from "@/dev/index.js";
 
 /**
  * @class

@@ -56,10 +56,10 @@
       "import": "./dist/terrain/index.js",
       "require": "./dist/terrain/index.cjs"
     },
-    "./utils": {
-      "types": "./dist/utils/index.d.ts",
-      "import": "./dist/utils/index.js",
-      "require": "./dist/utils/index.cjs"
+    "./dev": {
+      "types": "./dist/dev/index.d.ts",
+      "import": "./dist/dev/index.js",
+      "require": "./dist/dev/index.cjs"
     },
     "./viewer": {
       "types": "./dist/viewer/index.d.ts",
@@ -102,14 +102,14 @@
     "@commitlint/cz-commitlint": "^19.8.1",
     "@commitlint/format": "^19.8.1",
     "@commitlint/types": "^19.8.1",
-    "@eslint/js": "^9.31.0",
+    "@eslint/js": "^9.32.0",
     "@types/node": "^24.1.0",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
     "@vitest/coverage-v8": "^3.2.4",
     "cesium": "^1.131.0",
-    "eslint": "^9.31.0",
-    "eslint-plugin-jsdoc": "^51.4.1",
+    "eslint": "^9.32.0",
+    "eslint-plugin-jsdoc": "^52.0.0",
     "eslint-plugin-prettier": "^5.5.3",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-unused-imports": "^4.1.4",
@@ -117,7 +117,7 @@
     "jsdom": "^26.1.0",
     "rimraf": "^6.0.1",
     "tsup": "^8.5.0",
-    "typedoc": "^0.28.7",
+    "typedoc": "^0.28.8",
     "typescript": "^5.8.3",
     "vite": "^7.0.6",
     "vitest": "^3.2.4"

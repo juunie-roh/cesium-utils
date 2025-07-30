@@ -1,7 +1,6 @@
 import HybridTerrainProvider from "./hybrid-terrain-provider.js";
-import TerrainArea from "./terrain-area.js";
 
-export { HybridTerrainProvider, TerrainArea };
+export { HybridTerrainProvider };
 
 // New simplified API exports for convenience
 export type TerrainRegion = HybridTerrainProvider.TerrainRegion;

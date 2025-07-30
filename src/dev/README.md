@@ -13,10 +13,6 @@
 
 - **Enhanced Developer Experience**: Existing deprecated APIs now show runtime warnings to help developers identify and migrate away from deprecated functionality.
 
-  - `TerrainArea` constructor now shows deprecation warning on instantiation
-  - `HybridTerrainProvider.computeRectangle()` shows warning when called
-  - Both include removal version info (`v0.3.0`) and migration guidance
-
 - **Configurable Warning System**:
   - Once-only warnings by default (prevents spam)
   - Customizable prefixes and removal version info
@@ -27,12 +23,14 @@
 **Usage Examples:**
 
 ```typescript
-import { TerrainArea } from "@juun-roh/cesium-utils";
-import { Deprecate, deprecate } from "@juun-roh/cesium-utils/utils";
+import { HybridTerrainProvider } from "@juun-roh/cesium-utils";
+import { Deprecate, deprecate } from "@juun-roh/cesium-utils/dev";
 
-// Automatic warning when using deprecated APIs
-const area = new TerrainArea({ /* ... */ }); 
-// Console: "[DEPRECATED] TerrainArea is deprecated. Use HybridTerrainProvider.TerrainRegion instead. This feature will be removed in v0.3.0."
+// Use the new TerrainRegion interface instead of deprecated TerrainArea
+const region: HybridTerrainProvider.TerrainRegion = {
+  provider: customTerrainProvider,
+  bounds: Rectangle.fromDegrees(-120, 30, -100, 50)
+};
 
 // Wrap your own deprecated functions (development/testing use)
 const myOldFunction = deprecate(

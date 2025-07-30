@@ -8,7 +8,7 @@ import type {
 } from "cesium";
 import { EllipsoidTerrainProvider, Rectangle } from "cesium";
 
-import Deprecate from "@/utils/deprecation.js";
+import Deprecate from "@/dev/deprecation.js";
 
 /**
  * @class
@@ -395,7 +395,3 @@ namespace HybridTerrainProvider {
 }
 
 export default HybridTerrainProvider;
-
-// Legacy support - re-export TerrainArea for backward compatibility
-// @deprecated Use HybridTerrainProvider.TerrainRegion instead
-export { default as TerrainArea } from "./terrain-area.js";

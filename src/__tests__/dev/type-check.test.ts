@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isGetterOnly } from "@/utils/type-check.js";
+import { isGetterOnly } from "@/dev/type-check.js";
 
 const mock = new (class {
   private _private = "private";
