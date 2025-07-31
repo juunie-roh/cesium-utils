@@ -5,46 +5,127 @@
 [![Documentation](https://img.shields.io/badge/docs-typedoc-blue)](https://juunie-roh.github.io/cesium-utils/)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/juunie-roh/cesium-utils/release-and-publish.yml)](https://github.com/juunie-roh/cesium-utils/actions)
 
-A utility library for Cesium.js that simplifies working with collections, terrain providers and highlights.
+**Solve common Cesium.js development challenges** with utilities that provide hybrid terrain providers, entity collection tagging, and visual highlighting systems.
+
+## 🚀 Common Problems This Library Solves
+
+### Multiple Terrain Sources (Hybrid Terrain Provider)
+
+**Problem**: Cesium only supports one terrain provider at a time, but you need to combine multiple terrain sources.  
+**Solution**: `HybridTerrainProvider` seamlessly blends different terrain providers for different geographic regions.
+
+### Entity Collection Tagging and Filtering  
+
+**Problem**: Cesium's EntityCollection lacks built-in tagging and filtering capabilities for large datasets.  
+**Solution**: `Collection` class adds powerful tagging, filtering, and grouping to entity collections.
+
+### Visual Entity Highlighting
+
+**Problem**: No built-in way to highlight selected entities with silhouettes or surface effects.  
+**Solution**: `SilhouetteHighlight` and `SurfaceHighlight` provide professional visual highlighting systems.
 
 [📚 API Documentation](https://juunie-roh.github.io/cesium-utils/) | [📦 NPM Package](https://www.npmjs.com/package/@juun-roh/cesium-utils) | [▶️ Demonstration](https://juun.vercel.app/cesium-utils)
 
-## Installation
-
-This library requires `cesium` to run.
+## Quick Start
 
 ```bash
-# npm
 npm install @juun-roh/cesium-utils cesium
+```
 
-# yarn
-yarn add @juun-roh/cesium-utils cesium
+### Hybrid Terrain Provider Example
 
-# pnpm
+Combine multiple terrain sources for different regions:
+
+```typescript
+import { HybridTerrainProvider } from "@juun-roh/cesium-utils";
+
+const terrainProvider = new HybridTerrainProvider({
+  regions: [
+    {
+      provider: highResProvider, // Your detailed terrain
+      rectangle: Rectangle.fromDegrees(-122.5, 37.7, -122.3, 37.8) // San Francisco
+    },
+    {
+      provider: globalProvider, // Fallback terrain
+      rectangle: Rectangle.MAX_VALUE
+    }
+  ]
+});
+
+viewer.terrainProvider = terrainProvider;
+```
+
+### Entity Collection Tagging Example
+
+Tag and filter entities efficiently:
+
+```typescript
+import { Collection } from "@juun-roh/cesium-utils";
+
+const buildings = new Collection(viewer.entities, "buildings");
+const parks = new Collection(viewer.entities, "parks");
+
+// Add tagged entities
+buildings.add({ position: coords, model: buildingModel });
+parks.add({ position: coords, polygon: parkPolygon });
+
+// Filter and manipulate by tag
+buildings.show = false; // Hide all buildings
+parks.forEach(entity => entity.polygon.material = Color.GREEN);
+```
+
+### Entity Highlighting Example
+
+Add professional visual highlights:
+
+```typescript
+import { SilhouetteHighlight } from "@juun-roh/cesium-utils";
+
+const highlight = new SilhouetteHighlight(viewer, {
+  color: Color.YELLOW,
+  size: 2.0
+});
+
+// Highlight an entity
+highlight.add(selectedEntity);
+```
+
+## API Overview
+
+| Feature | Module | Use Case |
+|---------|--------|----------|
+| **HybridTerrainProvider** | `terrain` | Combine multiple terrain sources by region |
+| **Collection** | `collection` | Tag, filter, and group entity collections |
+| **SilhouetteHighlight** | `highlight` | Add silhouette effects to entities |
+| **SurfaceHighlight** | `highlight` | Add surface glow effects to entities |
+| **cloneViewer** | `viewer` | Duplicate viewer configurations |
+| **syncCamera** | `viewer` | Synchronize camera positions between viewers |
+
+## Installation & Import Options
+
+```bash
+npm install @juun-roh/cesium-utils cesium
+yarn add @juun-roh/cesium-utils cesium  
 pnpm add @juun-roh/cesium-utils cesium
 ```
 
-## Browser Compatibility
-
-This library works in both modern browsers and Node.js environments. It supports:
-
-* ESM (ECMAScript modules)
-* CommonJS (via a bundled .cjs file)
-
-## Modular Exports
-
-This library supports modular exports, enabling you to import only the functionality you need rather than the entire package. This helps reduce bundle size and improves build performance by explicitly avoiding unused code.
+**Tree-shakable imports** (recommended for smaller bundles):
 
 ```typescript
-// Import everything from the main package
-import { Collection, Highlight, HybridTerrainProvider } from "@juun-roh/cesium-utils";
-
-// Or import specific modules to minimize bundle size
-import { Collection } from "@juun-roh/cesium-utils/collection";
-import { Highlight } from "@juun-roh/cesium-utils/highlight";
+// Import specific modules
 import { HybridTerrainProvider } from "@juun-roh/cesium-utils/terrain";
-import { cloneViewer, syncCamera } from "@juun-roh/cesium-utils/viewer";
+import { Collection } from "@juun-roh/cesium-utils/collection";
+import { SilhouetteHighlight } from "@juun-roh/cesium-utils/highlight";
 ```
+
+**Convenience imports**:
+
+```typescript
+// Import everything
+import { Collection, HybridTerrainProvider, SilhouetteHighlight } from "@juun-roh/cesium-utils";
+```
+
+**ESM and CommonJS support** - works in browsers and Node.js environments.
 
 ## Development Utilities
 
