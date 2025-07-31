@@ -129,11 +129,11 @@ import { Collection, HybridTerrainProvider, SilhouetteHighlight } from "@juun-ro
 
 ## Development Utilities
 
-For development and testing purposes, this library provides additional utilities through the `/utils` module. These utilities include deprecation warnings, terrain visualization helpers, and type checking functions.
+For development and testing purposes, this library provides additional utilities through the `/dev` module. These utilities include deprecation warnings, terrain visualization helpers, and type checking functions.
 
 ```typescript
 // Import development utilities (not part of main API)
-import { Deprecate, TerrainVisualizer, isGetterOnly } from "@juun-roh/cesium-utils/utils";
+import { Deprecate, TerrainVisualizer, isGetterOnly } from "@juun-roh/cesium-utils/dev";
 ```
 
 **Note**: These utilities are intentionally not exported from the main package as they are primarily intended for development, testing, and advanced terrain configuration.
