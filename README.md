@@ -39,17 +39,24 @@ Combine multiple terrain sources for different regions:
 ```typescript
 import { HybridTerrainProvider } from "@juun-roh/cesium-utils";
 
+// set region from zoom level and tile coordinates
+const provider = TerrainProvider.fromUrl("your-terrain-url");
+const tiles: HybridTerrainProvider.TerrainRegion["tiles"] = new Map();
+tiles.set(13, {
+  x: [13963, 13967],
+  y: [2389, 2393],
+});
+
+const region: HybridTerrainProvider.TerrainRegion = {
+  provider,
+  tiles,
+};
+
 const terrainProvider = new HybridTerrainProvider({
   regions: [
-    {
-      provider: highResProvider, // Your detailed terrain
-      rectangle: Rectangle.fromDegrees(-122.5, 37.7, -122.3, 37.8) // San Francisco
-    },
-    {
-      provider: globalProvider, // Fallback terrain
-      rectangle: Rectangle.MAX_VALUE
-    }
-  ]
+    region,
+  ],
+  defaultProvider: worldTerrain
 });
 
 viewer.terrainProvider = terrainProvider;
