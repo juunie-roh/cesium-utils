@@ -176,10 +176,14 @@ class HybridTerrainProvider implements TerrainProvider {
   ): Promise<Awaited<TerrainData>> | undefined {
     if (!this._ready) return undefined;
 
-    // Check regions for a match
+    // Check regions for a match AND successful data availability
     for (const region of this._regions) {
       if (this._regionContains(region, x, y, level)) {
-        return region.provider.requestTileGeometry(x, y, level, request);
+        const available = region.provider.getTileDataAvailable(x, y, level);
+        if (available) {
+          return region.provider.requestTileGeometry(x, y, level, request);
+        }
+        // Continue searching if this provider has no data
       }
     }
 
