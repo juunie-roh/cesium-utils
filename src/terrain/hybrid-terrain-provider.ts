@@ -204,10 +204,14 @@ class HybridTerrainProvider implements TerrainProvider {
     y: number,
     level: number,
   ): boolean | undefined {
-    // First check if any terrain region contains this tile
+    // First check if any terrain region contains this tile AND has data
     for (const region of this._regions) {
       if (this._regionContains(region, x, y, level)) {
-        return region.provider.getTileDataAvailable(x, y, level);
+        const available = region.provider.getTileDataAvailable(x, y, level);
+        if (available) {
+          return true; // Found a provider with data
+        }
+        // Continue searching if this provider has no data (false)
       }
     }
 
