@@ -7,14 +7,15 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import HybridTerrainProvider from "@/terrain/hybrid-terrain-provider.js";
+import type { TerrainRegion } from "@/terrain/index.js";
 
-const createRectRegion = (): HybridTerrainProvider.TerrainRegion => ({
+const createRectRegion = (): TerrainRegion => ({
   provider: new EllipsoidTerrainProvider(),
   bounds: Rectangle.fromDegrees(-10, -10, 10, 10),
   levels: [0, 1, 2, 3, 4],
 });
 
-const createTileRegion = (): HybridTerrainProvider.TerrainRegion => {
+const createTileRegion = (): TerrainRegion => {
   const tileRanges = new Map();
   tileRanges.set(5, { x: [0, 5], y: [0, 5] });
   tileRanges.set(6, { x: [0, 11], y: [0, 11] });
@@ -27,8 +28,8 @@ const createTileRegion = (): HybridTerrainProvider.TerrainRegion => {
 describe("HybridTerrainProvider", () => {
   let defaultProvider: TerrainProvider;
   let fallbackProvider: TerrainProvider;
-  let rectRegion: HybridTerrainProvider.TerrainRegion;
-  let tileRegion: HybridTerrainProvider.TerrainRegion;
+  let rectRegion: TerrainRegion;
+  let tileRegion: TerrainRegion;
   let hybrid: HybridTerrainProvider;
 
   beforeEach(() => {
@@ -177,17 +178,20 @@ describe("HybridTerrainProvider", () => {
         .spyOn(secondRegion.provider, "getTileDataAvailable")
         .mockReturnValue(true);
 
-      const defaultProviderSpy = vi.spyOn(defaultProvider, "getTileDataAvailable");
+      const defaultProviderSpy = vi.spyOn(
+        defaultProvider,
+        "getTileDataAvailable",
+      );
 
       const result = hybridWithMultipleRegions.getTileDataAvailable(0, 0, 14);
 
       // Both regions should be checked
       expect(firstRegionSpy).toHaveBeenCalledWith(0, 0, 14);
       expect(secondRegionSpy).toHaveBeenCalledWith(0, 0, 14);
-      
+
       // Default provider should not be called since second region had data
       expect(defaultProviderSpy).not.toHaveBeenCalled();
-      
+
       // Should return true from second region
       expect(result).toBe(true);
     });
@@ -201,14 +205,18 @@ describe("HybridTerrainProvider", () => {
       });
 
       // Mock both regions to contain the tile
-      vi.spyOn(hybridWithMultipleRegions as any, "_regionContains")
-        .mockReturnValue(true);
+      vi.spyOn(
+        hybridWithMultipleRegions as any,
+        "_regionContains",
+      ).mockReturnValue(true);
 
       // Both regions return false (no data available)
-      vi.spyOn(rectRegion.provider, "getTileDataAvailable")
-        .mockReturnValue(false);
-      vi.spyOn(secondRegion.provider, "getTileDataAvailable")
-        .mockReturnValue(false);
+      vi.spyOn(rectRegion.provider, "getTileDataAvailable").mockReturnValue(
+        false,
+      );
+      vi.spyOn(secondRegion.provider, "getTileDataAvailable").mockReturnValue(
+        false,
+      );
 
       const defaultProviderSpy = vi
         .spyOn(defaultProvider, "getTileDataAvailable")
@@ -233,7 +241,9 @@ describe("HybridTerrainProvider", () => {
 
     it("should use region provider if tile is within a region", () => {
       vi.spyOn(hybrid as any, "_regionContains").mockReturnValue(true);
-      vi.spyOn(rectRegion.provider, "getTileDataAvailable").mockReturnValue(true);
+      vi.spyOn(rectRegion.provider, "getTileDataAvailable").mockReturnValue(
+        true,
+      );
       const regionRequestSpy = vi.spyOn(
         rectRegion.provider,
         "requestTileGeometry",
@@ -311,16 +321,18 @@ describe("HybridTerrainProvider", () => {
         .mockReturnValueOnce(true); // Second region also contains tile
 
       // First region has no data available
-      vi.spyOn(rectRegion.provider, "getTileDataAvailable")
-        .mockReturnValue(false);
+      vi.spyOn(rectRegion.provider, "getTileDataAvailable").mockReturnValue(
+        false,
+      );
       const firstRegionRequestSpy = vi.spyOn(
         rectRegion.provider,
         "requestTileGeometry",
       );
 
       // Second region has data available
-      vi.spyOn(secondRegion.provider, "getTileDataAvailable")
-        .mockReturnValue(true);
+      vi.spyOn(secondRegion.provider, "getTileDataAvailable").mockReturnValue(
+        true,
+      );
       const secondRegionRequestSpy = vi.spyOn(
         secondRegion.provider,
         "requestTileGeometry",
@@ -335,10 +347,10 @@ describe("HybridTerrainProvider", () => {
 
       // First region should not be called for request since it has no data
       expect(firstRegionRequestSpy).not.toHaveBeenCalled();
-      
+
       // Second region should be called since it has data
       expect(secondRegionRequestSpy).toHaveBeenCalledWith(0, 0, 14, undefined);
-      
+
       // Default provider should not be called
       expect(defaultProviderSpy).not.toHaveBeenCalled();
     });
@@ -352,12 +364,16 @@ describe("HybridTerrainProvider", () => {
       });
 
       // Mock both regions to contain the tile but have no data
-      vi.spyOn(hybridWithMultipleRegions as any, "_regionContains")
-        .mockReturnValue(true);
-      vi.spyOn(rectRegion.provider, "getTileDataAvailable")
-        .mockReturnValue(false);
-      vi.spyOn(secondRegion.provider, "getTileDataAvailable")
-        .mockReturnValue(false);
+      vi.spyOn(
+        hybridWithMultipleRegions as any,
+        "_regionContains",
+      ).mockReturnValue(true);
+      vi.spyOn(rectRegion.provider, "getTileDataAvailable").mockReturnValue(
+        false,
+      );
+      vi.spyOn(secondRegion.provider, "getTileDataAvailable").mockReturnValue(
+        false,
+      );
 
       const firstRegionRequestSpy = vi.spyOn(
         rectRegion.provider,
@@ -369,8 +385,7 @@ describe("HybridTerrainProvider", () => {
       );
 
       // Default provider has data available
-      vi.spyOn(defaultProvider, "getTileDataAvailable")
-        .mockReturnValue(true);
+      vi.spyOn(defaultProvider, "getTileDataAvailable").mockReturnValue(true);
       const defaultProviderSpy = vi.spyOn(
         defaultProvider,
         "requestTileGeometry",
@@ -381,7 +396,7 @@ describe("HybridTerrainProvider", () => {
       // Neither region should be called for request
       expect(firstRegionRequestSpy).not.toHaveBeenCalled();
       expect(secondRegionRequestSpy).not.toHaveBeenCalled();
-      
+
       // Default provider should be called
       expect(defaultProviderSpy).toHaveBeenCalledWith(0, 0, 14, undefined);
     });
@@ -389,7 +404,9 @@ describe("HybridTerrainProvider", () => {
     it("should pass the request parameter to the appropriate provider", () => {
       const request = new Request();
       vi.spyOn(hybrid as any, "_regionContains").mockReturnValue(true);
-      vi.spyOn(rectRegion.provider, "getTileDataAvailable").mockReturnValue(true);
+      vi.spyOn(rectRegion.provider, "getTileDataAvailable").mockReturnValue(
+        true,
+      );
       const regionRequestSpy = vi.spyOn(
         rectRegion.provider,
         "requestTileGeometry",
@@ -446,7 +463,7 @@ describe("HybridTerrainProvider", () => {
 
   describe("_regionContains", () => {
     it("should check rectangle bounds correctly", () => {
-      const region: HybridTerrainProvider.TerrainRegion = {
+      const region: TerrainRegion = {
         provider: new EllipsoidTerrainProvider(),
         bounds: Rectangle.fromDegrees(-10, -10, 10, 10),
       };
@@ -461,7 +478,7 @@ describe("HybridTerrainProvider", () => {
       tileRanges.set(5, { x: [0, 10], y: [0, 10] });
       tileRanges.set(6, { x: [0, 20], y: [0, 20] });
 
-      const region: HybridTerrainProvider.TerrainRegion = {
+      const region: TerrainRegion = {
         provider: new EllipsoidTerrainProvider(),
         tiles: tileRanges,
       };
@@ -477,7 +494,7 @@ describe("HybridTerrainProvider", () => {
       tileRanges.set(5, { x: [0, 10], y: [0, 10] });
       tileRanges.set(6, { x: [0, 20], y: [0, 20] });
 
-      const region: HybridTerrainProvider.TerrainRegion = {
+      const region: TerrainRegion = {
         provider: new EllipsoidTerrainProvider(),
         tiles: tileRanges,
         levels: [5, 6], // only allow levels 5 and 6
