@@ -1,6 +1,6 @@
 {
   "name": "@juun-roh/cesium-utils",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Solve common Cesium.js challenges: combine multiple terrain sources, tag and filter entity collections, and add visual highlights.",
   "keywords": [
     "cesium",
