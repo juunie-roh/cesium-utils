@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Use correct character set. -->
+    <meta charset="utf-8" />
+    <!-- Tell IE to use the latest, best version. -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <title>Cesium Utils Highlight</title>
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="globals.css" media="screen" />
+  </head>
+  <body style="display: flex; background: #000">
+    <div id="cesiumContainer" class="fullWindow"></div>
+    <div id="loadingIndicator" class="loadingIndicator"></div>
+    <script src="main.ts" type="module"></script>
+    <script src="scripts/terrain.ts" type="module" defer async></script>
+  </body>
+</html>
