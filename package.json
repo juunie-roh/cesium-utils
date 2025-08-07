@@ -84,7 +84,7 @@
     "test": "vitest run",
     "test:watch": "vitest watch --coverage",
     "test:cesium": "node scripts/test-cesium-versions.js",
-    "dev": "pnpm build && vite"
+    "dev": "pnpm vite"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -115,8 +115,8 @@
     "@vitest/coverage-v8": "^3.2.4",
     "cesium": "^1.132.0",
     "eslint": "^9.32.0",
-    "eslint-plugin-jsdoc": "^52.0.3",
-    "eslint-plugin-prettier": "^5.5.3",
+    "eslint-plugin-jsdoc": "^52.0.4",
+    "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-unused-imports": "^4.1.4",
     "husky": "^9.1.7",
