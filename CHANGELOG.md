@@ -1,5 +1,15 @@
 # @juun-roh/cesium-utils
 
+## 0.2.6
+
+### Patch Changes
+
+- 9e11a80: Revert Latest Update
+
+  revert: Revert recent update, need more research
+
+  - The `requestTileGeometry` needs more research to enable overriding zoom levels.
+
 ## 0.2.5
 
 ### Patch Changes
