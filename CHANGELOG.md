@@ -1,5 +1,13 @@
 # @juun-roh/cesium-utils
 
+## 0.2.7
+
+### Patch Changes
+
+- b069bb7: docs: Update README.md to be more technical
+
+  Fix Collection.setProperty JSDoc parameter order and example to match implementation
+
 ## 0.2.6
 
 ### Patch Changes
