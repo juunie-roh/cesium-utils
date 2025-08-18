@@ -692,14 +692,14 @@ class Collection<C extends Collection.Base, I extends Collection.ItemFor<C>> {
    *
    * @template K - A type
    *
-   * @param by - The tag identifying which items to update
    * @param property - The property name to set
    * @param value - The value to set
+   * @param by - The tag identifying which items to update
    * @returns The collection itself.
    *
    * @example
    * // Change color of all buildings to red
-   * collection.setProperty('buildings', 'color', Color.RED);
+   * collection.setProperty('color', Color.RED, 'buildings');
    */
   setProperty<K extends NonFunction<I>>(
     property: K,
