@@ -1,9 +1,9 @@
-import { Clock, JulianDate, Viewer } from "cesium";
-import { Cartesian3 } from "cesium";
+import type { Clock, Viewer } from "cesium";
+import { Cartesian3, JulianDate } from "cesium";
 
 /**
  * @experimental
- * Sunlight analysis utility for shadow calculations.
+ * Point sunlight analysis utility for shadow calculations.
  *
  * ⚠️ **Warning**: This is an experimental feature that uses Cesium's internal APIs.
  * The API may change or break in future versions of Cesium or cesium-utils.
@@ -74,12 +74,20 @@ class Sunlight {
    * @param from target point where to analyze
    * @param at time when to analyze
    */
-  analyze(from: Cartesian3, at: JulianDate): void;
-  analyze(from: Cartesian3, [start, end]: JulianDate[], interval: number): void;
   analyze(
     from: Cartesian3,
-    time: JulianDate | JulianDate[],
-    interval?: number,
+    at: JulianDate,
+    options?: Sunlight.AnalyzeOptions,
+  ): void;
+  analyze(
+    from: Cartesian3,
+    time: Sunlight.TimeRange,
+    options?: Sunlight.AnalyzeOptions,
+  ): void;
+  analyze(
+    from: Cartesian3,
+    time: JulianDate | Sunlight.TimeRange,
+    options?: Sunlight.AnalyzeOptions,
   ) {
     // Flag for recursive call level detection
     const isTopLevel = !this._analyzing;
@@ -93,27 +101,24 @@ class Sunlight {
     }
 
     try {
-      if (Array.isArray(time)) {
-        if (time.length < 2)
-          throw new Error("Invalid time range for sunlight analysis");
-        if (!interval)
-          throw new Error("Interval for sunlight analysis must be set");
-        if (time.length > 2) console.warn("time range may invalid");
-
-        const [start, end] = time;
-        let t = start;
-        while (JulianDate.compare(t, end) <= 0) {
-          this.analyze(from, t);
-          JulianDate.addMinutes(t, interval, t);
-        }
-
+      if (time instanceof JulianDate) {
+        // Single time analysis
+        // implement single time analyze
+        // Create point entity (set point size as error boundary if necessary) for collision test at `from`.
+        // Set clock.currentTime as time, then call render.
+        // Execute ray collision detection (pick)
+        this._clock.currentTime = time;
+        this._render();
         return;
       }
 
-      // implement single time analyze
-      // Create point entity (set point size as error boundary if necessary) for collision test at `from`.
-      // Set clock.currentTime as at, then call render.
-      // Execute ray collision detection (pick)
+      // Time range analysis
+      const { start, end, step } = time;
+      let t = start.clone();
+      while (JulianDate.compare(t, end) <= 0) {
+        this.analyze(from, t, options);
+        JulianDate.addSeconds(t, step, t);
+      }
     } finally {
       // Reset the viewer state as before analysis.
       if (isTopLevel && originalTime) {
@@ -125,6 +130,21 @@ class Sunlight {
   }
 }
 
-namespace Sunlight {}
+namespace Sunlight {
+  /** for time-range analysis */
+  export interface TimeRange {
+    /** When to start analysis */
+    start: JulianDate;
+    /** When to end analysis */
+    end: JulianDate;
+    /** Step interval (seconds) inside the range */
+    step: number;
+  }
+
+  /** Debug options for analysis */
+  export interface AnalyzeOptions {
+    showPaths?: boolean;
+  }
+}
 
 export default Sunlight;
