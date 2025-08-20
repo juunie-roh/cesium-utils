@@ -125,4 +125,6 @@ class Sunlight {
   }
 }
 
+namespace Sunlight {}
+
 export default Sunlight;
