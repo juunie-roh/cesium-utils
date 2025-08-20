@@ -1,4 +1,4 @@
-import type { Clock, Viewer } from "cesium";
+import { Entity, Viewer } from "cesium";
 import { Cartesian3, JulianDate } from "cesium";
 
 /**
@@ -17,17 +17,17 @@ import { Cartesian3, JulianDate } from "cesium";
 class Sunlight {
   private _sunPositionWC: Cartesian3;
   private _sunDirectionWC: Cartesian3;
-  private _clock: Clock;
-  private _render: (time?: JulianDate) => void;
+  private _viewer: Viewer;
   private _analyzing: boolean = false;
+  private _pointEntityId?: string;
+  private _debugEntities: Entity[] = [];
 
   constructor(viewer: Viewer) {
     // @ts-expect-error Accessing internal APIs
     const { sunPositionWC, sunDirectionWC } = viewer.scene.context.uniformState;
     this._sunPositionWC = sunPositionWC;
     this._sunDirectionWC = sunDirectionWC;
-    this._clock = viewer.clock;
-    this._render = viewer.scene.render;
+    this._viewer = viewer;
   }
 
   /**
@@ -52,10 +52,10 @@ class Sunlight {
   }
 
   /**
-   * Gets a virtual position of sun, to reduce calculation overhead.
+   * Gets a virtual position of the sun to reduce calculation overhead.
    *
-   * @param from target point where to start from
-   * @param radius virtual distance set between target point and the sun. defaults to 1000 (1km)
+   * @param from target point to start from
+   * @param radius virtual distance between target point and the sun. Defaults to 1000 (1km)
    */
   getVirtualSunPosition(from: Cartesian3, radius: number = 1000): Cartesian3 {
     // Get normalized vector between target point and sun position
@@ -64,36 +64,37 @@ class Sunlight {
       new Cartesian3(),
     );
 
-    // multiply the vector by radius
+    // Multiply the vector by radius
     Cartesian3.multiplyByScalar(n, radius, n);
     return Cartesian3.add(from, n, new Cartesian3());
   }
 
   /**
-   * Analyze the sunlight acceptance from given point at given time.
-   * @param from target point where to analyze
-   * @param at time when to analyze
+   * Analyze the sunlight acceptance from a given point at a given time.
+   * @param from target point to analyze
+   * @param at time to analyze
    */
   analyze(
     from: Cartesian3,
     at: JulianDate,
     options?: Sunlight.AnalyzeOptions,
-  ): void;
+  ): Sunlight.AnalysisResult;
   analyze(
     from: Cartesian3,
     time: Sunlight.TimeRange,
     options?: Sunlight.AnalyzeOptions,
-  ): void;
+  ): Sunlight.AnalysisResult[];
   analyze(
     from: Cartesian3,
     time: JulianDate | Sunlight.TimeRange,
     options?: Sunlight.AnalyzeOptions,
-  ) {
+  ): Sunlight.AnalysisResult | Sunlight.AnalysisResult[] {
+    const result: Sunlight.AnalysisResult[] = [];
     // Flag for recursive call level detection
     const isTopLevel = !this._analyzing;
     // Only set time on top level calls
     const originalTime = isTopLevel
-      ? this._clock.currentTime.clone()
+      ? this._viewer.clock.currentTime.clone()
       : undefined;
 
     if (isTopLevel) {
@@ -103,30 +104,59 @@ class Sunlight {
     try {
       if (time instanceof JulianDate) {
         // Single time analysis
-        // implement single time analyze
+        // Implement single time analysis
         // Create point entity (set point size as error boundary if necessary) for collision test at `from`.
-        // Set clock.currentTime as time, then call render.
+        // Set clock.currentTime to time, then call render.
         // Execute ray collision detection (pick)
-        this._clock.currentTime = time;
-        this._render();
-        return;
-      }
+        this._viewer.clock.currentTime = time;
+        this._viewer.scene.render();
 
-      // Time range analysis
-      const { start, end, step } = time;
-      let t = start.clone();
-      while (JulianDate.compare(t, end) <= 0) {
-        this.analyze(from, t, options);
-        JulianDate.addSeconds(t, step, t);
+        return {
+          timestamp: time.toString(),
+        };
+      } else {
+        // Time range analysis
+        const { start, end, step } = time;
+        let t = start.clone();
+        while (JulianDate.compare(t, end) <= 0) {
+          result.push(this.analyze(from, t, options));
+          JulianDate.addSeconds(t, step, t);
+        }
       }
     } finally {
-      // Reset the viewer state as before analysis.
+      // Reset the viewer state to before analysis.
       if (isTopLevel && originalTime) {
-        this._clock.currentTime = originalTime;
-        this._render();
+        this._viewer.clock.currentTime = originalTime;
+        this._viewer.scene.render();
         this._analyzing = false;
+        // Clean up point entity used for collision detection
+        if (this._pointEntityId)
+          this._viewer.entities.removeById(this._pointEntityId);
       }
     }
+
+    return result;
+  }
+
+  /**
+   * Create a point entity for collision detection
+   * @param at where to create the entity
+   * @param errorBoundary size of the point entity for error tolerance
+   */
+  private _createPointEntity(at: Cartesian3, errorBoundary?: number): void {
+    // Generate new point entity with error boundary size
+    // Store the entity id
+  }
+
+  /**
+   * Remove all instances created for debug purpose
+   */
+  clear(): void {
+    this._debugEntities.forEach((entity) => {
+      if (this._viewer.entities.contains(entity))
+        this._viewer.entities.remove(entity);
+    });
+    this._debugEntities = [];
   }
 }
 
@@ -141,9 +171,20 @@ namespace Sunlight {
     step: number;
   }
 
-  /** Debug options for analysis */
   export interface AnalyzeOptions {
-    showPaths?: boolean;
+    /** List of objects to exclude from ray pick */
+    objectsToExclude?: any[];
+    /** size of the point entity for error tolerance */
+    errorBoundary?: number;
+    /** Whether to show sunlight paths */
+    debugShowRays?: boolean;
+    /** Whether to show points */
+    debugShowPoints?: boolean;
+  }
+
+  export interface AnalysisResult {
+    /** ISO time string */
+    timestamp: string;
   }
 }
 
