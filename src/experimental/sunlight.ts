@@ -30,23 +30,17 @@ class Sunlight {
     this._viewer = viewer;
   }
 
-  /**
-   * The sun position in 3D world coordinates at the current scene time.
-   */
+  /** The sun position in 3D world coordinates at the current scene time. */
   get sunPositionWC(): Cartesian3 {
     return this._sunPositionWC;
   }
 
-  /**
-   * A normalized vector to the sun in 3D world coordinates at the current scene time.
-   */
+  /** A normalized vector to the sun in 3D world coordinates at the current scene time. */
   get sunDirectionWC(): Cartesian3 {
     return this._sunDirectionWC;
   }
 
-  /**
-   * Whether sunlight analysis is currently in progress
-   */
+  /** Whether sunlight analysis is currently in progress. */
   get isAnalyzing(): boolean {
     return this._analyzing;
   }
@@ -73,15 +67,22 @@ class Sunlight {
    * Analyze the sunlight acceptance from a given point at a given time.
    * @param from target point to analyze
    * @param at time to analyze
+   * @param options {@link Sunlight.AnalyzeOptions}
    */
   analyze(
     from: Cartesian3,
     at: JulianDate,
     options?: Sunlight.AnalyzeOptions,
   ): Sunlight.AnalysisResult;
+  /**
+   * Analyze the sunlight acceptance from a given point at a given time range.
+   * @param from target point to analyze
+   * @param range time range to analyze
+   * @param options {@link Sunlight.AnalyzeOptions}
+   */
   analyze(
     from: Cartesian3,
-    time: Sunlight.TimeRange,
+    range: Sunlight.TimeRange,
     options?: Sunlight.AnalyzeOptions,
   ): Sunlight.AnalysisResult[];
   analyze(
