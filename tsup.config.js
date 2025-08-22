@@ -10,6 +10,7 @@ export default defineConfig({
     "src/terrain/index.ts",
     "src/dev/index.ts",
     "src/viewer/index.ts",
+    "src/experimental/index.ts",
   ],
   esbuildOptions(options) {
     options.platform = "neutral";

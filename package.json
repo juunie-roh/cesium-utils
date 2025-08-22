@@ -66,6 +66,11 @@
       "import": "./dist/dev/index.js",
       "require": "./dist/dev/index.cjs"
     },
+    "./experimental": {
+      "types": "./dist/experimental/index.d.ts",
+      "import": "./dist/experimental/index.js",
+      "require": "./dist/experimental/index.cjs"
+    },
     "./viewer": {
       "types": "./dist/viewer/index.d.ts",
       "import": "./dist/viewer/index.js",

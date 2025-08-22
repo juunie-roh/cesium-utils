@@ -2,6 +2,8 @@
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": [
     "src/index.ts",
+    "src/dev/index.ts",
+    "src/experimental/index.ts"
   ],
   "out": "docs",
   "name": "Cesium Utils",
