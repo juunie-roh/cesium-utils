@@ -1,5 +1,28 @@
 # @juun-roh/cesium-utils
 
+## 0.3.0
+
+### Minor Changes
+
+- 9494eec: Add experimental Sunlight analysis for shadow calculations
+
+  feat: Add experimental sunlight class for shadow detection
+
+  - **⚠️ Experimental**: Uses Cesium internal APIs that may change in future versions
+  - Added `Sunlight` class via `@juun-roh/cesium-utils/experimental/sunlight`
+  - Supports single-time and time-range shadow analysis
+  - Includes debug visualization and object exclusion options
+
+### Patch Changes
+
+- 1c89a05: Add package json export paths
+
+  build: Add package json export paths
+
+- 28efe2e: Update Configurations
+
+  fix: Update build and document configurations
+
 ## 0.2.7
 
 ### Patch Changes
