@@ -1,9 +1,4 @@
-import {
-  EllipsoidTerrainProvider,
-  Rectangle,
-  Request,
-  TerrainProvider,
-} from "cesium";
+import { EllipsoidTerrainProvider, Request, TerrainProvider } from "cesium";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import HybridTerrainProvider from "@/terrain/hybrid-terrain-provider.js";
@@ -11,7 +6,6 @@ import type { TerrainRegion } from "@/terrain/index.js";
 
 const createRectRegion = (): TerrainRegion => ({
   provider: new EllipsoidTerrainProvider(),
-  bounds: Rectangle.fromDegrees(-10, -10, 10, 10),
   levels: [0, 1, 2, 3, 4],
 });
 
@@ -319,25 +313,6 @@ describe("HybridTerrainProvider", () => {
   });
 
   describe("factory methods", () => {
-    it("should create from rectangles", () => {
-      const regions = [
-        {
-          provider: new EllipsoidTerrainProvider(),
-          bounds: Rectangle.fromDegrees(-10, -10, 10, 10),
-          levels: [1, 2, 3],
-        },
-      ];
-
-      const hybrid = HybridTerrainProvider.fromRectangles(
-        regions,
-        defaultProvider,
-      );
-
-      expect(hybrid).toBeInstanceOf(HybridTerrainProvider);
-      expect(hybrid.regions).toHaveLength(1);
-      expect(hybrid.regions[0].bounds).toBe(regions[0].bounds);
-    });
-
     it("should create from tile ranges", () => {
       const tileRanges = new Map();
       tileRanges.set(5, { x: [0, 10], y: [0, 10] });
@@ -362,17 +337,6 @@ describe("HybridTerrainProvider", () => {
   });
 
   describe("_regionContains", () => {
-    it("should check rectangle bounds correctly", () => {
-      const region: TerrainRegion = {
-        provider: new EllipsoidTerrainProvider(),
-        bounds: Rectangle.fromDegrees(-10, -10, 10, 10),
-      };
-
-      // This is a simplified test - in reality this would need proper tile coordinate calculation
-      const result = hybrid["_regionContains"](region, 0, 0, 5);
-      expect(typeof result).toBe("boolean");
-    });
-
     it("should check tile coordinates correctly", () => {
       const tileRanges = new Map();
       tileRanges.set(5, { x: [0, 10], y: [0, 10] });

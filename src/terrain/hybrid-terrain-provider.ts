@@ -6,9 +6,7 @@ import type {
   TileAvailability,
   TilingScheme,
 } from "cesium";
-import { EllipsoidTerrainProvider, Rectangle } from "cesium";
-
-import Deprecate from "@/dev/deprecation.js";
+import { EllipsoidTerrainProvider } from "cesium";
 
 /**
  * @class
@@ -249,12 +247,6 @@ class HybridTerrainProvider implements TerrainProvider {
       return x >= xMin && x <= xMax && y >= yMin && y <= yMax;
     }
 
-    // Rectangle-based bounds
-    if (region.bounds) {
-      const tileRectangle = this._tilingScheme.tileXYToRectangle(x, y, level);
-      return Rectangle.intersection(tileRectangle, region.bounds) !== undefined;
-    }
-
     return false;
   }
 }
@@ -278,8 +270,6 @@ namespace HybridTerrainProvider {
   export interface TerrainRegion {
     /** The terrain provider for this region. */
     provider: TerrainProvider;
-    /** Rectangle-based geographic bounds (simpler). */
-    bounds?: Rectangle;
     /**
      * Tile-coordinate based bounds (precise control).
      * Map of level to tile coordinate ranges for that level.
@@ -295,28 +285,6 @@ namespace HybridTerrainProvider {
     >;
     /** Optional level constraints. If specified, region only applies to these levels. */
     levels?: number[];
-  }
-
-  /**
-   * Creates a HybridTerrainProvider from rectangle-based regions.
-   * @param regions Array of regions with rectangle bounds
-   * @param defaultProvider Default terrain provider
-   * @param fallbackProvider Optional fallback provider
-   */
-  export function fromRectangles(
-    regions: Array<{
-      provider: TerrainProvider;
-      bounds: Rectangle;
-      levels?: number[];
-    }>,
-    defaultProvider: TerrainProvider,
-    fallbackProvider?: TerrainProvider,
-  ): HybridTerrainProvider {
-    return new HybridTerrainProvider({
-      regions: regions.map((r) => ({ ...r })),
-      defaultProvider,
-      fallbackProvider,
-    });
   }
 
   /**
@@ -345,56 +313,6 @@ namespace HybridTerrainProvider {
       defaultProvider,
       fallbackProvider,
     });
-  }
-
-  /**
-   * @deprecated Use Rectangle.fromDegrees() instead. This method is maintained for backward compatibility.
-   * Calculates a bounding rectangle that encompasses all the specified tile ranges.
-   * @param tilingScheme The tiling scheme to use for calculation.
-   * @param from Tile ranges to calculate from.
-   */
-  export function computeRectangle(
-    tilingScheme: TilingScheme,
-    from: Map<number, any>,
-  ): Rectangle {
-    Deprecate.warn(
-      "computeRectangle() is deprecated. Use Rectangle.fromDegrees() instead.",
-      { removeInVersion: "v0.3.0" },
-    );
-
-    if (from.size === 0) return new Rectangle();
-
-    let west = Number.POSITIVE_INFINITY;
-    let south = Number.POSITIVE_INFINITY;
-    let east = Number.NEGATIVE_INFINITY;
-    let north = Number.NEGATIVE_INFINITY;
-
-    const levels = Array.from(from.keys());
-    const minimumLevel = Math.min(...levels);
-    const tileRange = from.get(minimumLevel);
-
-    if (tileRange) {
-      const { start, end } = tileRange;
-
-      const startRect = tilingScheme.tileXYToRectangle(
-        start.x,
-        start.y,
-        minimumLevel,
-      );
-
-      const endRect = tilingScheme.tileXYToRectangle(
-        end.x,
-        end.y,
-        minimumLevel,
-      );
-
-      west = Math.min(startRect.west, west);
-      south = Math.min(endRect.south, south);
-      east = Math.max(endRect.east, east);
-      north = Math.max(startRect.north, north);
-    }
-
-    return new Rectangle(west, south, east, north);
   }
 }
 
