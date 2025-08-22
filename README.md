@@ -106,6 +106,17 @@ Additional utilities for advanced usage:
 import { Deprecate, TerrainVisualizer, isGetterOnly } from "@juun-roh/cesium-utils/dev";
 ```
 
+### Experimental Features
+
+⚠️ **Warning**: Experimental features use Cesium's internal APIs and may break in future versions.
+
+```typescript
+import Sunlight from "@juun-roh/cesium-utils/experimental/sunlight";
+
+const sunlight = new Sunlight(viewer);
+const result = sunlight.analyze(point, JulianDate.now());
+```
+
 ## License
 
 MIT © Juun

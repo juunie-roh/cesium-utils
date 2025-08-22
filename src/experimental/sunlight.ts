@@ -1,7 +1,8 @@
-import { Entity, Viewer } from "cesium";
+import { Entity, Ray, Viewer } from "cesium";
 import { Cartesian3, JulianDate } from "cesium";
 
 /**
+ * @since Cesium 1.132.0
  * @experimental
  * Point sunlight analysis utility for shadow calculations.
  *
@@ -90,7 +91,7 @@ class Sunlight {
     time: JulianDate | Sunlight.TimeRange,
     options?: Sunlight.AnalyzeOptions,
   ): Sunlight.AnalysisResult | Sunlight.AnalysisResult[] {
-    const result: Sunlight.AnalysisResult[] = [];
+    const results: Sunlight.AnalysisResult[] = [];
     // Flag for recursive call level detection
     const isTopLevel = !this._analyzing;
     // Only set time on top level calls
@@ -99,28 +100,70 @@ class Sunlight {
       : undefined;
 
     if (isTopLevel) {
+      // Create point entity (set point size as error boundary if necessary) for collision test at `from`.
+      this._viewer.entities.add(
+        this._createPointEntity(
+          from,
+          options?.debugShowPoints,
+          options?.errorBoundary,
+        ),
+      );
       this._analyzing = true;
     }
 
     try {
       if (time instanceof JulianDate) {
         // Single time analysis
-        // Implement single time analysis
-        // Create point entity (set point size as error boundary if necessary) for collision test at `from`.
+
         // Set clock.currentTime to time, then call render.
-        // Execute ray collision detection (pick)
         this._viewer.clock.currentTime = time;
         this._viewer.scene.render();
 
+        // Create ray instance
+        const ray = new Ray(
+          this.getVirtualSunPosition(from),
+          this._sunDirectionWC,
+        );
+
+        // Execute ray collision detection (pick)
+        // @ts-expect-error Accessing internal APIs
+        const picking = this._viewer.scene.picking;
+        /**
+         * @returns
+         * const results = getRayIntersections();
+         * if (results.length > 0)
+         *   return results[0]: { object: object, position: position, exclude: unknown };
+         */
+        const { object, position } = picking.pickFromRay(
+          picking,
+          this._viewer.scene,
+          ray,
+          options?.objectsToExclude,
+        );
+        const result =
+          object instanceof Entity && object.id === this._pointEntityId;
+
+        // Show collision points
+        if (options?.debugShowPoints && position) {
+          const e = new Entity({
+            point: { show: true, pixelSize: 5 },
+            position,
+          });
+
+          this._viewer.entities.add(e);
+          this._debugEntities.push(e);
+        }
+
         return {
           timestamp: time.toString(),
+          result,
         };
       } else {
         // Time range analysis
         const { start, end, step } = time;
         let t = start.clone();
         while (JulianDate.compare(t, end) <= 0) {
-          result.push(this.analyze(from, t, options));
+          results.push(this.analyze(from, t, options));
           JulianDate.addSeconds(t, step, t);
         }
       }
@@ -130,23 +173,39 @@ class Sunlight {
         this._viewer.clock.currentTime = originalTime;
         this._viewer.scene.render();
         this._analyzing = false;
-        // Clean up point entity used for collision detection
-        if (this._pointEntityId)
+        // If it isn't showing debug point entities:
+        if (this._pointEntityId && !options?.debugShowPoints)
+          // Clean up point entity used for collision detection
           this._viewer.entities.removeById(this._pointEntityId);
       }
     }
 
-    return result;
+    return results;
   }
 
   /**
    * Create a point entity for collision detection
    * @param at where to create the entity
+   * @param show whether to show point entity
    * @param errorBoundary size of the point entity for error tolerance
    */
-  private _createPointEntity(at: Cartesian3, errorBoundary?: number): void {
+  private _createPointEntity(
+    at: Cartesian3,
+    show?: boolean,
+    errorBoundary?: number,
+  ): Entity {
     // Generate new point entity with error boundary size
-    // Store the entity id
+    const e = new Entity({
+      point: {
+        show,
+        pixelSize: errorBoundary ?? 5, // fallback to default size as 5
+      },
+      position: at,
+    });
+    // tracking entity id
+    this._pointEntityId = e.id;
+
+    return e;
   }
 
   /**
@@ -158,6 +217,12 @@ class Sunlight {
         this._viewer.entities.remove(entity);
     });
     this._debugEntities = [];
+
+    if (this._pointEntityId) {
+      if (this._viewer.entities.getById(this._pointEntityId)) {
+        this._viewer.entities.removeById(this._pointEntityId);
+      }
+    }
   }
 }
 
@@ -177,7 +242,7 @@ namespace Sunlight {
     objectsToExclude?: any[];
     /** size of the point entity for error tolerance */
     errorBoundary?: number;
-    /** Whether to show sunlight paths */
+    /** Whether to show sunlight paths, NOT IMPLEMENTED YET */
     debugShowRays?: boolean;
     /** Whether to show points */
     debugShowPoints?: boolean;
@@ -186,6 +251,8 @@ namespace Sunlight {
   export interface AnalysisResult {
     /** ISO time string */
     timestamp: string;
+    /** Whether the sunlight has reached */
+    result: boolean;
   }
 }
 

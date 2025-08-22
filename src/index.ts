@@ -1,5 +1,4 @@
 import { Collection } from "./collection/index.js";
-import Sunlight from "./experimental/sunlight.js";
 import {
   Highlight,
   SilhouetteHighlight,
@@ -14,7 +13,6 @@ export {
   Highlight,
   HybridTerrainProvider,
   SilhouetteHighlight,
-  Sunlight,
   SurfaceHighlight,
 };
 
