@@ -1,19 +1,8 @@
-import {
-  EllipsoidTerrainProvider,
-  Rectangle,
-  Request,
-  TerrainProvider,
-} from "cesium";
+import { EllipsoidTerrainProvider, Request, TerrainProvider } from "cesium";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import HybridTerrainProvider from "@/terrain/hybrid-terrain-provider.js";
 import type { TerrainRegion } from "@/terrain/index.js";
-
-const createRectRegion = (): TerrainRegion => ({
-  provider: new EllipsoidTerrainProvider(),
-  bounds: Rectangle.fromDegrees(-10, -10, 10, 10),
-  levels: [0, 1, 2, 3, 4],
-});
 
 const createTileRegion = (): TerrainRegion => {
   const tileRanges = new Map();
@@ -28,16 +17,15 @@ const createTileRegion = (): TerrainRegion => {
 describe("HybridTerrainProvider", () => {
   let defaultProvider: TerrainProvider;
   let fallbackProvider: TerrainProvider;
-  let rectRegion: TerrainRegion;
   let tileRegion: TerrainRegion;
   let hybrid: HybridTerrainProvider;
 
   beforeEach(() => {
     defaultProvider = new EllipsoidTerrainProvider();
     fallbackProvider = new EllipsoidTerrainProvider();
-    rectRegion = createRectRegion();
+    tileRegion = createTileRegion();
     hybrid = new HybridTerrainProvider({
-      regions: [rectRegion],
+      regions: [tileRegion],
       defaultProvider,
       fallbackProvider,
     });
@@ -46,7 +34,7 @@ describe("HybridTerrainProvider", () => {
   describe("constructor", () => {
     it("should create new instance with default values", () => {
       const defaultHybrid = new HybridTerrainProvider({
-        regions: [rectRegion],
+        regions: [tileRegion],
         defaultProvider,
       });
 
@@ -62,7 +50,7 @@ describe("HybridTerrainProvider", () => {
       const provider = new EllipsoidTerrainProvider();
       const fallback = new EllipsoidTerrainProvider();
       const t = new HybridTerrainProvider({
-        regions: [rectRegion],
+        regions: [tileRegion],
         defaultProvider: provider,
         fallbackProvider: fallback,
       });
@@ -104,7 +92,7 @@ describe("HybridTerrainProvider", () => {
 
     it("should return a copy of regions", () => {
       const regions = hybrid.regions;
-      expect(regions).toContain(rectRegion);
+      expect(regions).toContain(tileRegion);
       expect(regions).not.toBe(hybrid["_regions"]);
     });
   });
@@ -130,7 +118,7 @@ describe("HybridTerrainProvider", () => {
       // Mock region contains method
       vi.spyOn(hybrid as any, "_regionContains").mockReturnValue(true);
       const regionSpy = vi
-        .spyOn(rectRegion.provider, "getTileDataAvailable")
+        .spyOn(tileRegion.provider, "getTileDataAvailable")
         .mockReturnValue(true);
       const providerSpy = vi.spyOn(defaultProvider, "getTileDataAvailable");
 
@@ -157,7 +145,7 @@ describe("HybridTerrainProvider", () => {
       // Create a second region
       const secondRegion = createTileRegion();
       const hybridWithMultipleRegions = new HybridTerrainProvider({
-        regions: [rectRegion, secondRegion],
+        regions: [tileRegion, secondRegion],
         defaultProvider,
         fallbackProvider,
       });
@@ -169,7 +157,7 @@ describe("HybridTerrainProvider", () => {
 
       // First region returns false (no data available)
       const firstRegionSpy = vi
-        .spyOn(rectRegion.provider, "getTileDataAvailable")
+        .spyOn(tileRegion.provider, "getTileDataAvailable")
         .mockReturnValue(false);
 
       // Second region returns true (data available)
@@ -198,7 +186,7 @@ describe("HybridTerrainProvider", () => {
     it("should fall back to default provider when all regions return false", () => {
       const secondRegion = createTileRegion();
       const hybridWithMultipleRegions = new HybridTerrainProvider({
-        regions: [rectRegion, secondRegion],
+        regions: [tileRegion, secondRegion],
         defaultProvider,
         fallbackProvider,
       });
@@ -210,7 +198,7 @@ describe("HybridTerrainProvider", () => {
       ).mockReturnValue(true);
 
       // Both regions return false (no data available)
-      vi.spyOn(rectRegion.provider, "getTileDataAvailable").mockReturnValue(
+      vi.spyOn(tileRegion.provider, "getTileDataAvailable").mockReturnValue(
         false,
       );
       vi.spyOn(secondRegion.provider, "getTileDataAvailable").mockReturnValue(
@@ -242,7 +230,7 @@ describe("HybridTerrainProvider", () => {
       vi.spyOn(hybrid, "getTileDataAvailable").mockReturnValue(true);
       vi.spyOn(hybrid as any, "_regionContains").mockReturnValue(true);
       const regionRequestSpy = vi.spyOn(
-        rectRegion.provider,
+        tileRegion.provider,
         "requestTileGeometry",
       );
       const defaultProviderSpy = vi.spyOn(
@@ -308,7 +296,7 @@ describe("HybridTerrainProvider", () => {
       vi.spyOn(hybrid, "getTileDataAvailable").mockReturnValue(true);
       vi.spyOn(hybrid as any, "_regionContains").mockReturnValue(true);
       const regionRequestSpy = vi.spyOn(
-        rectRegion.provider,
+        tileRegion.provider,
         "requestTileGeometry",
       );
 
@@ -319,25 +307,6 @@ describe("HybridTerrainProvider", () => {
   });
 
   describe("factory methods", () => {
-    it("should create from rectangles", () => {
-      const regions = [
-        {
-          provider: new EllipsoidTerrainProvider(),
-          bounds: Rectangle.fromDegrees(-10, -10, 10, 10),
-          levels: [1, 2, 3],
-        },
-      ];
-
-      const hybrid = HybridTerrainProvider.fromRectangles(
-        regions,
-        defaultProvider,
-      );
-
-      expect(hybrid).toBeInstanceOf(HybridTerrainProvider);
-      expect(hybrid.regions).toHaveLength(1);
-      expect(hybrid.regions[0].bounds).toBe(regions[0].bounds);
-    });
-
     it("should create from tile ranges", () => {
       const tileRanges = new Map();
       tileRanges.set(5, { x: [0, 10], y: [0, 10] });
@@ -362,17 +331,6 @@ describe("HybridTerrainProvider", () => {
   });
 
   describe("_regionContains", () => {
-    it("should check rectangle bounds correctly", () => {
-      const region: TerrainRegion = {
-        provider: new EllipsoidTerrainProvider(),
-        bounds: Rectangle.fromDegrees(-10, -10, 10, 10),
-      };
-
-      // This is a simplified test - in reality this would need proper tile coordinate calculation
-      const result = hybrid["_regionContains"](region, 0, 0, 5);
-      expect(typeof result).toBe("boolean");
-    });
-
     it("should check tile coordinates correctly", () => {
       const tileRanges = new Map();
       tileRanges.set(5, { x: [0, 10], y: [0, 10] });

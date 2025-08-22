@@ -411,17 +411,6 @@ export namespace TerrainVisualizer {
       tag,
     });
 
-    // Visualize the region bounds if available
-    if (region.bounds) {
-      collection.add(
-        TerrainVisualizer.createRectangle(
-          region.bounds,
-          color.withAlpha(alpha),
-        ),
-        tag,
-      );
-    }
-
     if (show && region.tiles && region.tiles.size > 0) {
       const tilingScheme = region.provider.tilingScheme;
 
