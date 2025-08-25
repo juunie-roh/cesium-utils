@@ -1,4 +1,4 @@
-import { Entity, Ray, Viewer } from "cesium";
+import { Color, Entity, Ray, Viewer } from "cesium";
 import { Cartesian3, JulianDate } from "cesium";
 
 /**
@@ -21,7 +21,7 @@ class Sunlight {
   private _viewer: Viewer;
   private _analyzing: boolean = false;
   private _pointEntityId?: string;
-  private _debugEntities: Entity[] = [];
+  private _debugEntityIds: string[] = [];
 
   constructor(viewer: Viewer) {
     // @ts-expect-error Accessing internal APIs
@@ -124,6 +124,19 @@ class Sunlight {
           this.getVirtualSunPosition(from),
           this._sunDirectionWC,
         );
+        // Draw polyline entity on debug option enabled
+        if (options?.debugShowRays) {
+          const e = new Entity({
+            polyline: {
+              positions: [this.getVirtualSunPosition(from), from],
+              width: 10,
+              material: Color.YELLOW.withAlpha(0.5),
+            },
+          });
+
+          this._debugEntityIds.push(e.id);
+          this._viewer.entities.add(e);
+        }
 
         // Execute ray collision detection (pick)
         // @ts-expect-error Accessing internal APIs
@@ -138,7 +151,12 @@ class Sunlight {
           picking,
           this._viewer.scene,
           ray,
-          options?.objectsToExclude,
+          [
+            ...this._debugEntityIds
+              .map((id) => this._viewer.entities.getById(id))
+              .filter(Boolean),
+            ...(options?.objectsToExclude ?? []),
+          ],
         );
         const result =
           object instanceof Entity && object.id === this._pointEntityId;
@@ -150,8 +168,8 @@ class Sunlight {
             position,
           });
 
+          this._debugEntityIds.push(e.id);
           this._viewer.entities.add(e);
-          this._debugEntities.push(e);
         }
 
         return {
@@ -212,17 +230,11 @@ class Sunlight {
    * Remove all instances created for debug purpose
    */
   clear(): void {
-    this._debugEntities.forEach((entity) => {
-      if (this._viewer.entities.contains(entity))
-        this._viewer.entities.remove(entity);
-    });
-    this._debugEntities = [];
+    this._debugEntityIds.forEach((id) => this._viewer.entities.removeById(id));
+    this._debugEntityIds = [];
 
-    if (this._pointEntityId) {
-      if (this._viewer.entities.getById(this._pointEntityId)) {
-        this._viewer.entities.removeById(this._pointEntityId);
-      }
-    }
+    if (this._pointEntityId)
+      this._viewer.entities.removeById(this._pointEntityId);
   }
 }
 
