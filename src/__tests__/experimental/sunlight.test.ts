@@ -170,6 +170,24 @@ describe("Sunlight", () => {
       expect(debugEntity.point?.show?.getValue()).toBe(true);
       expect(debugEntity.point?.pixelSize?.getValue()).toBe(5);
     });
+
+    it("should create debug ray polyline when debugShowRays enabled", () => {
+      const from = new Cartesian3(100, 100, 0);
+      const time = JulianDate.now();
+
+      sunlight.analyze(from, time, { debugShowRays: true });
+
+      // Should add debug polyline entity (second call after target point)
+      const addCalls = vi.mocked(viewer.entities.add).mock.calls;
+      expect(addCalls.length).toBe(2); // Target point + debug polyline
+
+      const debugEntity = addCalls[1][0] as Entity;
+      expect(debugEntity.polyline).toBeDefined();
+      expect(debugEntity.polyline?.width?.getValue()).toBe(10);
+      expect(
+        debugEntity.polyline?.material?.getValue().color.alpha,
+      ).toBeCloseTo(0.5);
+    });
   });
 
   describe("analyze - time range", () => {
@@ -237,27 +255,28 @@ describe("Sunlight", () => {
 
       sunlight.analyze(from, time, { objectsToExclude: excludeObjects });
 
+      // Should combine debug entity IDs with objectsToExclude
       expect(mockPicking.pickFromRay).toHaveBeenCalledWith(
         mockPicking,
         viewer.scene,
         expect.any(Ray),
-        excludeObjects,
+        expect.arrayContaining(excludeObjects),
       );
     });
   });
 
   describe("cleanup", () => {
     it("should clear debug entities", () => {
-      // Add some debug entities
-      const debugEntity1 = new Entity();
-      const debugEntity2 = new Entity();
-      sunlight["_debugEntities"] = [debugEntity1, debugEntity2];
+      // Add some debug entity IDs
+      const debugId1 = "debug-entity-1";
+      const debugId2 = "debug-entity-2";
+      sunlight["_debugEntityIds"] = [debugId1, debugId2];
 
       sunlight.clear();
 
-      expect(viewer.entities.remove).toHaveBeenCalledWith(debugEntity1);
-      expect(viewer.entities.remove).toHaveBeenCalledWith(debugEntity2);
-      expect(sunlight["_debugEntities"]).toEqual([]);
+      expect(viewer.entities.removeById).toHaveBeenCalledWith(debugId1);
+      expect(viewer.entities.removeById).toHaveBeenCalledWith(debugId2);
+      expect(sunlight["_debugEntityIds"]).toEqual([]);
     });
 
     it("should clean up point entity", () => {
