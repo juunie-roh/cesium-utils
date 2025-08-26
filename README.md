@@ -4,6 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation](https://img.shields.io/badge/docs-typedoc-blue)](https://juunie-roh.github.io/cesium-utils/)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/juunie-roh/cesium-utils/release-and-publish.yml)](https://github.com/juunie-roh/cesium-utils/actions)
+[![Changelog](https://img.shields.io/badge/changelog-releases-blue)](https://github.com/juunie-roh/cesium-utils/blob/main/CHANGELOG.md)
 
 TypeScript utility library for Cesium.js providing hybrid terrain providers, entity collection tagging, and visual highlighting systems.
 
