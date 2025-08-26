@@ -1,10 +1,12 @@
 # Cesium Utils
 
-[![npm version](https://img.shields.io/npm/v/@juun-roh/cesium-utils.svg)](https://www.npmjs.com/package/@juun-roh/cesium-utils)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Documentation](https://img.shields.io/badge/docs-typedoc-blue)](https://juunie-roh.github.io/cesium-utils/)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/juunie-roh/cesium-utils/release-and-publish.yml)](https://github.com/juunie-roh/cesium-utils/actions)
-[![Changelog](https://img.shields.io/badge/changelog-releases-blue)](https://github.com/juunie-roh/cesium-utils/blob/main/CHANGELOG.md)
+[![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/juunie-roh/cesium-utils)
+[![npm version](https://img.shields.io/npm/v/@juun-roh/cesium-utils.svg?logo=npm&logoColor=fff&color=CB3837)](https://www.npmjs.com/package/@juun-roh/cesium-utils)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?logo=opensourceinitiative&logoColor=fff)](https://opensource.org/licenses/MIT)
+[![Documentation](https://img.shields.io/badge/docs-typedoc-blue?logo=typescript&logoColor=fff&color=3178C6)](https://juunie-roh.github.io/cesium-utils/)
+
+[![Build Status](https://img.shields.io/github/actions/workflow/status/juunie-roh/cesium-utils/release-and-publish.yml?logo=githubactions&logoColor=fff)](https://github.com/juunie-roh/cesium-utils/actions)
+[![Changelog](https://img.shields.io/badge/changelog-releases-blue?logo=git&logoColor=fff&color=green)](https://github.com/juunie-roh/cesium-utils/releases)
 
 TypeScript utility library for Cesium.js providing hybrid terrain providers, entity collection tagging, and visual highlighting systems.
 
