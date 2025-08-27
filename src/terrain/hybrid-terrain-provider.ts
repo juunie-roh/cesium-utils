@@ -83,24 +83,28 @@ class HybridTerrainProvider implements TerrainProvider {
   get tilingScheme(): TilingScheme {
     return this._tilingScheme;
   }
+
   /**
    * Gets an object that can be used to determine availability of terrain from this provider.
    */
   get availability(): TileAvailability | undefined {
     return this._availability;
   }
+
   /**
    * Gets the list of terrain regions managed by this provider.
    */
   get regions(): readonly HybridTerrainProvider.TerrainRegion[] {
     return [...this._regions];
   }
+
   /**
    * Gets the default terrain provider.
    */
   get defaultProvider(): TerrainProvider {
     return this._defaultProvider;
   }
+
   /**
    * Gets the fallback terrain provider.
    */
@@ -115,6 +119,7 @@ class HybridTerrainProvider implements TerrainProvider {
   get credit(): Credit {
     return this._defaultProvider?.credit;
   }
+
   /**
    * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
    * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
@@ -123,6 +128,7 @@ class HybridTerrainProvider implements TerrainProvider {
   get errorEvent(): any {
     return this._defaultProvider.errorEvent;
   }
+
   /**
    * Gets a value indicating whether or not the provider includes a water mask.  The water mask
    * indicates which areas of the globe are water rather than land, so they can be rendered
@@ -131,10 +137,12 @@ class HybridTerrainProvider implements TerrainProvider {
   get hasWaterMask(): boolean {
     return this._defaultProvider.hasWaterMask;
   }
+
   /** Gets a value indicating whether or not the requested tiles include vertex normals. */
   get hasVertexNormals(): boolean {
     return this._defaultProvider.hasVertexNormals;
   }
+
   /**
    * Makes sure we load availability data for a tile
    * @param x - The X coordinate of the tile for which to request geometry.
@@ -149,6 +157,7 @@ class HybridTerrainProvider implements TerrainProvider {
   ): Promise<void> | undefined {
     return this._defaultProvider.loadTileDataAvailability(x, y, level);
   }
+
   /**
    * Gets the maximum geometric error allowed in a tile at a given level.
    * @param level - The tile level for which to get the maximum geometric error.
