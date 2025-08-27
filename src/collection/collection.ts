@@ -192,120 +192,54 @@ class Collection<C extends Collection.Base, I extends Collection.ItemFor<C>> {
   }
 
   /**
-   * Emits an event to all registered listeners.
+   * Gets all item instances in the collection.
+   * This array should not be modified directly.
    *
-   * @private
-   * @param type - The event type
-   * @param data - Additional event data
+   * @returns An array of all items in the collection
    */
-  private _emit(
-    type: Collection.Event,
-    data?: { items?: I[]; tag?: Collection.Tag },
-  ): void {
-    const listeners = this._eventListeners.get(type);
-    if (listeners) {
-      const event = { type, ...data };
-      listeners.forEach((handler) => handler(event));
+  get values(): I[] {
+    // Use cache if available
+    if (this._valuesCache !== null) {
+      return this._valuesCache;
     }
-  }
 
-  /**
-   * Adds an item to the internal tag map for quick lookups.
-   *
-   * @private
-   * @param item - The item to add
-   * @param tag - The tag to associate with the item
-   */
-  private _addToTagMap(item: I, tag: Collection.Tag): void {
-    if (!this._tagMap.has(tag)) {
-      this._tagMap.set(tag, new Set());
-    }
-    this._tagMap.get(tag)?.add(item);
-  }
-
-  /**
-   * Removes an item from the internal tag map.
-   *
-   * @private
-   * @param item - The item to remove
-   */
-  private _removeFromTagMap(item: I & Collection.WithTag): void {
-    const tag = item[Collection.symbol];
-    const itemSet = this._tagMap.get(tag);
-    if (itemSet) {
-      itemSet.delete(item);
-      // Clean up empty sets
-      if (itemSet.size === 0) {
-        this._tagMap.delete(tag);
+    // Build values array
+    let values: I[];
+    if (this.collection instanceof EntityCollection) {
+      values = this.collection.values as I[];
+    } else {
+      values = [];
+      for (let i = 0; i < this.collection.length; i++) {
+        values.push(this.collection.get(i) as I);
       }
     }
+
+    // Cache and return
+    this._valuesCache = values;
+    return values;
   }
 
   /**
-   * Invalidates the values cache when collection changes.
+   * Gets the number of items in the collection.
    *
-   * @private
+   * @returns The item count
    */
-  private _invalidateCache = (): void => {
-    this._valuesCache = null;
-  };
+  get length(): number {
+    return this.values?.length || 0;
+  }
 
   /**
-   * Sets up automatic cache invalidation by registering event listeners on the underlying Cesium collection.
+   * Gets all unique tags currently in use in the collection.
    *
-   * @private
-   * @param collection - The Cesium collection to monitor for changes
+   * @returns An array of all unique tags
    *
-   * @see {@link destroy} For cleanup of event listeners
-   * @see {@link _invalidateCache} For the actual cache invalidation logic
+   * @example
+   * // Get all tags
+   * const tags = collection.tags;
+   * console.log(`Collection has these tags: ${tags.join(', ')}`);
    */
-  private _setupCacheInvalidator(collection: C) {
-    if (collection instanceof EntityCollection) {
-      collection.collectionChanged.addEventListener(this._invalidateCache);
-      this._eventCleanupFunctions.push(() =>
-        collection.collectionChanged.removeEventListener(this._invalidateCache),
-      );
-    } else if (collection instanceof PrimitiveCollection) {
-      collection.primitiveAdded.addEventListener(this._invalidateCache);
-      collection.primitiveRemoved.addEventListener(this._invalidateCache);
-      this._eventCleanupFunctions.push(
-        () =>
-          collection.primitiveAdded.removeEventListener(this._invalidateCache),
-        () =>
-          collection.primitiveRemoved.removeEventListener(
-            this._invalidateCache,
-          ),
-      );
-    } else if (collection instanceof DataSourceCollection) {
-      collection.dataSourceAdded.addEventListener(this._invalidateCache);
-      collection.dataSourceMoved.addEventListener(this._invalidateCache);
-      collection.dataSourceRemoved.addEventListener(this._invalidateCache);
-      this._eventCleanupFunctions.push(
-        () =>
-          collection.dataSourceAdded.removeEventListener(this._invalidateCache),
-        () =>
-          collection.dataSourceMoved.removeEventListener(this._invalidateCache),
-        () =>
-          collection.dataSourceRemoved.removeEventListener(
-            this._invalidateCache,
-          ),
-      );
-    } else if (collection instanceof ImageryLayerCollection) {
-      collection.layerAdded.addEventListener(this._invalidateCache);
-      collection.layerMoved.addEventListener(this._invalidateCache);
-      collection.layerRemoved.addEventListener(this._invalidateCache);
-      collection.layerShownOrHidden.addEventListener(this._invalidateCache);
-      this._eventCleanupFunctions.push(
-        () => collection.layerAdded.removeEventListener(this._invalidateCache),
-        () => collection.layerMoved.removeEventListener(this._invalidateCache),
-        () =>
-          collection.layerRemoved.removeEventListener(this._invalidateCache),
-        () =>
-          collection.layerShownOrHidden.removeEventListener(
-            this._invalidateCache,
-          ),
-      );
-    }
+  get tags(): Collection.Tag[] {
+    return Array.from(this._tagMap.keys());
   }
 
   /**
@@ -495,43 +429,6 @@ class Collection<C extends Collection.Base, I extends Collection.ItemFor<C>> {
   }
 
   /**
-   * Gets all item instances in the collection.
-   * This array should not be modified directly.
-   *
-   * @returns An array of all items in the collection
-   */
-  get values(): I[] {
-    // Use cache if available
-    if (this._valuesCache !== null) {
-      return this._valuesCache;
-    }
-
-    // Build values array
-    let values: I[];
-    if (this.collection instanceof EntityCollection) {
-      values = this.collection.values as I[];
-    } else {
-      values = [];
-      for (let i = 0; i < this.collection.length; i++) {
-        values.push(this.collection.get(i) as I);
-      }
-    }
-
-    // Cache and return
-    this._valuesCache = values;
-    return values;
-  }
-
-  /**
-   * Gets the number of items in the collection.
-   *
-   * @returns The item count
-   */
-  get length(): number {
-    return this.values?.length || 0;
-  }
-
-  /**
    * Gets all items with the specified tag from the collection.
    * Uses an optimized internal map for faster lookups.
    *
@@ -564,20 +461,6 @@ class Collection<C extends Collection.Base, I extends Collection.ItemFor<C>> {
       return items.values().next().value;
     }
     return undefined;
-  }
-
-  /**
-   * Gets all unique tags currently in use in the collection.
-   *
-   * @returns An array of all unique tags
-   *
-   * @example
-   * // Get all tags
-   * const tags = collection.tags;
-   * console.log(`Collection has these tags: ${tags.join(', ')}`);
-   */
-  get tags(): Collection.Tag[] {
-    return Array.from(this._tagMap.keys());
   }
 
   /**
@@ -810,6 +693,123 @@ class Collection<C extends Collection.Base, I extends Collection.ItemFor<C>> {
   find(predicate: (value: I) => boolean, by?: Collection.Tag): I | undefined {
     const items = by ? this.get(by) : this.values;
     return items.find(predicate);
+  }
+
+  /**
+   * Emits an event to all registered listeners.
+   *
+   * @private
+   * @param type - The event type
+   * @param data - Additional event data
+   */
+  private _emit(
+    type: Collection.Event,
+    data?: { items?: I[]; tag?: Collection.Tag },
+  ): void {
+    const listeners = this._eventListeners.get(type);
+    if (listeners) {
+      const event = { type, ...data };
+      listeners.forEach((handler) => handler(event));
+    }
+  }
+
+  /**
+   * Adds an item to the internal tag map for quick lookups.
+   *
+   * @private
+   * @param item - The item to add
+   * @param tag - The tag to associate with the item
+   */
+  private _addToTagMap(item: I, tag: Collection.Tag): void {
+    if (!this._tagMap.has(tag)) {
+      this._tagMap.set(tag, new Set());
+    }
+    this._tagMap.get(tag)?.add(item);
+  }
+
+  /**
+   * Removes an item from the internal tag map.
+   *
+   * @private
+   * @param item - The item to remove
+   */
+  private _removeFromTagMap(item: I & Collection.WithTag): void {
+    const tag = item[Collection.symbol];
+    const itemSet = this._tagMap.get(tag);
+    if (itemSet) {
+      itemSet.delete(item);
+      // Clean up empty sets
+      if (itemSet.size === 0) {
+        this._tagMap.delete(tag);
+      }
+    }
+  }
+
+  /**
+   * Invalidates the values cache when collection changes.
+   *
+   * @private
+   */
+  private _invalidateCache = (): void => {
+    this._valuesCache = null;
+  };
+
+  /**
+   * Sets up automatic cache invalidation by registering event listeners on the underlying Cesium collection.
+   *
+   * @private
+   * @param collection - The Cesium collection to monitor for changes
+   *
+   * @see {@link destroy} For cleanup of event listeners
+   * @see {@link _invalidateCache} For the actual cache invalidation logic
+   */
+  private _setupCacheInvalidator(collection: C) {
+    if (collection instanceof EntityCollection) {
+      collection.collectionChanged.addEventListener(this._invalidateCache);
+      this._eventCleanupFunctions.push(() =>
+        collection.collectionChanged.removeEventListener(this._invalidateCache),
+      );
+    } else if (collection instanceof PrimitiveCollection) {
+      collection.primitiveAdded.addEventListener(this._invalidateCache);
+      collection.primitiveRemoved.addEventListener(this._invalidateCache);
+      this._eventCleanupFunctions.push(
+        () =>
+          collection.primitiveAdded.removeEventListener(this._invalidateCache),
+        () =>
+          collection.primitiveRemoved.removeEventListener(
+            this._invalidateCache,
+          ),
+      );
+    } else if (collection instanceof DataSourceCollection) {
+      collection.dataSourceAdded.addEventListener(this._invalidateCache);
+      collection.dataSourceMoved.addEventListener(this._invalidateCache);
+      collection.dataSourceRemoved.addEventListener(this._invalidateCache);
+      this._eventCleanupFunctions.push(
+        () =>
+          collection.dataSourceAdded.removeEventListener(this._invalidateCache),
+        () =>
+          collection.dataSourceMoved.removeEventListener(this._invalidateCache),
+        () =>
+          collection.dataSourceRemoved.removeEventListener(
+            this._invalidateCache,
+          ),
+      );
+    } else if (collection instanceof ImageryLayerCollection) {
+      collection.layerAdded.addEventListener(this._invalidateCache);
+      collection.layerMoved.addEventListener(this._invalidateCache);
+      collection.layerRemoved.addEventListener(this._invalidateCache);
+      collection.layerShownOrHidden.addEventListener(this._invalidateCache);
+      this._eventCleanupFunctions.push(
+        () => collection.layerAdded.removeEventListener(this._invalidateCache),
+        () => collection.layerMoved.removeEventListener(this._invalidateCache),
+        () =>
+          collection.layerRemoved.removeEventListener(this._invalidateCache),
+        () =>
+          collection.layerShownOrHidden.removeEventListener(
+            this._invalidateCache,
+          ),
+      );
+    }
   }
 }
 

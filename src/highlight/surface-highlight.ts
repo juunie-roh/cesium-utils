@@ -68,6 +68,26 @@ export default class SurfaceHighlight implements Highlight.Base {
     );
   }
 
+  /** Gets the highlight color. */
+  get color(): Color {
+    return this._color;
+  }
+
+  /** Sets the highlight color. */
+  set color(color: Color) {
+    this._color = color;
+  }
+
+  /** Gets the highlight entity */
+  get entity(): Entity {
+    return this._entity;
+  }
+
+  /** Gets the currently highlighted object */
+  get currentObject(): Entity | GroundPrimitive | undefined {
+    return this._currentObject;
+  }
+
   /**
    * Highlights a picked object by updating the reusable entity
    * @param object The object to be highlighted.
@@ -120,6 +140,27 @@ export default class SurfaceHighlight implements Highlight.Base {
       this._currentOptions = undefined;
       return undefined;
     }
+  }
+
+  /**
+   * Clears the current highlight
+   */
+  hide(): void {
+    if (this._entity) {
+      this._entity.show = false;
+    }
+    // Clear tracking of current object
+    this._currentObject = undefined;
+    this._currentOptions = undefined;
+  }
+
+  /** Clean up the instances */
+  destroy(): void {
+    if (this._entities.contains(this._entity)) {
+      this._entities.remove(this._entity);
+    }
+    this._currentObject = undefined;
+    this._currentOptions = undefined;
   }
 
   /**
@@ -309,46 +350,5 @@ export default class SurfaceHighlight implements Highlight.Base {
         });
       }
     }
-  }
-
-  /**
-   * Clears the current highlight
-   */
-  hide(): void {
-    if (this._entity) {
-      this._entity.show = false;
-    }
-    // Clear tracking of current object
-    this._currentObject = undefined;
-    this._currentOptions = undefined;
-  }
-
-  /** Clean up the instances */
-  destroy(): void {
-    if (this._entities.contains(this._entity)) {
-      this._entities.remove(this._entity);
-    }
-    this._currentObject = undefined;
-    this._currentOptions = undefined;
-  }
-
-  /** Gets the highlight color. */
-  get color(): Color {
-    return this._color;
-  }
-
-  /** Sets the highlight color. */
-  set color(color: Color) {
-    this._color = color;
-  }
-
-  /** Gets the highlight entity */
-  get entity(): Entity {
-    return this._entity;
-  }
-
-  /** Gets the currently highlighted object */
-  get currentObject(): Entity | GroundPrimitive | undefined {
-    return this._currentObject;
   }
 }
