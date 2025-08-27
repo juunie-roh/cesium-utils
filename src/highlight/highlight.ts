@@ -55,6 +55,21 @@ class Highlight {
     this._silhouette.color = this._color;
   }
 
+  /** Gets the highlight color. */
+  get color(): Color {
+    return this._color;
+  }
+
+  /**
+   * Sets the highlight color.
+   * @param color The new color for highlights
+   */
+  set color(color: Color) {
+    this._color = color;
+    this._surface.color = color;
+    this._silhouette.color = color;
+  }
+
   /**
    * Gets or creates highlight instance from a viewer.
    * @param viewer The viewer to get or create a new instance from.
@@ -124,21 +139,6 @@ class Highlight {
   hide(): void {
     this._surface.hide();
     this._silhouette.hide();
-  }
-
-  /** Gets the highlight color. */
-  get color(): Color {
-    return this._color;
-  }
-
-  /**
-   * Sets the highlight color.
-   * @param color The new color for highlights
-   */
-  set color(color: Color) {
-    this._color = color;
-    this._surface.color = color;
-    this._silhouette.color = color;
   }
 }
 

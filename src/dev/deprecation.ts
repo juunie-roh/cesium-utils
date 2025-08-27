@@ -4,18 +4,6 @@
  */
 namespace Deprecate {
   /**
-   * Set of messages that have already been shown (for once-only warnings).
-   */
-  const shownWarnings = new Set<string>();
-  /**
-   * Whether deprecation warnings are enabled globally.
-   * Can be controlled via environment variable CESIUM_UTILS_DISABLE_DEPRECATION_WARNINGS.
-   */
-  const warningsEnabled =
-    typeof process !== "undefined"
-      ? process.env.CESIUM_UTILS_DISABLE_DEPRECATION_WARNINGS !== "true"
-      : true;
-  /**
    * Configuration options for deprecation warnings.
    */
   export interface Options {
@@ -42,6 +30,20 @@ namespace Deprecate {
      */
     removeInVersion?: string;
   }
+
+  /**
+   * Set of messages that have already been shown (for once-only warnings).
+   */
+  const shownWarnings = new Set<string>();
+
+  /**
+   * Whether deprecation warnings are enabled globally.
+   * Can be controlled via environment variable CESIUM_UTILS_DISABLE_DEPRECATION_WARNINGS.
+   */
+  const warningsEnabled =
+    typeof process !== "undefined"
+      ? process.env.CESIUM_UTILS_DISABLE_DEPRECATION_WARNINGS !== "true"
+      : true;
 
   /**
    * Displays a deprecation warning message.

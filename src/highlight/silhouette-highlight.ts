@@ -63,6 +63,21 @@ export default class SilhouetteHighlight implements Highlight.Base {
     this._stages.add(this._composite);
   }
 
+  /** Gets the highlight color. */
+  get color(): Color {
+    return this._color;
+  }
+
+  /** Sets the highlight color. */
+  set color(color: Color) {
+    this._color = color;
+  }
+
+  /** Gets the currently highlighted object */
+  get currentObject(): Cesium3DTileFeature | Entity | undefined {
+    return this._currentObject;
+  }
+
   /**
    * Highlights a picked `Cesium3DTileset` by updating silhouette composite.
    * @param object The object to be highlighted.
@@ -113,6 +128,25 @@ export default class SilhouetteHighlight implements Highlight.Base {
     }
   }
 
+  /** Clears the current highlight */
+  hide(): void {
+    this._clearHighlights();
+
+    // Clear tracking of current object
+    this._currentObject = undefined;
+    this._currentOptions = undefined;
+  }
+
+  /** Clean up the instances */
+  destroy(): void {
+    this.hide();
+    if (this._composite) {
+      this._stages.remove(this._composite);
+    }
+    this._currentObject = undefined;
+    this._currentOptions = undefined;
+  }
+
   /**
    * Compares two Highlight.Options objects for equality
    * @private
@@ -153,39 +187,5 @@ export default class SilhouetteHighlight implements Highlight.Base {
       this._entity.model.silhouetteSize = new ConstantProperty(0.0);
       this._entity = undefined;
     }
-  }
-
-  /** Clears the current highlight */
-  hide(): void {
-    this._clearHighlights();
-
-    // Clear tracking of current object
-    this._currentObject = undefined;
-    this._currentOptions = undefined;
-  }
-
-  /** Clean up the instances */
-  destroy(): void {
-    this.hide();
-    if (this._composite) {
-      this._stages.remove(this._composite);
-    }
-    this._currentObject = undefined;
-    this._currentOptions = undefined;
-  }
-
-  /** Gets the highlight color. */
-  get color(): Color {
-    return this._color;
-  }
-
-  /** Sets the highlight color. */
-  set color(color: Color) {
-    this._color = color;
-  }
-
-  /** Gets the currently highlighted object */
-  get currentObject(): Cesium3DTileFeature | Entity | undefined {
-    return this._currentObject;
   }
 }
