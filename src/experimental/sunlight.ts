@@ -91,114 +91,45 @@ class Sunlight {
     time: JulianDate | Sunlight.TimeRange,
     options?: Sunlight.AnalyzeOptions,
   ): Sunlight.AnalysisResult | Sunlight.AnalysisResult[] {
-    const results: Sunlight.AnalysisResult[] = [];
-    // Flag for recursive call level detection
-    const isTopLevel = !this._analyzing;
-    // Only set time on top level calls
-    const originalTime = isTopLevel
-      ? this._viewer.clock.currentTime.clone()
-      : undefined;
+    const originalTime = this._viewer.clock.currentTime.clone();
 
-    if (isTopLevel) {
-      // Create point entity (set point size as error boundary if necessary) for collision test at `from`.
-      this._viewer.entities.add(
-        this._createPointEntity(
-          from,
-          options?.debugShowPoints,
-          options?.errorBoundary,
-        ),
-      );
-      this._analyzing = true;
-    }
+    // Create point entity (set point size as error boundary if necessary) for collision test at `from`.
+    this._viewer.entities.add(
+      this._createPointEntity(
+        from,
+        options?.debugShowPoints,
+        options?.errorBoundary,
+      ),
+    );
+    this._analyzing = true;
 
     try {
       if (time instanceof JulianDate) {
-        // Single time analysis
-
-        // Set clock.currentTime to time, then call render.
-        this._viewer.clock.currentTime = time;
-        this._viewer.scene.render();
-
-        // Create ray instance
-        const ray = new Ray(
-          this.getVirtualSunPosition(from),
-          this._sunDirectionWC,
-        );
-        // Draw polyline entity on debug option enabled
-        if (options?.debugShowRays) {
-          const e = new Entity({
-            polyline: {
-              positions: [this.getVirtualSunPosition(from), from],
-              width: 10,
-              material: Color.YELLOW.withAlpha(0.5),
-            },
-          });
-
-          this._debugEntityIds.push(e.id);
-          this._viewer.entities.add(e);
-        }
-
-        // Execute ray collision detection (pick)
-        // @ts-expect-error Accessing internal APIs
-        const picking = this._viewer.scene.picking;
-        /**
-         * @returns
-         * const results = getRayIntersections();
-         * if (results.length > 0)
-         *   return results[0]: { object: object, position: position, exclude: unknown };
-         */
-        const { object, position } = picking.pickFromRay(
-          picking,
-          this._viewer.scene,
-          ray,
-          [
-            ...this._debugEntityIds
-              .map((id) => this._viewer.entities.getById(id))
-              .filter(Boolean),
-            ...(options?.objectsToExclude ?? []),
-          ],
-        );
-        const result =
-          object instanceof Entity && object.id === this._pointEntityId;
-
-        // Show collision points
-        if (options?.debugShowPoints && position) {
-          const e = new Entity({
-            point: { show: true, pixelSize: 5 },
-            position,
-          });
-
-          this._debugEntityIds.push(e.id);
-          this._viewer.entities.add(e);
-        }
-
-        return {
-          timestamp: time.toString(),
-          result,
-        };
+        return this._analyzeSingleTime(from, time, options);
       } else {
-        // Time range analysis
-        const { start, end, step } = time;
-        let t = start.clone();
-        while (JulianDate.compare(t, end) <= 0) {
-          results.push(this.analyze(from, t, options));
-          JulianDate.addSeconds(t, step, t);
-        }
+        return this._analyzeTimeRange(from, time, options);
       }
     } finally {
       // Reset the viewer state to before analysis.
-      if (isTopLevel && originalTime) {
-        this._viewer.clock.currentTime = originalTime;
-        this._viewer.scene.render();
-        this._analyzing = false;
-        // If it isn't showing debug point entities:
-        if (this._pointEntityId && !options?.debugShowPoints)
-          // Clean up point entity used for collision detection
-          this._viewer.entities.removeById(this._pointEntityId);
-      }
+      this._viewer.clock.currentTime = originalTime;
+      this._viewer.scene.render();
+      this._analyzing = false;
+      // If it isn't showing debug point entities:
+      if (this._pointEntityId && !options?.debugShowPoints)
+        // Clean up point entity used for collision detection
+        this._viewer.entities.removeById(this._pointEntityId);
     }
+  }
 
-    return results;
+  /**
+   * Remove all instances created for debug purpose
+   */
+  clear(): void {
+    this._debugEntityIds.forEach((id) => this._viewer.entities.removeById(id));
+    this._debugEntityIds = [];
+
+    if (this._pointEntityId)
+      this._viewer.entities.removeById(this._pointEntityId);
   }
 
   /**
@@ -226,15 +157,88 @@ class Sunlight {
     return e;
   }
 
-  /**
-   * Remove all instances created for debug purpose
-   */
-  clear(): void {
-    this._debugEntityIds.forEach((id) => this._viewer.entities.removeById(id));
-    this._debugEntityIds = [];
+  private _analyzeSingleTime(
+    from: Cartesian3,
+    time: JulianDate,
+    options?: Sunlight.AnalyzeOptions,
+  ): Sunlight.AnalysisResult {
+    // Set clock.currentTime to time, then call render.
+    this._viewer.clock.currentTime = time;
+    this._viewer.scene.render();
 
-    if (this._pointEntityId)
-      this._viewer.entities.removeById(this._pointEntityId);
+    // Create ray instance
+    const ray = new Ray(this.getVirtualSunPosition(from), this._sunDirectionWC);
+    // Draw polyline entity on debug option enabled
+    if (options?.debugShowRays) {
+      const e = new Entity({
+        polyline: {
+          positions: [this.getVirtualSunPosition(from), from],
+          width: 10,
+          material: Color.YELLOW.withAlpha(0.5),
+        },
+      });
+
+      this._debugEntityIds.push(e.id);
+      this._viewer.entities.add(e);
+    }
+
+    // Execute ray collision detection (pick)
+    // @ts-expect-error Accessing internal APIs
+    const picking = this._viewer.scene.picking;
+    /**
+     * @returns
+     * const results = getRayIntersections();
+     * if (results.length > 0)
+     *   return results[0]: { object: object, position: position, exclude: unknown };
+     */
+    const { object, position } = picking.pickFromRay(
+      picking,
+      this._viewer.scene,
+      ray,
+      this._getExcludedObjects(options?.objectsToExclude),
+    );
+    const result =
+      object instanceof Entity && object.id === this._pointEntityId;
+
+    // Show collision points
+    if (options?.debugShowPoints && position) {
+      const e = new Entity({
+        point: { show: true, pixelSize: 5 },
+        position,
+      });
+
+      this._debugEntityIds.push(e.id);
+      this._viewer.entities.add(e);
+    }
+
+    return {
+      timestamp: time.toString(),
+      result,
+    };
+  }
+
+  private _analyzeTimeRange(
+    from: Cartesian3,
+    timeRange: Sunlight.TimeRange,
+    options?: Sunlight.AnalyzeOptions,
+  ): Sunlight.AnalysisResult[] {
+    const results: Sunlight.AnalysisResult[] = [];
+    const { start, end, step } = timeRange;
+    let t = start.clone();
+    while (JulianDate.compare(t, end) <= 0) {
+      results.push(this._analyzeSingleTime(from, t, options));
+      JulianDate.addSeconds(t, step, t);
+    }
+    return results;
+  }
+
+  private _getExcludedObjects(objectsToExclude?: any[]): any[] {
+    return [
+      ...this._debugEntityIds
+        .map((id) => this._viewer.entities.getById(id))
+        .filter(Boolean),
+      ...(objectsToExclude ?? []),
+    ];
   }
 }
 
