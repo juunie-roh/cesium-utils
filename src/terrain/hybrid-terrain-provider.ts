@@ -16,28 +16,16 @@ import { EllipsoidTerrainProvider } from "cesium";
  *
  * @example
  * ``` typescript
- * // Simple rectangle-based regions
- * const hybridTerrain = new HybridTerrainProvider({
- *   regions: [
- *     {
- *       provider: customProvider,
- *       bounds: Rectangle.fromDegrees(-120, 30, -100, 50),
- *       levels: [10, 15] // optional
- *     }
- *   ],
- *   defaultProvider: worldTerrain
- * });
- *
- * // Or tile-coordinate based for precise control (multiple levels)
- * const tileRanges = new Map();
- * tileRanges.set(15, { x: [55852, 55871], y: [9556, 9575] });
- * tileRanges.set(16, { x: [111704, 111742], y: [19112, 19150] });
+ * // Tile-coordinate based for precise control (multiple levels)
+ * const customTiles: TerrainTiles = new Map();
+ * customTiles.set(15, { x: [55852, 55871], y: [9556, 9575] });
+ * customTiles.set(16, { x: [111704, 111742], y: [19112, 19150] });
  *
  * const hybridTerrain = new HybridTerrainProvider({
  *   regions: [
  *     {
  *       provider: customProvider,
- *       tiles: tileRanges
+ *       tiles: customTiles,
  *     }
  *   ],
  *   defaultProvider: worldTerrain

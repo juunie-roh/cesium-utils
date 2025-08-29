@@ -258,7 +258,7 @@ namespace Sunlight {
     objectsToExclude?: any[];
     /** size of the point entity for error tolerance */
     errorBoundary?: number;
-    /** Whether to show sunlight paths, NOT IMPLEMENTED YET */
+    /** Whether to show sunlight paths */
     debugShowRays?: boolean;
     /** Whether to show points */
     debugShowPoints?: boolean;
