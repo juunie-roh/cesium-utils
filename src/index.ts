@@ -18,3 +18,6 @@ export {
 
 // Functions
 export { cloneViewer, syncCamera };
+
+// Types
+export type * from "./terrain/index.js";
