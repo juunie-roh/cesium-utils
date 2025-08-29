@@ -1,5 +1,23 @@
 # @juun-roh/cesium-utils
 
+## 0.3.2
+
+### Patch Changes
+
+- 42ec5d1: Refactoring class method
+
+  refactor: Break down methods into several parts
+
+  - Separated heavily concentrated methods to improve readability.
+
+- 6569d55: Re-ordering code
+
+  style: Standardize code ordering
+
+  - Consistent ordering of class members and methods
+  - Standardized import/export organization
+  - Applied uniform code structure across files
+
 ## 0.3.1
 
 ### Patch Changes
