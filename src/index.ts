@@ -20,4 +20,7 @@ export {
 export { cloneViewer, syncCamera };
 
 // Types
+export type * from "./collection/index.js";
+export type * from "./highlight/index.js";
 export type * from "./terrain/index.js";
+export type * from "./viewer/index.js";
