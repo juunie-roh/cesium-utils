@@ -1,5 +1,13 @@
 # @juun-roh/cesium-utils
 
+## 0.3.3
+
+### Patch Changes
+
+- f2892cc: Add Type Exports
+
+  chore: Export types in main module to improve a11y
+
 ## 0.3.2
 
 ### Patch Changes
