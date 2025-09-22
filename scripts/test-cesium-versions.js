@@ -9,16 +9,7 @@
 
 import { execSync } from "child_process";
 
-const CESIUM_VERSIONS_TO_TEST = [
-  "1.0.0",
-  "1.10.0",
-  "1.20.0",
-  "1.50.0",
-  "1.75.0",
-  "1.100.0",
-  "1.120.0",
-  "1.131.0",
-];
+const CESIUM_VERSIONS_TO_TEST = ["1.132.0", "1.133.0", "1.133.1"];
 
 async function testCesiumVersion(version) {
   console.log(`\n🧪 Testing Cesium ${version}...`);
