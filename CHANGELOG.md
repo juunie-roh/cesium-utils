@@ -1,5 +1,17 @@
 # @juun-roh/cesium-utils
 
+## 0.3.3
+
+### Patch Changes
+
+- f2892cc: Add Type Exports
+
+  chore: Export types in main module to improve a11y
+
+- 63d643e: Update Recommended Cesium Version
+
+  chore: Update peer dependency and compatibility testing for latest Cesium version
+
 ## 0.3.2
 
 ### Patch Changes
