@@ -4,6 +4,14 @@
 
 ### Patch Changes
 
+- dfd339f: Fix CI Workflows
+
+  ci: Fix workflow
+
+## 0.3.4
+
+### Patch Changes
+
 - 140f8c8: Adapt tsconfig deprecation warning
 
   build: Remove baseurl option in tsconfig
