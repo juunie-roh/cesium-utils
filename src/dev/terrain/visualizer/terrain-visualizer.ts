@@ -236,8 +236,7 @@ export class TerrainVisualizer {
 
     // Check terrain regions first
     for (const region of this._terrainProvider.regions) {
-      // Use private method to check if region contains the tile
-      if ((this._terrainProvider as any)._regionContains(region, x, y, level)) {
+      if (HybridTerrainProvider.TerrainRegion.contains(region, x, y, level)) {
         // For backward compatibility, assume all regions are custom
         return this._colors.get("custom") || Color.RED;
       }
@@ -356,7 +355,6 @@ export namespace TerrainVisualizer {
   /** Tag constants for entity collection management. */
   export const tag = {
     default: "Terrain Visualizer",
-    boundary: "Terrain Visualizer Boundary",
     grid: "Terrain Visualizer Tile Grid",
   };
 
@@ -403,7 +401,6 @@ export namespace TerrainVisualizer {
     const color = options?.color || Color.RED;
     const maxTilesToShow = options?.maxTilesToShow || 100;
     const show = options?.show ?? true;
-    const alpha = options?.alpha || 0.7;
     const tileAlpha = options?.tileAlpha || 0.2;
 
     const collection = new Collection<EntityCollection, Entity>({
