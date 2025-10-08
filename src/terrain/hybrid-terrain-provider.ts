@@ -173,7 +173,7 @@ class HybridTerrainProvider implements TerrainProvider {
 
     // Check regions for a match
     for (const region of this._regions) {
-      if (this._regionContains(region, x, y, level)) {
+      if (HybridTerrainProvider.TerrainRegion.contains(region, x, y, level)) {
         return region.provider.requestTileGeometry(x, y, level, request);
       }
     }
@@ -201,7 +201,7 @@ class HybridTerrainProvider implements TerrainProvider {
   ): boolean | undefined {
     // First check if any terrain region contains this tile AND has data
     for (const region of this._regions) {
-      if (this._regionContains(region, x, y, level)) {
+      if (HybridTerrainProvider.TerrainRegion.contains(region, x, y, level)) {
         const available = region.provider.getTileDataAvailable(x, y, level);
         if (available) {
           return true; // Found a provider with data
@@ -212,39 +212,6 @@ class HybridTerrainProvider implements TerrainProvider {
 
     // Fall back to default provider
     return this._defaultProvider.getTileDataAvailable(x, y, level);
-  }
-
-  /**
-   * Checks if a terrain region contains the specified tile.
-   * @private
-   */
-  private _regionContains(
-    region: HybridTerrainProvider.TerrainRegion,
-    x: number,
-    y: number,
-    level: number,
-  ): boolean {
-    // Check level constraints if specified
-    if (region.levels && !region.levels.includes(level)) {
-      return false;
-    }
-
-    // Tile-coordinate based bounds
-    if (region.tiles) {
-      const tileRange = region.tiles.get(level);
-      if (!tileRange) return false;
-
-      const [xMin, xMax] = Array.isArray(tileRange.x)
-        ? tileRange.x
-        : [tileRange.x, tileRange.x];
-      const [yMin, yMax] = Array.isArray(tileRange.y)
-        ? tileRange.y
-        : [tileRange.y, tileRange.y];
-
-      return x >= xMin && x <= xMax && y >= yMin && y <= yMax;
-    }
-
-    return false;
   }
 }
 
@@ -263,29 +230,8 @@ namespace HybridTerrainProvider {
     fallbackProvider?: TerrainProvider;
   }
 
-  /** Represents a terrain region with provider and geographic bounds. */
-  export interface TerrainRegion {
-    /** The terrain provider for this region. */
-    provider: TerrainProvider;
-    /**
-     * Tile-coordinate based bounds (precise control).
-     * Map of level to tile coordinate ranges for that level.
-     */
-    tiles?: Map<
-      number,
-      {
-        /** X tile coordinate range [min, max] or single value. */
-        x: number | [number, number];
-        /** Y tile coordinate range [min, max] or single value. */
-        y: number | [number, number];
-      }
-    >;
-    /** Optional level constraints. If specified, region only applies to these levels. */
-    levels?: number[];
-  }
-
   /**
-   * Creates a HybridTerrainProvider from tile-coordinate based regions.
+   * A factory function which creates a HybridTerrainProvider from tile-coordinate based regions.
    * @param regions Array of regions with tile-coordinate bounds
    * @param defaultProvider Default terrain provider
    * @param fallbackProvider Optional fallback provider
@@ -310,6 +256,70 @@ namespace HybridTerrainProvider {
       defaultProvider,
       fallbackProvider,
     });
+  }
+
+  /** Represents a terrain region with provider and geographic bounds. */
+  export interface TerrainRegion {
+    /** The terrain provider for this region. */
+    provider: TerrainProvider;
+    /**
+     * Tile-coordinate based bounds (precise control).
+     * Map of level to tile coordinate ranges for that level.
+     */
+    tiles?: Map<
+      number,
+      {
+        /** X tile coordinate range [min, max] or single value. */
+        x: number | [number, number];
+        /** Y tile coordinate range [min, max] or single value. */
+        y: number | [number, number];
+      }
+    >;
+    /** Optional level constraints. If specified, region only applies to these levels. */
+    levels?: number[];
+  }
+
+  /**
+   * @namespace
+   * Utility functions for working with TerrainRegion objects.
+   */
+  export namespace TerrainRegion {
+    /**
+     * Checks if a terrain region contains the specified tile.
+     * @param region The terrain region to check
+     * @param x The X coordinate of the tile
+     * @param y The Y coordinate of the tile
+     * @param level The zoom level of the tile
+     * @returns True if the region contains the tile, false otherwise
+     */
+    export function contains(
+      region: HybridTerrainProvider.TerrainRegion,
+      x: number,
+      y: number,
+      level: number,
+    ): boolean {
+      // Check level constraints if specified
+      if (region.levels && !region.levels.includes(level)) {
+        return false;
+      }
+
+      // Tile-coordinate based bounds
+      if (region.tiles) {
+        const tileRange = region.tiles.get(level);
+        if (!tileRange) return false;
+
+        const [xMin, xMax] = Array.isArray(tileRange.x)
+          ? tileRange.x
+          : [tileRange.x, tileRange.x];
+        const [yMin, yMax] = Array.isArray(tileRange.y)
+          ? tileRange.y
+          : [tileRange.y, tileRange.y];
+
+        return x >= xMin && x <= xMax && y >= yMin && y <= yMax;
+      }
+
+      return false;
+    }
   }
 }
 
