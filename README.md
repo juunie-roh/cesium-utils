@@ -10,7 +10,7 @@
 
 TypeScript utility library for Cesium.js providing hybrid terrain providers, entity collection tagging, and visual highlighting systems.
 
-> **Note**: The `HybridTerrainProvider` from this library is being integrated into Cesium Core ([#12822](https://github.com/CesiumGS/cesium/pull/12822)).
+> **Note**: The `HybridTerrainProvider` from this library is submitted to Cesium ([#12822](https://github.com/CesiumGS/cesium/pull/12822)).
 
 [📚 Documentation](https://juunie-roh.github.io/cesium-utils/) • [📦 NPM](https://www.npmjs.com/package/@juun-roh/cesium-utils) • [▶️ Demo](https://juun.vercel.app/cesium-utils)
 
