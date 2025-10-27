@@ -1,9 +1,10 @@
+import type { MockInstance } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import Deprecate from "@/dev/deprecation.js";
 
 describe("deprecation utilities", () => {
-  let consoleSpy: ReturnType<typeof vi.spyOn>;
+  let consoleSpy: MockInstance;
 
   beforeEach(() => {
     // Mock console.warn
