@@ -16,6 +16,13 @@ function merge(to: any, from?: any) {
     if (key === "__proto__" || key === "constructor") {
       return; // Skip prototype-polluting keys
     }
+
+    // Skip read-only properties (Vitest 4.x mock functions have getters)
+    const descriptor = Object.getOwnPropertyDescriptor(to, key);
+    if (descriptor && descriptor.get && !descriptor.set) {
+      return; // Skip getter-only properties
+    }
+
     if (from[key] instanceof Object && key in to) {
       merge(to[key], from[key]);
     } else {
@@ -162,26 +169,47 @@ const createMockTerrainProvider = (overrides?: CTerrainProvider) =>
 
 const defined = vi.fn();
 
-const EllipsoidTerrainProvider = vi
-  .fn()
-  .mockImplementation(() => createMockTerrainProvider());
+const EllipsoidTerrainProvider = vi.fn(function (this: any) {
+  Object.assign(this, createMockTerrainProvider());
+});
 const CesiumTerrainProvider = {
   fromUrl: vi.fn().mockResolvedValue(createMockTerrainProvider()),
 };
 
-const Camera = vi.fn().mockImplementation(() => createMockCamera());
-const Clock = vi.fn().mockImplementation(() => createMockClock());
-const Color = vi
-  .fn()
-  .mockImplementation(() => ({ withAlpha: vi.fn().mockReturnValue({}) }));
-const Entity = vi.fn().mockImplementation(() => ({}));
-const EntityCollection = vi
-  .fn()
-  .mockImplementation(() => ({ add: vi.fn(), remove: vi.fn() }));
-const HeightReference = vi.fn().mockImplementation(() => ({}));
-const Rectangle = vi.fn().mockImplementation(() => ({}));
-const TileCoordinatesImageryProvider = vi.fn().mockImplementation(() => ({}));
-const Viewer = vi.fn().mockImplementation(() => createMockViewer());
+// Vitest 4.x requires constructors to be defined using function or class keywords
+// For constructors, we need to assign to `this` rather than return
+const Camera = vi.fn(function (this: any) {
+  Object.assign(this, createMockCamera());
+});
+const Clock = vi.fn(function (this: any) {
+  Object.assign(this, createMockClock());
+});
+const Color = vi.fn(function (this: any) {
+  Object.assign(this, { withAlpha: vi.fn().mockReturnValue({}) });
+});
+const Entity = vi.fn(function (this: any) {
+  // Empty constructor
+});
+const EntityCollection = vi.fn(function (this: any) {
+  Object.assign(this, { add: vi.fn(), remove: vi.fn() });
+});
+const HeightReference = vi.fn(function (this: any) {
+  // Empty constructor
+});
+const Rectangle = vi.fn(function (this: any) {
+  // Empty constructor
+});
+const TileCoordinatesImageryProvider = vi.fn(function (this: any) {
+  // Empty constructor
+});
+// Viewer constructor - in Vitest 4.x, constructors must use function keyword
+const Viewer: any = vi.fn(function (
+  this: any,
+  _container?: any,
+  _options?: any,
+) {
+  Object.assign(this, createMockViewer());
+});
 
 export {
   Camera,

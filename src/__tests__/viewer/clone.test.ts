@@ -45,7 +45,12 @@ describe("cloneViewer", () => {
       },
     };
 
-    Viewer.mockReturnValue(mockDestination);
+    // Vitest 4.x: Use mockImplementation for constructors
+    // Return the mockDestination to ensure reference equality
+    Viewer.mockImplementation(function (this: any) {
+      Object.assign(this, mockDestination);
+      return mockDestination;
+    });
   });
 
   it("should create a new viewer with copied configuration", () => {
