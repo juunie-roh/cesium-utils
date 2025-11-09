@@ -117,7 +117,7 @@
     "@types/node": "^24.10.0",
     "@typescript-eslint/eslint-plugin": "^8.46.3",
     "@typescript-eslint/parser": "^8.46.3",
-    "@vitest/coverage-v8": "^4.0.7",
+    "@vitest/coverage-v8": "^4.0.8",
     "cesium": "^1.135.0",
     "eslint": "^9.39.1",
     "eslint-plugin-jsdoc": "^61.1.12",
@@ -131,7 +131,7 @@
     "typedoc": "^0.28.14",
     "typescript": "^5.9.3",
     "vite": "^7.2.2",
-    "vitest": "^4.0.7"
+    "vitest": "^4.0.8"
   },
   "pnpm": {
     "overrides": {
