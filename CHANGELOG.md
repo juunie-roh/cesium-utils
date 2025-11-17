@@ -1,5 +1,15 @@
 # @juun-roh/cesium-utils
 
+## 0.3.7
+
+### Patch Changes
+
+- 2734c73: Security Patch
+
+  build(deps): Security patch for js-yaml
+
+  - The package is not directly used in this project. Tried to override `js-yaml` to 4.1.1, but it breaks `changeset`.
+
 ## 0.3.6
 
 ### Patch Changes
