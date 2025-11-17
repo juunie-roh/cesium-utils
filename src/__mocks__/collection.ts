@@ -1,6 +1,6 @@
-import { vi } from "vitest";
+import { type Mock, vi } from "vitest";
 
-const Collection = vi.fn().mockImplementation(() => ({
+const Collection: Mock = vi.fn().mockImplementation(() => ({
   add: vi.fn(),
   remove: vi.fn(),
 }));

@@ -7,7 +7,7 @@ import {
   TerrainProvider as CTerrainProvider,
   Viewer as CViewer,
 } from "cesium";
-import { vi } from "vitest";
+import { type Mock, vi } from "vitest";
 
 // Deep merge utility
 function merge(to: any, from?: any) {
@@ -34,7 +34,7 @@ function merge(to: any, from?: any) {
 }
 
 // Helper to create a cloneable object with a clone method
-function createCloneable<T>(value: T) {
+function createCloneable<T>(value: T): { clone: Mock } {
   return {
     clone: vi.fn().mockReturnValue(value),
   };
@@ -167,12 +167,12 @@ const createMockTerrainProvider = (overrides?: CTerrainProvider) =>
     overrides,
   );
 
-const defined = vi.fn();
+const defined: Mock = vi.fn();
 
 const EllipsoidTerrainProvider = vi.fn(function (this: any) {
   Object.assign(this, createMockTerrainProvider());
 });
-const CesiumTerrainProvider = {
+const CesiumTerrainProvider: { fromUrl: Mock } = {
   fromUrl: vi.fn().mockResolvedValue(createMockTerrainProvider()),
 };
 
