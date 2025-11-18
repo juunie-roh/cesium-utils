@@ -1,5 +1,13 @@
 # @juun-roh/cesium-utils
 
+## 0.3.8
+
+### Patch Changes
+
+- a2e6f3c: Fix Vitest Type Inferrence
+
+  fix: Declare explicit types for mocks
+
 ## 0.3.7
 
 ### Patch Changes
