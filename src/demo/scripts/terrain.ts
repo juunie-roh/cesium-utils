@@ -52,9 +52,18 @@ function setupHybridTerrainDemo() {
       }),
     };
 
+    // Region 4: Level 15 ellipsoid terrain (higher zoom override)
+    const region4 = {
+      provider: new Cesium.EllipsoidTerrainProvider(),
+      tiles: new Map().set(15, {
+        x: [55865, 55866],
+        y: [9570, 9571],
+      }),
+    } satisfies TerrainRegion;
+
     // Create hybrid terrain provider with multiple regions
     const hybrid = new HybridTerrainProvider({
-      regions: [region, region2, region3],
+      regions: [region, region2, region3, region4],
       defaultProvider: new Cesium.EllipsoidTerrainProvider(),
     });
 
