@@ -1,16 +1,12 @@
 import {
   Color,
-  Entity,
-  EntityCollection,
-  HeightReference,
   ImageryLayer,
   Rectangle,
   TileCoordinatesImageryProvider,
-  TilingScheme,
   Viewer,
 } from "cesium";
 
-import Collection from "@/collection/collection.js";
+import HybridImageryProvider from "@/dev/terrain/visualizer/hybrid-imagery-provider.js";
 import HybridTerrainProvider from "@/terrain/hybrid-terrain-provider.js";
 
 /**
@@ -19,11 +15,10 @@ import HybridTerrainProvider from "@/terrain/hybrid-terrain-provider.js";
  */
 export class TerrainVisualizer {
   private _viewer: Viewer;
-  private _collection: Collection<EntityCollection, Entity>;
-  private _terrainProvider?: HybridTerrainProvider;
+  private _terrainProvider: HybridTerrainProvider;
   private _visible: boolean = false;
-  private _level: number = 15;
   private _tileCoordinatesLayer: ImageryLayer | undefined;
+  private _hybridImageryLayer: ImageryLayer | undefined;
   private _colors: Map<string, Color> = new Map([
     ["custom", Color.RED],
     ["default", Color.BLUE],
@@ -36,31 +31,18 @@ export class TerrainVisualizer {
    * @param viewer The Cesium viewer instance
    * @param options {@link TerrainVisualizer.ConstructorOptions}
    */
-  constructor(viewer: Viewer, options?: TerrainVisualizer.ConstructorOptions) {
+  constructor(viewer: Viewer, options: TerrainVisualizer.ConstructorOptions) {
     this._viewer = viewer;
-    this._collection = new Collection<EntityCollection, Entity>({
-      collection: viewer.entities,
-      tag: TerrainVisualizer.tag.default,
-    });
+    this._terrainProvider = options.terrainProvider;
 
-    if (options) {
-      if (options.colors) {
-        Object.entries(options.colors).forEach(([key, color]) => {
-          this._colors.set(key, color);
-        });
-      }
+    if (options.colors) {
+      Object.entries(options.colors).forEach(([key, color]) => {
+        this._colors.set(key, color);
+      });
+    }
 
-      if (options.tile !== undefined) {
-        this._visible = options.tile;
-      }
-
-      if (options.activeLevel !== undefined) {
-        this._level = options.activeLevel;
-      }
-
-      if (options.terrainProvider) {
-        this.setTerrainProvider(options.terrainProvider);
-      }
+    if (options.tile !== undefined && options.tile) {
+      this.show();
     }
   }
 
@@ -77,10 +59,17 @@ export class TerrainVisualizer {
    * Updates all active visualizations.
    */
   update(): void {
+    const wasVisible = this._visible;
+    const hadTileCoords = !!this._tileCoordinatesLayer;
+    const alpha = this._hybridImageryLayer?.alpha ?? 0.5;
+
     this.clear();
 
-    if (this._visible) {
-      this.show(this._level);
+    if (wasVisible) {
+      this.show({
+        showTileCoordinates: hadTileCoords,
+        alpha: alpha,
+      });
     }
   }
 
@@ -88,30 +77,33 @@ export class TerrainVisualizer {
    * Clears all visualizations.
    */
   clear(): void {
-    this._collection.remove(this._collection.tags);
+    this.hide();
   }
 
   /**
-   * Shows a grid of tiles at the specified level.
-   * @param level The zoom level to visualize
+   * Shows terrain visualization using HybridImageryProvider.
+   * Optionally adds tile coordinate grid overlay.
+   * @param options Visualization options
    */
-  // Suggested refactor for TerrainVisualizer.show() method
-  show(level: number = 15): void {
+  show(options?: {
+    /** Show tile coordinate labels. Default: true */
+    showTileCoordinates?: boolean;
+    /** Transparency level (0-1). Default: 0.5 */
+    alpha?: number;
+  }): void {
     if (!this._terrainProvider) return;
 
-    this._collection.remove(TerrainVisualizer.tag.grid);
-    this._level = level;
+    const showTileCoordinates = options?.showTileCoordinates ?? true;
+    const alpha = options?.alpha ?? 0.5;
 
-    // Add tile coordinates layer if needed
-    this._ensureTileCoordinatesLayer();
-
-    const visibleRectangle = this._getVisibleRectangle();
-    if (!visibleRectangle || !this._isValidRectangle(visibleRectangle)) {
-      console.warn("Invalid visible rectangle detected, skipping grid display");
-      return;
+    // Add tile coordinates layer if requested
+    if (showTileCoordinates) {
+      this._ensureTileCoordinatesLayer();
     }
 
-    this._displayTileGrid(visibleRectangle, level);
+    // Show imagery overlay
+    this.showImageryOverlay(alpha);
+
     this._visible = true;
   }
 
@@ -127,139 +119,16 @@ export class TerrainVisualizer {
     }
   }
 
-  private _isValidRectangle(rectangle: Rectangle): boolean {
-    return (
-      rectangle &&
-      Number.isFinite(rectangle.west) &&
-      Number.isFinite(rectangle.south) &&
-      Number.isFinite(rectangle.east) &&
-      Number.isFinite(rectangle.north) &&
-      rectangle.west <= rectangle.east &&
-      rectangle.south <= rectangle.north
-    );
-  }
-
-  private _displayTileGrid(visibleRectangle: Rectangle, level: number): void {
-    const tilingScheme = this._terrainProvider!.tilingScheme;
-
-    try {
-      const tileBounds = this._calculateTileBounds(
-        visibleRectangle,
-        level,
-        tilingScheme,
-      );
-      const tiles = this._generateVisibleTiles(tileBounds, level, tilingScheme);
-
-      tiles.forEach((tile) => {
-        this._collection.add(tile.entity, TerrainVisualizer.tag.grid);
-      });
-    } catch (error) {
-      console.error("Error displaying tile grid:", error);
-    }
-  }
-
-  private _calculateTileBounds(
-    rectangle: Rectangle,
-    level: number,
-    tilingScheme: TilingScheme,
-  ): { start: any; end: any } {
-    const start = tilingScheme.positionToTileXY(
-      Rectangle.northwest(rectangle),
-      level,
-    );
-    const end = tilingScheme.positionToTileXY(
-      Rectangle.southeast(rectangle),
-      level,
-    );
-
-    if (!start || !end) {
-      throw new Error("Failed to calculate tile bounds");
-    }
-
-    return { start, end };
-  }
-
-  private _generateVisibleTiles(
-    bounds: { start: any; end: any },
-    level: number,
-    tilingScheme: TilingScheme,
-  ): Array<{ entity: Entity }> {
-    const tiles = [];
-    const maxTilesToShow = 100;
-
-    const xCount = Math.min(bounds.end.x - bounds.start.x + 1, maxTilesToShow);
-    const yCount = Math.min(bounds.end.y - bounds.start.y + 1, maxTilesToShow);
-
-    for (let x = bounds.start.x; x < bounds.start.x + xCount; x++) {
-      for (let y = bounds.start.y; y < bounds.start.y + yCount; y++) {
-        try {
-          const tile = this._createTileEntity(x, y, level, tilingScheme);
-          if (tile) tiles.push({ entity: tile });
-        } catch (error) {
-          console.warn(`Error creating tile (${x}, ${y}, ${level}):`, error);
-        }
-      }
-    }
-
-    return tiles;
-  }
-
-  private _createTileEntity(
-    x: number,
-    y: number,
-    level: number,
-    tilingScheme: TilingScheme,
-  ): Entity | null {
-    const rect = tilingScheme.tileXYToRectangle(x, y, level);
-
-    if (!this._isValidRectangle(rect)) {
-      return null;
-    }
-
-    const color = this._getTileColor(x, y, level);
-    const entity = TerrainVisualizer.createRectangle(
-      rect,
-      color.withAlpha(0.3),
-    );
-
-    entity.properties?.addProperty("tileX", x);
-    entity.properties?.addProperty("tileY", y);
-    entity.properties?.addProperty("tileLevel", level);
-
-    return entity;
-  }
-
-  private _getTileColor(x: number, y: number, level: number): Color {
-    if (!this._terrainProvider) {
-      return this._colors.get("fallback") || Color.TRANSPARENT;
-    }
-
-    // Check terrain regions first
-    for (const region of this._terrainProvider.regions) {
-      if (HybridTerrainProvider.TerrainRegion.contains(region, x, y, level)) {
-        // For backward compatibility, assume all regions are custom
-        return this._colors.get("custom") || Color.RED;
-      }
-    }
-
-    // Check default provider availability
-    if (this._terrainProvider.getTileDataAvailable(x, y, level)) {
-      return this._colors.get("default") || Color.BLUE;
-    }
-
-    return this._colors.get("fallback") || Color.GRAY;
-  }
-
   /**
-   * Hides the tile grid.
+   * Hides the terrain visualization.
    */
   hide(): void {
-    this._collection.remove(TerrainVisualizer.tag.grid);
-
     if (this._tileCoordinatesLayer) {
       this._viewer.imageryLayers.remove(this._tileCoordinatesLayer);
       this._tileCoordinatesLayer = undefined;
     }
+
+    this.hideImageryOverlay();
 
     this._visible = false;
   }
@@ -277,6 +146,70 @@ export class TerrainVisualizer {
   }
 
   /**
+   * Shows terrain regions using HybridImageryProvider (performant, global coverage).
+   * This replaces the entity-based approach with an imagery layer.
+   * @param alpha Transparency level (0-1), default 0.5
+   */
+  showImageryOverlay(alpha: number = 0.5): void {
+    // Remove existing layer if present
+    if (this._hybridImageryLayer) {
+      this._viewer.imageryLayers.remove(this._hybridImageryLayer);
+    }
+
+    // Create HybridImageryProvider
+    const imageryProvider = new HybridImageryProvider({
+      terrainProvider: this._terrainProvider,
+      colors: this._colors,
+      tilingScheme: this._terrainProvider.tilingScheme,
+    });
+
+    // Add to imagery layers
+    this._hybridImageryLayer =
+      this._viewer.imageryLayers.addImageryProvider(imageryProvider);
+    this._hybridImageryLayer.alpha = alpha;
+
+    console.log("HybridImageryProvider overlay enabled");
+  }
+
+  /**
+   * Hides the imagery overlay.
+   */
+  hideImageryOverlay(): void {
+    if (this._hybridImageryLayer) {
+      this._viewer.imageryLayers.remove(this._hybridImageryLayer);
+      this._hybridImageryLayer = undefined;
+      console.log("HybridImageryProvider overlay disabled");
+    }
+  }
+
+  /**
+   * Shows tile coordinate grid overlay.
+   */
+  showTileCoordinates(): void {
+    this._ensureTileCoordinatesLayer();
+  }
+
+  /**
+   * Hides tile coordinate grid overlay.
+   */
+  hideTileCoordinates(): void {
+    if (this._tileCoordinatesLayer) {
+      this._viewer.imageryLayers.remove(this._tileCoordinatesLayer);
+      this._tileCoordinatesLayer = undefined;
+    }
+  }
+
+  /**
+   * Sets the transparency of the imagery overlay.
+   * @param alpha Transparency level (0-1), where 0 is fully transparent and 1 is fully opaque
+   */
+  setAlpha(alpha: number): void {
+    if (this._hybridImageryLayer) {
+      this._hybridImageryLayer.alpha = alpha;
+    }
+  }
+
+  /**
    * Flies the camera to focus on a rectangle.
    * @param rectangle The rectangle to focus on.
    * @param options {@link Viewer.flyTo}
@@ -291,35 +224,13 @@ export class TerrainVisualizer {
     });
   }
 
-  /**
-   * Gets the rectangle representing the current view.
-   * @returns The current view rectangle or undefined.
-   * @private
-   */
-  private _getVisibleRectangle(): Rectangle | undefined {
-    const camera = this._viewer.camera;
-    const visibleArea = camera.computeViewRectangle();
-    return visibleArea;
-  }
-
-  /** The current zoom level set on the visualizer. */
-  get level(): number {
-    return this._level;
-  }
-  /** Set zoom level on the visualizer. */
-  set level(level: number) {
-    this._level = level;
-    if (this._visible) {
-      this.update();
-    }
+  /** Whether tile coordinates are currently visible. */
+  get tileCoordinatesVisible(): boolean {
+    return !!this._tileCoordinatesLayer;
   }
   /** Whether the grid is currently visible. */
   get visible(): boolean {
     return this._visible;
-  }
-  /** The collection used in the visualizer. */
-  get collection(): Collection<EntityCollection, Entity> {
-    return this._collection;
   }
   /** The viewer used in the visualizer */
   get viewer(): Viewer {
@@ -349,29 +260,7 @@ export namespace TerrainVisualizer {
     /** Initial zoom level to use for visualizations. */
     activeLevel?: number;
     /** Terrain provider to visualize. */
-    terrainProvider?: HybridTerrainProvider;
-  }
-
-  /** Tag constants for entity collection management. */
-  export const tag = {
-    default: "Terrain Visualizer",
-    grid: "Terrain Visualizer Tile Grid",
-  };
-
-  /**
-   * Creates a ground-clamped rectangle entity for visualization.
-   * @param rectangle The rectangle to visualize
-   * @param color The color to use
-   * @returns A new entity
-   */
-  export function createRectangle(rectangle: Rectangle, color: Color) {
-    return new Entity({
-      rectangle: {
-        coordinates: rectangle,
-        material: color,
-        heightReference: HeightReference.CLAMP_TO_GROUND,
-      },
-    });
+    terrainProvider: HybridTerrainProvider;
   }
 
   /** Options for {@link TerrainVisualizer.visualize} */
@@ -385,55 +274,55 @@ export namespace TerrainVisualizer {
     tileAlpha?: number;
   }
 
-  /**
-   * Visualizes a terrain region in a viewer.
-   * @param region The terrain region to visualize.
-   * @param viewer The Cesium viewer.
-   * @param options Visualization options.
-   * @returns Collection of created entities.
-   */
-  export function visualize(
-    region: HybridTerrainProvider.TerrainRegion,
-    viewer: Viewer,
-    options?: Options,
-  ): Collection<EntityCollection, Entity> {
-    const tag = options?.tag || "terrain_region_visualization";
-    const color = options?.color || Color.RED;
-    const maxTilesToShow = options?.maxTilesToShow || 100;
-    const show = options?.show ?? true;
-    const tileAlpha = options?.tileAlpha || 0.2;
+  // /**
+  //  * Visualizes a terrain region in a viewer.
+  //  * @param region The terrain region to visualize.
+  //  * @param viewer The Cesium viewer.
+  //  * @param options Visualization options.
+  //  * @returns Collection of created entities.
+  //  */
+  // export function visualize(
+  //   region: HybridTerrainProvider.TerrainRegion,
+  //   viewer: Viewer,
+  //   options?: Options,
+  // ): Collection<EntityCollection, Entity> {
+  //   const tag = options?.tag || "terrain_region_visualization";
+  //   const color = options?.color || Color.RED;
+  //   const maxTilesToShow = options?.maxTilesToShow || 100;
+  //   const show = options?.show ?? true;
+  //   const tileAlpha = options?.tileAlpha || 0.2;
 
-    const collection = new Collection<EntityCollection, Entity>({
-      collection: viewer.entities,
-      tag,
-    });
+  //   const collection = new Collection<EntityCollection, Entity>({
+  //     collection: viewer.entities,
+  //     tag,
+  //   });
 
-    if (show && region.tiles && region.tiles.size > 0) {
-      const tilingScheme = region.provider.tilingScheme;
+  //   if (show && region.tiles && region.tiles.size > 0) {
+  //     const tilingScheme = region.provider.tilingScheme;
 
-      let count = 0;
-      region.tiles.forEach((range, level) => {
-        const xRange = Array.isArray(range.x) ? range.x : [range.x, range.x];
-        const yRange = Array.isArray(range.y) ? range.y : [range.y, range.y];
+  //     let count = 0;
+  //     region.tiles.forEach((range, level) => {
+  //       const xRange = Array.isArray(range.x) ? range.x : [range.x, range.x];
+  //       const yRange = Array.isArray(range.y) ? range.y : [range.y, range.y];
 
-        for (let x = xRange[0]; x <= xRange[1] && count < maxTilesToShow; x++) {
-          for (
-            let y = yRange[0];
-            y <= yRange[1] && count < maxTilesToShow;
-            y++
-          ) {
-            const rect = tilingScheme.tileXYToRectangle(x, y, level);
-            collection.add(
-              createRectangle(rect, color.withAlpha(tileAlpha)),
-              `${tag}_tile`,
-            );
+  //       for (let x = xRange[0]; x <= xRange[1] && count < maxTilesToShow; x++) {
+  //         for (
+  //           let y = yRange[0];
+  //           y <= yRange[1] && count < maxTilesToShow;
+  //           y++
+  //         ) {
+  //           const rect = tilingScheme.tileXYToRectangle(x, y, level);
+  //           collection.add(
+  //             createRectangle(rect, color.withAlpha(tileAlpha)),
+  //             `${tag}_tile`,
+  //           );
 
-            count++;
-          }
-        }
-      });
-    }
+  //           count++;
+  //         }
+  //       }
+  //     });
+  //   }
 
-    return collection;
-  }
+  //   return collection;
+  // }
 }
