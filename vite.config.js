@@ -22,7 +22,7 @@ export default defineConfig({
   },
   test: {
     include: ["src/**/*.(test|spec).*"],
-    exclude: ["**/node_modules/**", "**/docs/**"],
+    exclude: ["**/node_modules/**", "**/docs/**", "dist"],
     environment: "jsdom",
     coverage: {
       include: ["src/**"],
@@ -31,6 +31,7 @@ export default defineConfig({
         "src/demo/**",
         "src/__tests__/**",
         "**/__mocks__/**",
+        "dist",
       ],
     },
   },
