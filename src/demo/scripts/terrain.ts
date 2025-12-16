@@ -67,7 +67,7 @@ function setupHybridTerrainDemo() {
     });
 
     // Show terrain tiles for visualization
-    visualizer.show(13);
+    visualizer.show();
 
     console.log("HybridTerrainProvider demo loaded!");
     console.log(
