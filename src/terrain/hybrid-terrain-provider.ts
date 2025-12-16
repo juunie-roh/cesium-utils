@@ -168,7 +168,7 @@ class HybridTerrainProvider implements TerrainProvider {
     y: number,
     level: number,
     request?: Request,
-  ): Promise<Awaited<TerrainData>> | undefined {
+  ): Promise<TerrainData> | undefined {
     if (!this._ready) return undefined;
 
     // Check regions for a match
@@ -199,14 +199,11 @@ class HybridTerrainProvider implements TerrainProvider {
     y: number,
     level: number,
   ): boolean | undefined {
-    // First check if any terrain region contains this tile AND has data
+    // If any terrain region contains this tile, data is available
+    // The region definition itself is the source of truth
     for (const region of this._regions) {
       if (HybridTerrainProvider.TerrainRegion.contains(region, x, y, level)) {
-        const available = region.provider.getTileDataAvailable(x, y, level);
-        if (available) {
-          return true; // Found a provider with data
-        }
-        // Continue searching if this provider has no data (false)
+        return true; // Region contains tile, so data is available
       }
     }
 

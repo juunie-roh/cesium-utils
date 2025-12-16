@@ -118,19 +118,16 @@ describe("HybridTerrainProvider", () => {
   });
 
   describe("getTileDataAvailable", () => {
-    it("should check terrain regions first", () => {
-      // Mock region contains method
+    it("should return true if any region contains the tile", () => {
+      // Mock region contains method to return true
       vi.spyOn(HybridTerrainProvider.TerrainRegion, "contains").mockReturnValue(
         true,
       );
-      const regionSpy = vi
-        .spyOn(tileRegion.provider, "getTileDataAvailable")
-        .mockReturnValue(true);
       const providerSpy = vi.spyOn(defaultProvider, "getTileDataAvailable");
 
       const result = hybrid.getTileDataAvailable(0, 0, 0);
 
-      expect(regionSpy).toHaveBeenCalledWith(0, 0, 0);
+      // Should not check providers when region contains tile
       expect(providerSpy).not.toHaveBeenCalled();
       expect(result).toBe(true);
     });
@@ -149,7 +146,7 @@ describe("HybridTerrainProvider", () => {
       expect(result).toBe(true);
     });
 
-    it("should continue searching regions when a provider returns false", () => {
+    it("should return true for first region that contains the tile", () => {
       // Create a second region
       const secondRegion = createTileRegion();
       const hybridWithMultipleRegions = new HybridTerrainProvider({
@@ -158,20 +155,10 @@ describe("HybridTerrainProvider", () => {
         fallbackProvider,
       });
 
-      // Mock both regions to contain the tile
+      // Mock only first region to contain the tile
       vi.spyOn(HybridTerrainProvider.TerrainRegion, "contains")
         .mockReturnValueOnce(true) // First region contains tile
-        .mockReturnValueOnce(true); // Second region also contains tile
-
-      // First region returns false (no data available)
-      const firstRegionSpy = vi
-        .spyOn(tileRegion.provider, "getTileDataAvailable")
-        .mockReturnValue(false);
-
-      // Second region returns true (data available)
-      const secondRegionSpy = vi
-        .spyOn(secondRegion.provider, "getTileDataAvailable")
-        .mockReturnValue(true);
+        .mockReturnValueOnce(false); // Second region doesn't
 
       const defaultProviderSpy = vi.spyOn(
         defaultProvider,
@@ -180,18 +167,14 @@ describe("HybridTerrainProvider", () => {
 
       const result = hybridWithMultipleRegions.getTileDataAvailable(0, 0, 14);
 
-      // Both regions should be checked
-      expect(firstRegionSpy).toHaveBeenCalledWith(0, 0, 14);
-      expect(secondRegionSpy).toHaveBeenCalledWith(0, 0, 14);
-
-      // Default provider should not be called since second region had data
+      // Default provider should not be called since first region contained tile
       expect(defaultProviderSpy).not.toHaveBeenCalled();
 
-      // Should return true from second region
+      // Should return true from first region
       expect(result).toBe(true);
     });
 
-    it("should fall back to default provider when all regions return false", () => {
+    it("should pass through default provider result when no regions match", () => {
       const secondRegion = createTileRegion();
       const hybridWithMultipleRegions = new HybridTerrainProvider({
         regions: [tileRegion, secondRegion],
@@ -199,27 +182,19 @@ describe("HybridTerrainProvider", () => {
         fallbackProvider,
       });
 
-      // Mock both regions to contain the tile
+      // Mock both regions to NOT contain the tile
       vi.spyOn(HybridTerrainProvider.TerrainRegion, "contains").mockReturnValue(
-        true,
-      );
-
-      // Both regions return false (no data available)
-      vi.spyOn(tileRegion.provider, "getTileDataAvailable").mockReturnValue(
-        false,
-      );
-      vi.spyOn(secondRegion.provider, "getTileDataAvailable").mockReturnValue(
         false,
       );
 
       const defaultProviderSpy = vi
         .spyOn(defaultProvider, "getTileDataAvailable")
-        .mockReturnValue(true);
+        .mockReturnValue(undefined);
 
       const result = hybridWithMultipleRegions.getTileDataAvailable(0, 0, 14);
 
       expect(defaultProviderSpy).toHaveBeenCalledWith(0, 0, 14);
-      expect(result).toBe(true);
+      expect(result).toBe(undefined);
     });
   });
 

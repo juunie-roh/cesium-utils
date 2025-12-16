@@ -24,18 +24,19 @@ export default class HybridImageryProvider extends GridImageryProvider {
     y: number,
     level: number,
   ): Promise<HTMLCanvasElement> {
-    // Check regions for a match at current level or parent levels
+    // Check if tile is in a region or would be upsampled from one
     for (const region of this._terrainProvider.regions) {
-      if (this._isInRegion(region, x, y, level)) {
+      if (this._isInRegionOrUpsampled(region, x, y, level)) {
         return this._createCanvasElement(
           this._colors.get("custom") || Color.RED,
         );
       }
     }
 
-    // Fall back to default provider
-    // Check if default provider has data at this level or any parent level
-    if (this._defaultProviderCoversArea(x, y, level)) {
+    // Check if default provider has data (directly or via upsampling)
+    if (
+      this._terrainProvider.defaultProvider.getTileDataAvailable(x, y, level)
+    ) {
       return this._createCanvasElement(
         this._colors.get("default") || Color.BLUE,
       );
@@ -48,53 +49,13 @@ export default class HybridImageryProvider extends GridImageryProvider {
   }
 
   /**
-   * Checks if a tile is within a region by checking the tile and its parents up the hierarchy.
-   * This mimics terrain upsampling behavior.
+   * Checks if terrain data for this tile would come from a region's provider.
+   * Returns true if:
+   * 1. The tile is directly in the region, OR
+   * 2. The tile would be upsampled from a parent tile in the region
    */
-  private _isInRegion(
+  private _isInRegionOrUpsampled(
     region: HybridTerrainProvider.TerrainRegion,
-    x: number,
-    y: number,
-    level: number,
-  ): boolean {
-    // Check current level first
-    if (HybridTerrainProvider.TerrainRegion.contains(region, x, y, level)) {
-      return true;
-    }
-
-    // If region has tiles defined, check parent tiles
-    if (region.tiles) {
-      let currentX = x;
-      let currentY = y;
-      let currentLevel = level;
-
-      // Walk up the tile hierarchy to find a parent that matches
-      while (currentLevel > 0) {
-        currentLevel--;
-        currentX = Math.floor(currentX / 2);
-        currentY = Math.floor(currentY / 2);
-
-        if (
-          HybridTerrainProvider.TerrainRegion.contains(
-            region,
-            currentX,
-            currentY,
-            currentLevel,
-          )
-        ) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
-  /**
-   * Checks if the default provider covers this area at any available level.
-   * Checks current level and parent tiles.
-   */
-  private _defaultProviderCoversArea(
     x: number,
     y: number,
     level: number,
@@ -103,16 +64,16 @@ export default class HybridImageryProvider extends GridImageryProvider {
     let currentY = y;
     let currentLevel = level;
 
-    // Check current level and walk up to find available data
+    // Walk up the tile hierarchy to find if this tile or any parent is in the region
     while (currentLevel >= 0) {
-      const available =
-        this._terrainProvider.defaultProvider.getTileDataAvailable(
+      if (
+        HybridTerrainProvider.TerrainRegion.contains(
+          region,
           currentX,
           currentY,
           currentLevel,
-        );
-
-      if (available) {
+        )
+      ) {
         return true;
       }
 
