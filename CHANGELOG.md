@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- a2e6f3c: Fix Vitest Type Inferrence
+- a2e6f3c: Fix Vitest Type Inference
 
   fix: Declare explicit types for mocks
 
