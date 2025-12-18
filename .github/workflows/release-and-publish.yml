@@ -1,6 +1,8 @@
 name: Release and Publish
 
 on:
+  # This workflow triggers only when CHANGELOG.md or package.json changes on main branch.
+  # It waits for CI to pass before proceeding with release.
   push:
     branches:
       - main
@@ -10,9 +12,30 @@ on:
   workflow_dispatch:
 
 jobs:
-  release-and-publish:
+  # Workflow execution order:
+  # 1. wait-for-ci - Waits for CI workflow to complete successfully
+  # 2. release-and-publish - Creates GitHub release and publishes to NPM
+  # 3. deploy - Deploys documentation to GitHub Pages
+  # If any job fails, subsequent jobs are automatically skipped.
+
+  wait-for-ci:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read  # Required to check CI workflow status
     if: contains(github.event.head_commit.message, 'Release version update')
+    steps:
+      - name: Wait for CI workflow to complete
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'ci'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+
+  release-and-publish:
+    needs: wait-for-ci
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       id-token: write
@@ -33,7 +56,7 @@ jobs:
           cache: 'pnpm'
           
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
       
       - name: Get package version
         id: package-version
@@ -72,14 +95,22 @@ jobs:
           HUSKY: 0
 
   deploy:
+    needs: release-and-publish
     permissions:
       contents: read
       pages: write
       id-token: write
+    # Concurrency control prevents race conditions during GitHub Pages deployments.
+    # - group: "pages" - Groups all Pages deployments together under a single concurrency group.
+    #   Only one deployment from this group can run at a time.
+    # - cancel-in-progress: false - When a new deployment is triggered while another is running,
+    #   the new one will wait for the current deployment to complete instead of canceling it.
+    #   This ensures each deployment finishes fully, preventing partial or corrupted documentation.
+    # Example: If two releases happen in quick succession, the second deployment waits for
+    # the first to complete before starting, ensuring Pages is always in a consistent state.
     concurrency:
       group: "pages"
       cancel-in-progress: false
-    needs: release-and-publish
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -95,7 +126,7 @@ jobs:
           node-version: 24
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
       - name: Generate documentation
         run: pnpm typedoc
       - name: Setup Pages

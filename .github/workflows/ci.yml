@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  ci:
+    permissions:
+      contents: read
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version:
+          - 24.x
+          - 25.x
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check types
+        run: pnpm check-types
+
+      - name: Run linter
+        run: pnpm lint
+
+      - name: Build package
+        run: pnpm build
+
+      - name: Run tests
+        run: pnpm test
