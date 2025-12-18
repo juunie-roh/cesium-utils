@@ -80,6 +80,7 @@
   "scripts": {
     "build": "tsup",
     "build:dev": "tsup --watch",
+    "check-types": "tsc -p ./tsconfig.json --noEmit",
     "clean": "rimraf dist",
     "lint": "eslint .",
     "ci:publish": "pnpm build && pnpm publish --no-git-checks",
@@ -97,7 +98,7 @@
   "peerDependencies": {
     "cesium": "^1.133.0"
   },
-  "packageManager": "pnpm@10.25.0",
+  "packageManager": "pnpm@10.26.0",
   "publishConfig": {
     "access": "public"
   },
@@ -114,10 +115,10 @@
     "@commitlint/format": "^20.2.0",
     "@commitlint/types": "^20.2.0",
     "@eslint/js": "^9.39.2",
-    "@types/node": "^24.10.4",
-    "@typescript-eslint/eslint-plugin": "^8.49.0",
-    "@typescript-eslint/parser": "^8.49.0",
-    "@vitest/coverage-v8": "^4.0.15",
+    "@types/node": "^25.0.3",
+    "@typescript-eslint/eslint-plugin": "^8.50.0",
+    "@typescript-eslint/parser": "^8.50.0",
+    "@vitest/coverage-v8": "^4.0.16",
     "cesium": "^1.136.0",
     "eslint": "^9.39.2",
     "eslint-plugin-jsdoc": "^61.5.0",
@@ -130,8 +131,8 @@
     "tsup": "^8.5.1",
     "typedoc": "^0.28.15",
     "typescript": "^5.9.3",
-    "vite": "^7.2.7",
-    "vitest": "^4.0.15"
+    "vite": "^7.3.0",
+    "vitest": "^4.0.16"
   },
   "pnpm": {
     "overrides": {
