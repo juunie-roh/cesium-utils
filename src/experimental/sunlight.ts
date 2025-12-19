@@ -147,6 +147,7 @@ class Sunlight {
     const e = new Entity({
       point: {
         show,
+        color: Color.RED.withAlpha(0.5),
         pixelSize: errorBoundary ?? 5, // fallback to default size as 5
       },
       position: at,
@@ -182,20 +183,15 @@ class Sunlight {
       this._viewer.entities.add(e);
     }
 
-    // Execute ray collision detection (pick)
-    // @ts-expect-error Accessing internal APIs
-    const picking = this._viewer.scene.picking;
     /**
-     * @returns
-     * const results = getRayIntersections();
-     * if (results.length > 0)
-     *   return results[0]: { object: object, position: position, exclude: unknown };
+     * @returns {object | undefined} An object containing the object and position of the first intersection or `undefined` if there are no intersections.
+     * @see https://github.com/CesiumGS/cesium/blob/1.136/packages/engine/Source/Scene/Scene.js#L4827
      */
-    const { object, position } = picking.pickFromRay(
-      picking,
-      this._viewer.scene,
+    // @ts-expect-error Accessing internal APIs
+    const { object, position } = this._viewer.scene.pickFromRay(
       ray,
       this._getExcludedObjects(options?.objectsToExclude),
+      2,
     );
     const result =
       object instanceof Entity && object.id === this._pointEntityId;

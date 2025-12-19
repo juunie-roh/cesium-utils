@@ -16,16 +16,14 @@ import Sunlight from "@/experimental/sunlight.js";
 describe("Sunlight", () => {
   let viewer: Viewer;
   let sunlight: Sunlight;
-  let mockPicking: any;
+  let mockPickFromRay: any;
 
   beforeEach(() => {
     // Mock picking functionality
-    mockPicking = {
-      pickFromRay: vi.fn().mockReturnValue({
-        object: null,
-        position: new Cartesian3(100, 100, 100),
-      }),
-    };
+    mockPickFromRay = vi.fn().mockReturnValue({
+      object: null,
+      position: new Cartesian3(100, 100, 100),
+    });
 
     viewer = createMockViewer({
       container: document.createElement("div"),
@@ -37,7 +35,7 @@ describe("Sunlight", () => {
             sunDirectionWC: new Cartesian3(0.5, 0.5, 0.7),
           },
         },
-        picking: mockPicking,
+        pickFromRay: mockPickFromRay,
         render: vi.fn(),
       }) as unknown as Scene,
       clock: {
@@ -102,7 +100,7 @@ describe("Sunlight", () => {
       });
 
       // Mock picking to return an entity with the same ID as the target point
-      mockPicking.pickFromRay.mockImplementation(() => {
+      mockPickFromRay.mockImplementation(() => {
         const mockEntity = new Entity();
         Object.defineProperty(mockEntity, "id", {
           value: targetEntityId,
@@ -122,7 +120,7 @@ describe("Sunlight", () => {
         result: true, // Ray hit the target point
       });
       expect(viewer.scene.render).toHaveBeenCalled();
-      expect(mockPicking.pickFromRay).toHaveBeenCalled();
+      expect(mockPickFromRay).toHaveBeenCalled();
     });
 
     it("should return false when ray hits obstruction", () => {
@@ -137,7 +135,7 @@ describe("Sunlight", () => {
         configurable: false,
       });
 
-      mockPicking.pickFromRay.mockReturnValue({
+      mockPickFromRay.mockReturnValue({
         object: obstructionEntity,
         position: new Cartesian3(50, 50, 50),
       });
@@ -155,7 +153,7 @@ describe("Sunlight", () => {
       const time = JulianDate.now();
       const collisionPos = new Cartesian3(75, 75, 25);
 
-      mockPicking.pickFromRay.mockReturnValue({
+      mockPickFromRay.mockReturnValue({
         object: new Entity(),
         position: collisionPos,
       });
@@ -218,7 +216,7 @@ describe("Sunlight", () => {
 
       // During analysis, isAnalyzing should be true
       let analyzingDuringCall = false;
-      mockPicking.pickFromRay.mockImplementation(() => {
+      mockPickFromRay.mockImplementation(() => {
         analyzingDuringCall = sunlight.isAnalyzing;
         return { object: new Entity(), position: new Cartesian3() };
       });
@@ -256,11 +254,10 @@ describe("Sunlight", () => {
       sunlight.analyze(from, time, { objectsToExclude: excludeObjects });
 
       // Should combine debug entity IDs with objectsToExclude
-      expect(mockPicking.pickFromRay).toHaveBeenCalledWith(
-        mockPicking,
-        viewer.scene,
+      expect(mockPickFromRay).toHaveBeenCalledWith(
         expect.any(Ray),
         expect.arrayContaining(excludeObjects),
+        2,
       );
     });
   });
