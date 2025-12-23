@@ -601,7 +601,24 @@ class Collection<C extends Collection.Base, I extends Collection.ItemFor<C>> {
     const items = this.get(by);
     const pathParts = (property as string).split(".");
 
+    // Prevent prototype pollution - block dangerous property names
+    const dangerousKeys = ["__proto__", "constructor", "prototype"];
+
     for (const item of items) {
+      // Check all parts of the path for dangerous keys
+      let hasDangerousKey = false;
+      for (const part of pathParts) {
+        if (dangerousKeys.includes(part)) {
+          hasDangerousKey = true;
+          break;
+        }
+      }
+
+      // Skip this item if path contains dangerous keys
+      if (hasDangerousKey) {
+        continue;
+      }
+
       // Traverse to the parent of the target property
       let current: any = item;
       let i = 0;
@@ -609,9 +626,11 @@ class Collection<C extends Collection.Base, I extends Collection.ItemFor<C>> {
       // Navigate to the nested object
       for (; i < pathParts.length - 1; i++) {
         const part = pathParts[i];
+
         if (!(part in current)) {
           break;
         }
+
         current = current[part];
         if (!current || typeof current !== "object") {
           break;
