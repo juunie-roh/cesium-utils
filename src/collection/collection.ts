@@ -627,21 +627,54 @@ class Collection<C extends Collection.Base, I extends Collection.ItemFor<C>> {
       for (; i < pathParts.length - 1; i++) {
         const part = pathParts[i];
 
-        if (!(part in current)) {
+        // Block dangerous keys at each step
+        if (dangerousKeys.includes(part)) {
+          hasDangerousKey = true;
+          break;
+        }
+
+        // Only traverse own, non-inherited properties
+        if (
+          !current ||
+          typeof current !== "object" ||
+          !Object.prototype.hasOwnProperty.call(current, part)
+        ) {
           break;
         }
 
         current = current[part];
-        if (!current || typeof current !== "object") {
+
+        // Stop if we reached a non-object or Object.prototype itself
+        if (
+          !current ||
+          typeof current !== "object" ||
+          current === Object.prototype
+        ) {
           break;
         }
+      }
+
+      // Skip this item entirely if we detected dangerous keys while traversing
+      if (hasDangerousKey) {
+        continue;
       }
 
       // Set the final property if we successfully traversed the path
       if (i === pathParts.length - 1) {
         const finalKey = pathParts[pathParts.length - 1];
 
-        if (finalKey in current && typeof current[finalKey] !== "function") {
+        // Block dangerous keys as the final property name as well
+        if (dangerousKeys.includes(finalKey)) {
+          continue;
+        }
+
+        if (
+          current &&
+          typeof current === "object" &&
+          current !== Object.prototype &&
+          finalKey in current &&
+          typeof current[finalKey] !== "function"
+        ) {
           if (isGetterOnly(current, finalKey)) {
             throw Error(
               `Cannot set read-only property '${property}' on ${item.constructor.name}`,
