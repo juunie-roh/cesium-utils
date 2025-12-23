@@ -844,6 +844,82 @@ describe("Collection", () => {
         taggedEntities.setProperty("definitionChanged", new Event());
       }).toThrow();
     });
+
+    it("should set nested properties using dot notation", () => {
+      // Add custom nested properties to entities for testing
+      (single_entity as any).metadata = { priority: 1 };
+      multiple_entities.forEach((e) => {
+        (e as any).metadata = { priority: 1 };
+      });
+
+      taggedEntities.add(single_entity);
+      taggedEntities.add(multiple_entities, tag);
+
+      // Set nested metadata.priority property (using type assertion for dynamic properties)
+      expect(
+        (taggedEntities as any).setProperty("metadata.priority", 5, tag),
+      ).toBe(taggedEntities);
+
+      // Verify nested property was set on tagged entities
+      multiple_entities.forEach((e) => {
+        expect((e as any).metadata.priority).toBe(5);
+      });
+
+      // Verify nested property was NOT set on untagged entity
+      expect((single_entity as any).metadata.priority).toBe(1);
+    });
+
+    it("should handle setting deeply nested properties", () => {
+      // Add deeply nested properties
+      multiple_entities.forEach((e) => {
+        (e as any).config = { display: { scale: 1.0 } };
+      });
+
+      taggedEntities.add(single_entity);
+      taggedEntities.add(multiple_entities, tag);
+
+      // Set deeply nested property (2 levels) (using type assertion for dynamic properties)
+      expect(
+        (taggedEntities as any).setProperty("config.display.scale", 2.5, tag),
+      ).toBe(taggedEntities);
+
+      multiple_entities.forEach((e) => {
+        expect((e as any).config.display.scale).toBe(2.5);
+      });
+    });
+
+    it("should gracefully handle nested paths that don't exist", () => {
+      taggedEntities.add(single_entity);
+
+      // Try to set a nested property where parent doesn't exist
+      // This should not throw, just skip the item
+      expect(() => {
+        (taggedEntities as any).setProperty("nonExistent.property", "value");
+      }).not.toThrow();
+    });
+
+    it("should handle nested read-only properties", () => {
+      // Create a nested object with a read-only property
+      Object.defineProperty(single_entity, "settings", {
+        value: {},
+        writable: true,
+        configurable: true,
+      });
+      Object.defineProperty((single_entity as any).settings, "readOnly", {
+        value: "initial",
+        writable: false,
+        configurable: true,
+      });
+
+      taggedEntities.add(single_entity);
+
+      // Attempt to set a nested read-only property - should throw
+      expect(() => {
+        (taggedEntities as any).setProperty("settings.readOnly", "changed");
+      }).toThrow(
+        /Cannot (set read-only property|assign to read only property)/,
+      );
+    });
   });
 
   describe(".filter()", () => {
