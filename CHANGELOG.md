@@ -26,10 +26,6 @@
   collection.setProperty("data.__proto__.polluted", "bad");
   ```
 
-## 0.4.1
-
-### Patch Changes
-
 - 0e2c4f0: Internal API usage fix
 
   fix: Fix internal API usage
