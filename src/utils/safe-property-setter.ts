@@ -114,6 +114,15 @@ export function safeSetProperty<T extends object>(
 
   const finalKey = pathParts[pathParts.length - 1];
 
+  // Check if the final key is a dangerous property name
+  if (isDangerousProperty(finalKey)) {
+    return {
+      success: false,
+      reason: "dangerous-property",
+      message: `Cannot set dangerous property "${finalKey}"`,
+    };
+  }
+
   // Final validation before setting
   if (!current || typeof current !== "object" || current === Object.prototype) {
     return {
