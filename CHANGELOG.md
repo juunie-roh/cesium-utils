@@ -871,10 +871,12 @@
     Better Error Handling: Improve error handling throughout the class to prevent failures when working with complex geometries.
     Rename Methods: Change method names to better reflect their function.
 
-  >     `add` → `show`
-  >     `remove` → `hide`
-  >     `removeAll` → now handled by hide
-  >     `_createEntity` → `_update`
+  > ```text
+  > add → show
+  > remove → hide
+  > removeAll → now handled by hide
+  > _createEntity → _update
+  > ```
 
   - Feature Enhancements
     Geometry Cleanup: Properly clear all geometries between highlights to prevent artifacts.
