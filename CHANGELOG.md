@@ -4,6 +4,16 @@
 
 ### Patch Changes
 
+- 3799a3e: Update workflow
+
+  ci: Fix workflow
+
+  - Update release and publish workflow to wait for ci to success
+
+## 0.4.1
+
+### Patch Changes
+
 - 2b50d75: Security fix
 
   fix: Add prototype pollution protection to Collection.setProperty()
