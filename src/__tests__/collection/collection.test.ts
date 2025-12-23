@@ -920,6 +920,53 @@ describe("Collection", () => {
         /Cannot (set read-only property|assign to read only property)/,
       );
     });
+
+    it("should prevent prototype pollution via __proto__", () => {
+      (single_entity as any).data = { safe: "value" };
+      taggedEntities.add(single_entity);
+
+      // Attempt to pollute via __proto__ - should be ignored
+      (taggedEntities as any).setProperty("__proto__.polluted", "bad");
+
+      expect((Object.prototype as any).polluted).toBeUndefined();
+    });
+
+    it("should prevent prototype pollution via constructor", () => {
+      (single_entity as any).data = { safe: "value" };
+      taggedEntities.add(single_entity);
+
+      // Attempt to pollute via constructor - should be ignored
+      (taggedEntities as any).setProperty("constructor.polluted", "bad");
+
+      expect((single_entity.constructor as any).polluted).toBeUndefined();
+    });
+
+    it("should prevent prototype pollution via nested __proto__", () => {
+      (single_entity as any).data = { nested: {} };
+      taggedEntities.add(single_entity);
+
+      // Attempt to pollute via nested __proto__ - should be ignored
+      (taggedEntities as any).setProperty("data.__proto__.polluted", "bad");
+
+      expect((Object.prototype as any).polluted).toBeUndefined();
+    });
+
+    it("should prevent setting properties via dangerous prototype chain access", () => {
+      // Create an object with safe inherited and own properties
+      const proto = { inherited: "original" };
+      (single_entity as any).data = Object.create(proto);
+      (single_entity as any).data.own = "value";
+
+      taggedEntities.add(single_entity);
+
+      // Try to access prototype directly - should be blocked
+      (taggedEntities as any).setProperty("data.prototype", { polluted: true });
+      expect((single_entity as any).data.prototype).toBeUndefined();
+
+      // Normal property should work fine
+      (taggedEntities as any).setProperty("data.own", "modified");
+      expect((single_entity as any).data.own).toBe("modified");
+    });
   });
 
   describe(".filter()", () => {
