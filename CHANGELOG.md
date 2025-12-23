@@ -1,5 +1,71 @@
 # @juun-roh/cesium-utils
 
+## 0.4.1
+
+### Patch Changes
+
+- 0e2c4f0: Internal API usage fix
+
+  fix: Fix internal API usage
+
+  The `sunlight` class was misusing the internal `picking` API of cesium.
+
+  Fixed the usage and updated mocks used for test.
+
+- 24718c8: New Type Utilities for Nested Property Paths
+
+  feat: Add recursive type utilities for type-safe nested object property access
+
+  This change introduces advanced TypeScript type utilities inspired by the pattern from [next-intl's MessageKeys](https://github.com/amannn/next-intl/blob/main/packages/use-intl/src/core/MessageKeys.tsx).
+
+  **New Type Utilities** (exported from `@juun-roh/cesium-utils/dev`):
+
+  - **`NestedKeyOf<T>`**: Recursively generates a union type of all possible property paths using dot notation (e.g., `"billboard.scale" | "billboard.show" | "name"`). Limited to 3 levels of depth to prevent infinite type recursion and excludes function properties.
+
+  - **`NestedValueOf<T, Path>`**: Extracts the value type from a nested property path string, ensuring type safety when working with deeply nested structures.
+
+  These utilities enable developers to build type-safe APIs that work with nested object properties using dot notation paths.
+
+- 3ed19d6: Enhanced Collection.setProperty() with Nested Property Path Support
+
+  feat: `Collection.setProperty()` now supports nested property paths using dot notation
+
+  The `setProperty` method has been enhanced to support setting deeply nested properties using dot notation paths, powered by the new `NestedKeyOf<T>` and `NestedValueOf<T, Path>` type utilities.
+
+  **Usage Examples**:
+
+  ```typescript
+  import { Collection } from "@juun-roh/cesium-utils";
+
+  const collection = new Collection({ collection: entityCollection });
+
+  // Before: Only top-level properties
+  collection.setProperty("name", "Building A");
+
+  // Now: Nested properties with full type safety and IntelliSense support
+  collection.setProperty("metadata.priority", 5, "buildings");
+  collection.setProperty("config.display.scale", 2.5, "markers");
+  collection.setProperty(
+    "settings.advanced.renderMode",
+    "optimized",
+    "terrain"
+  );
+  ```
+
+  **Key Features**:
+
+  - **Type Safety**: Full TypeScript IntelliSense and compile-time type checking for nested paths
+  - **Depth Limit**: Supports up to 3 levels of nesting to prevent excessive type complexity
+  - **Read-Only Detection**: Maintains existing safeguards for read-only properties at any nesting level
+  - **Graceful Handling**: Silently skips items where the nested path doesn't exist
+  - **Backward Compatible**: Existing code using top-level properties continues to work unchanged
+
+  **Implementation Details**:
+
+  - Runtime path traversal splits dot-notation strings and navigates object hierarchy
+  - Property descriptor checks ensure read-only properties cannot be modified
+  - Type system prevents setting function properties at any nesting level
+
 ## 0.4.0
 
 ### Minor Changes
