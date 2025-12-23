@@ -18,7 +18,11 @@ import {
   PrimitiveCollection,
 } from "cesium";
 
-import { isGetterOnly, type NonFunction } from "@/dev/index.js";
+import {
+  isGetterOnly,
+  type NestedKeyOf,
+  type NestedValueOf,
+} from "@/dev/index.js";
 
 /**
  * @class
@@ -572,10 +576,11 @@ class Collection<C extends Collection.Base, I extends Collection.ItemFor<C>> {
 
   /**
    * Sets a property value on all items with the specified tag.
+   * Supports nested property paths using dot notation (e.g., 'billboard.scale').
    *
-   * @template K - A type
+   * @template Path - A nested property path type
    *
-   * @param property - The property name to set
+   * @param property - The property name or nested path to set (e.g., 'name' or 'billboard.scale')
    * @param value - The value to set
    * @param by - The tag identifying which items to update
    * @returns The collection itself.
@@ -583,23 +588,49 @@ class Collection<C extends Collection.Base, I extends Collection.ItemFor<C>> {
    * @example
    * // Change color of all buildings to red
    * collection.setProperty('color', Color.RED, 'buildings');
+   *
+   * @example
+   * // Change billboard scale using nested path
+   * collection.setProperty('billboard.scale', 2.0, 'buildings');
    */
-  setProperty<K extends NonFunction<I>>(
-    property: K,
-    value: I[K],
+  setProperty<Path extends NestedKeyOf<I>>(
+    property: Path,
+    value: NestedValueOf<I, Path>,
     by: Collection.Tag = this.tag,
   ): this {
     const items = this.get(by);
+    const pathParts = (property as string).split(".");
 
     for (const item of items) {
-      if (property in item && typeof item[property] !== "function") {
-        if (isGetterOnly(item, property)) {
-          throw Error(
-            `Cannot set read-only property '${String(property)}' on ${item.constructor.name}`,
-          );
-        }
+      // Traverse to the parent of the target property
+      let current: any = item;
+      let i = 0;
 
-        item[property] = value;
+      // Navigate to the nested object
+      for (; i < pathParts.length - 1; i++) {
+        const part = pathParts[i];
+        if (!(part in current)) {
+          break;
+        }
+        current = current[part];
+        if (!current || typeof current !== "object") {
+          break;
+        }
+      }
+
+      // Set the final property if we successfully traversed the path
+      if (i === pathParts.length - 1) {
+        const finalKey = pathParts[pathParts.length - 1];
+
+        if (finalKey in current && typeof current[finalKey] !== "function") {
+          if (isGetterOnly(current, finalKey)) {
+            throw Error(
+              `Cannot set read-only property '${property}' on ${item.constructor.name}`,
+            );
+          }
+
+          current[finalKey] = value;
+        }
       }
     }
 
