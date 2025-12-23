@@ -33,6 +33,8 @@ import {
  * @template C - The type of Cesium collection (e.g., EntityCollection, PrimitiveCollection)
  * @template I - The type of items in the collection (e.g., Entity, Primitive)
  *
+ * @see [Collection Demo](https://juun.vercel.app/cesium-utils/collection)
+ *
  * @example
  * // Example 1: Managing Complex Scene with Multiple Object Types
  * class SceneOrganizer {
