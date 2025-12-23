@@ -26,12 +26,13 @@ jobs:
     if: contains(github.event.head_commit.message, 'Release version update')
     steps:
       - name: Wait for CI workflow to complete
-        uses: lewagon/wait-on-check-action@v1.4.1
+        uses: fountainhead/action-wait-for-check@v1.2.0
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: CI
           ref: ${{ github.sha }}
-          check-name: 'ci'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 10
+          intervalSeconds: 10
+          timeoutSeconds: 600
 
   release-and-publish:
     needs: wait-for-ci
