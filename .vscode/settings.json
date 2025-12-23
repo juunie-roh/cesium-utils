@@ -13,6 +13,7 @@
     "nodenext",
     "Tileset",
     "topojson",
+    "tsparser",
     "webgl"
   ],
   "editor.formatOnSave": false,

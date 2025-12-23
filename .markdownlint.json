@@ -1,5 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/DavidAnson/markdownlint/v0.38.0/schema/markdownlint-config-schema.json",
-  "MD013": false,
-  "MD041": false
+  "line-length": false,
+  "first-line-heading": false,
+  "no-duplicate-heading": false
 }
