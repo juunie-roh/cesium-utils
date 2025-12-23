@@ -2,43 +2,30 @@
  * Runtime type validator to identify the non-function property.
  */
 export type NonFunction<T> = {
-  [K in keyof T]: T[K] extends Function ? never : K;
+  [K in keyof T]: T[K] extends Function | ((...args: any[]) => any) ? never : K;
 }[keyof T];
 
 /**
- * Helper type to track recursion depth using tuple length.
- */
-type Prev = [never, 0, 1, 2, 3, 4, 5, ...0[]];
-
-/**
- * Recursively creates a union of property paths for nested objects.
- * Limited to 3 levels of depth to prevent infinite type recursion.
- * Excludes function properties from the path generation.
+ * Represents a path to any nested property in an object, using dot notation.
  *
- * @template ObjectType - The object type to extract property paths from
- * @template Depth - Internal counter to limit recursion depth (default: 3)
+ * The `(keyof T & string)` portion provides top-level key hints in autocomplete,
+ * while `(string & {})` allows any string input to pass through.
+ *
+ * Actual path validation is delegated to {@link NestedValueOf}, which returns `never`
+ * for invalid paths — causing a type error on the corresponding value parameter.
  *
  * @example
- * type Paths = NestedKeyOf<{ a: { b: { c: number } } }>
- * // Result: "a" | "a.b" | "a.b.c"
+ * ```ts
+ * function f<Path extends NestedKeyOf<Obj>>(
+ *   key: Path,
+ *   value: NestedValueOf<Obj, Path> // ← validation happens here
+ * ) {}
+ *
+ * f("a.b.c", 123);       // ✅ valid path, correct value type
+ * f("invalid.path", 1);  // ❌ NestedValueOf returns never
+ * ```
  */
-export type NestedKeyOf<ObjectType, Depth extends number = 3> = Depth extends 0
-  ? never
-  : ObjectType extends object
-    ? {
-        [Property in keyof ObjectType]: ObjectType[Property] extends
-          | Function
-          | ((...args: any[]) => any)
-          ? never
-          : Property extends string
-            ?
-                | Property
-                | (ObjectType[Property] extends object
-                    ? `${Property}.${NestedKeyOf<ObjectType[Property], Prev[Depth]>}`
-                    : never)
-            : never;
-      }[keyof ObjectType]
-    : never;
+export type NestedKeyOf<T extends object> = (keyof T & string) | (string & {});
 
 /**
  * Extracts the type of a nested property from a property path string.
@@ -55,10 +42,14 @@ export type NestedValueOf<
   Path extends string,
 > = Path extends `${infer Cur}.${infer Rest}`
   ? Cur extends keyof ObjectType
-    ? NestedValueOf<ObjectType[Cur], Rest>
+    ? NonNullable<ObjectType[Cur]> extends Function | ((...args: any[]) => any)
+      ? never // Stop at functions
+      : NestedValueOf<NonNullable<ObjectType[Cur]>, Rest>
     : never
   : Path extends keyof ObjectType
-    ? ObjectType[Path]
+    ? NonNullable<ObjectType[Path]> extends Function | ((...args: any[]) => any)
+      ? never // Exclude functions from final value
+      : ObjectType[Path]
     : never;
 
 /**

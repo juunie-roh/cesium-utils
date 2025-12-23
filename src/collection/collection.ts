@@ -19,10 +19,10 @@ import {
 } from "cesium";
 
 import {
-  isGetterOnly,
   type NestedKeyOf,
   type NestedValueOf,
-} from "@/dev/index.js";
+  safeSetProperty,
+} from "@/utils/index.js";
 
 /**
  * @class
@@ -599,91 +599,20 @@ class Collection<C extends Collection.Base, I extends Collection.ItemFor<C>> {
     by: Collection.Tag = this.tag,
   ): this {
     const items = this.get(by);
-    const pathParts = (property as string).split(".");
-
-    // Prevent prototype pollution - block dangerous property names
-    const dangerousKeys = ["__proto__", "constructor", "prototype"];
 
     for (const item of items) {
-      // Check all parts of the path for dangerous keys
-      let hasDangerousKey = false;
-      for (const part of pathParts) {
-        if (dangerousKeys.includes(part)) {
-          hasDangerousKey = true;
-          break;
-        }
+      const result = safeSetProperty(item, property as string, value);
+
+      // If setting failed due to read-only property, throw error
+      // (maintaining backward compatibility with existing behavior)
+      if (!result.success && result.reason === "read-only") {
+        throw Error(
+          `Cannot set read-only property '${property}' on ${item.constructor.name}`,
+        );
       }
 
-      // Skip this item if path contains dangerous keys
-      if (hasDangerousKey) {
-        continue;
-      }
-
-      // Traverse to the parent of the target property
-      let current: any = item;
-      let i = 0;
-
-      // Navigate to the nested object
-      for (; i < pathParts.length - 1; i++) {
-        const part = pathParts[i];
-
-        // Block dangerous keys at each step
-        if (dangerousKeys.includes(part)) {
-          hasDangerousKey = true;
-          break;
-        }
-
-        // Only traverse own, non-inherited properties
-        if (
-          !current ||
-          typeof current !== "object" ||
-          !Object.prototype.hasOwnProperty.call(current, part)
-        ) {
-          break;
-        }
-
-        current = current[part];
-
-        // Stop if we reached a non-object or Object.prototype itself
-        if (
-          !current ||
-          typeof current !== "object" ||
-          current === Object.prototype
-        ) {
-          break;
-        }
-      }
-
-      // Skip this item entirely if we detected dangerous keys while traversing
-      if (hasDangerousKey) {
-        continue;
-      }
-
-      // Set the final property if we successfully traversed the path
-      if (i === pathParts.length - 1) {
-        const finalKey = pathParts[pathParts.length - 1];
-
-        // Block dangerous keys as the final property name as well
-        if (dangerousKeys.includes(finalKey)) {
-          continue;
-        }
-
-        if (
-          current &&
-          typeof current === "object" &&
-          current !== Object.prototype &&
-          finalKey in current &&
-          typeof current[finalKey] !== "function"
-        ) {
-          if (isGetterOnly(current, finalKey)) {
-            throw Error(
-              `Cannot set read-only property '${property}' on ${item.constructor.name}`,
-            );
-          }
-
-          current[finalKey] = value;
-        }
-      }
+      // For other failures (dangerous properties, invalid paths, etc.),
+      // silently skip the item (matches previous behavior)
     }
 
     return this;
