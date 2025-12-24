@@ -4,6 +4,7 @@ import {
   Entity,
   EntityCollection,
   JulianDate,
+  PrimitiveCollection,
   Ray,
   Scene,
   Viewer,
@@ -19,6 +20,19 @@ describe("Sunlight", () => {
   let mockPickFromRay: any;
 
   beforeEach(() => {
+    // Mock browser APIs for Material creation in jsdom environment
+    if (typeof ImageBitmap === "undefined") {
+      (global as any).ImageBitmap = class ImageBitmap {};
+    }
+    if (typeof OffscreenCanvas === "undefined") {
+      (global as any).OffscreenCanvas = class OffscreenCanvas {
+        constructor(
+          public width: number,
+          public height: number,
+        ) {}
+      };
+    }
+
     // Mock picking functionality
     mockPickFromRay = vi.fn().mockReturnValue({
       object: null,
@@ -31,19 +45,24 @@ describe("Sunlight", () => {
         // @ts-expect-error
         context: {
           uniformState: {
-            sunPositionWC: new Cartesian3(1000, 1000, 1000),
-            sunDirectionWC: new Cartesian3(0.5, 0.5, 0.7),
+            _sunPositionWC: new Cartesian3(1000, 1000, 1000),
+            _sunDirectionWC: new Cartesian3(0.5, 0.5, 0.7),
           },
         },
-        pickFromRay: mockPickFromRay,
+        pickFromRayMostDetailed: mockPickFromRay,
         render: vi.fn(),
+        primitives: {
+          add: vi.fn().mockImplementation((item) => item),
+        } as unknown as PrimitiveCollection,
       }) as unknown as Scene,
       clock: {
         currentTime: JulianDate.now(),
       } as unknown as Clock,
       entities: {
         add: vi.fn().mockImplementation((entity) => {
-          entity.id = `mock-entity-${Math.random()}`;
+          if (!entity.id) {
+            entity.id = `mock-entity-${Math.random()}`;
+          }
           return entity;
         }),
         removeById: vi.fn(),
@@ -71,33 +90,30 @@ describe("Sunlight", () => {
   describe("getVirtualSunPosition", () => {
     it("should calculate virtual sun position at specified distance", () => {
       const from = new Cartesian3(0, 0, 0);
-      const virtualSun = sunlight.getVirtualSunPosition(from, 500);
+      const virtualSun = sunlight.virtualSun(from, 500);
 
       // Should be 500 units away in the direction of the sun
-      const distance = Cartesian3.distance(from, virtualSun);
+      const distance = Cartesian3.distance(from, virtualSun.position);
       expect(distance).toBeCloseTo(500, 1);
     });
 
-    it("should use default radius of 1000 when not specified", () => {
+    it("should use default radius of 10000 when not specified", () => {
       const from = new Cartesian3(0, 0, 0);
-      const virtualSun = sunlight.getVirtualSunPosition(from);
+      const virtualSun = sunlight.virtualSun(from);
 
-      const distance = Cartesian3.distance(from, virtualSun);
-      expect(distance).toBeCloseTo(1000, 1);
+      const distance = Cartesian3.distance(from, virtualSun.position);
+      expect(distance).toBeCloseTo(10000, 1);
     });
   });
 
   describe("analyze - single time", () => {
-    it("should perform single time sunlight analysis", () => {
+    it("should perform single time sunlight analysis", async () => {
       const from = new Cartesian3(100, 100, 0);
       const time = JulianDate.now();
-      let targetEntityId: string;
 
-      // Mock the point entity creation to capture its ID
-      vi.spyOn(viewer.entities, "add").mockImplementation((entity: any) => {
-        targetEntityId = entity.id;
-        return entity;
-      });
+      // Set target point first
+      sunlight.setTargetPoint(from, false, 3);
+      const targetEntityId = sunlight["_pointEntityId"];
 
       // Mock picking to return an entity with the same ID as the target point
       mockPickFromRay.mockImplementation(() => {
@@ -108,12 +124,12 @@ describe("Sunlight", () => {
           configurable: false,
         });
         return {
-          object: mockEntity,
+          object: { id: mockEntity },
           position: from,
         };
       });
 
-      const result = sunlight.analyze(from, time);
+      const result = await sunlight.analyze(from, time);
 
       expect(result).toEqual({
         timestamp: time.toString(),
@@ -123,9 +139,12 @@ describe("Sunlight", () => {
       expect(mockPickFromRay).toHaveBeenCalled();
     });
 
-    it("should return false when ray hits obstruction", () => {
+    it("should return false when ray hits obstruction", async () => {
       const from = new Cartesian3(100, 100, 0);
       const time = JulianDate.now();
+
+      // Set target point first
+      sunlight.setTargetPoint(from, false, 3);
 
       // Mock ray hitting a different object (obstruction)
       const obstructionEntity = new Entity();
@@ -136,11 +155,11 @@ describe("Sunlight", () => {
       });
 
       mockPickFromRay.mockReturnValue({
-        object: obstructionEntity,
+        object: { id: obstructionEntity },
         position: new Cartesian3(50, 50, 50),
       });
 
-      const result = sunlight.analyze(from, time);
+      const result = await sunlight.analyze(from, time);
 
       expect(result).toEqual({
         timestamp: time.toString(),
@@ -148,48 +167,21 @@ describe("Sunlight", () => {
       });
     });
 
-    it("should create debug collision point when debugShowPoints enabled", () => {
-      const from = new Cartesian3(100, 100, 0);
-      const time = JulianDate.now();
-      const collisionPos = new Cartesian3(75, 75, 25);
-
-      mockPickFromRay.mockReturnValue({
-        object: new Entity(),
-        position: collisionPos,
-      });
-
-      sunlight.analyze(from, time, { debugShowPoints: true });
-
-      // Should add debug entity to viewer (second call after target point)
-      const addCalls = vi.mocked(viewer.entities.add).mock.calls;
-      expect(addCalls.length).toBe(2); // Target point + debug entity
-
-      const debugEntity = addCalls[1][0] as Entity;
-      expect(debugEntity.point?.show?.getValue()).toBe(true);
-      expect(debugEntity.point?.pixelSize?.getValue()).toBe(5);
-    });
-
-    it("should create debug ray polyline when debugShowRays enabled", () => {
+    it("should track debug rays when debugShowRays enabled", async () => {
       const from = new Cartesian3(100, 100, 0);
       const time = JulianDate.now();
 
-      sunlight.analyze(from, time, { debugShowRays: true });
+      sunlight.setTargetPoint(from, false, 3);
 
-      // Should add debug polyline entity (second call after target point)
-      const addCalls = vi.mocked(viewer.entities.add).mock.calls;
-      expect(addCalls.length).toBe(2); // Target point + debug polyline
+      await sunlight.analyze(from, time, { debugShowRays: true });
 
-      const debugEntity = addCalls[1][0] as Entity;
-      expect(debugEntity.polyline).toBeDefined();
-      expect(debugEntity.polyline?.width?.getValue()).toBe(10);
-      expect(
-        debugEntity.polyline?.material?.getValue().color.alpha,
-      ).toBeCloseTo(0.5);
+      // Debug ray should be added to _objectsToExclude
+      expect(sunlight["_objectsToExclude"].length).toBeGreaterThan(0);
     });
   });
 
   describe("analyze - time range", () => {
-    it("should perform time range analysis", () => {
+    it("should perform time range analysis", async () => {
       const from = new Cartesian3(100, 100, 0);
       const start = JulianDate.now();
       const end = JulianDate.addSeconds(start, 3600, new JulianDate()); // 1 hour later
@@ -199,10 +191,12 @@ describe("Sunlight", () => {
         step: 1800, // 30 minutes
       };
 
-      const results = sunlight.analyze(
+      sunlight.setTargetPoint(from, false, 3);
+
+      const results = (await sunlight.analyze(
         from,
         timeRange,
-      ) as Sunlight.AnalysisResult[];
+      )) as Sunlight.AnalysisResult[];
 
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBe(3); // 0, 30min, 60min
@@ -211,8 +205,11 @@ describe("Sunlight", () => {
   });
 
   describe("state management", () => {
-    it("should manage analyzing state correctly", () => {
+    it("should manage analyzing state correctly", async () => {
       expect(sunlight.isAnalyzing).toBe(false);
+
+      const from = new Cartesian3(0, 0, 0);
+      sunlight.setTargetPoint(from, false, 3);
 
       // During analysis, isAnalyzing should be true
       let analyzingDuringCall = false;
@@ -221,13 +218,13 @@ describe("Sunlight", () => {
         return { object: new Entity(), position: new Cartesian3() };
       });
 
-      sunlight.analyze(new Cartesian3(0, 0, 0), JulianDate.now());
+      await sunlight.analyze(from, JulianDate.now());
 
       expect(analyzingDuringCall).toBe(true);
       expect(sunlight.isAnalyzing).toBe(false); // Should be reset after
     });
 
-    it("should restore original time after analysis", () => {
+    it("should restore original time after analysis", async () => {
       const originalTime = JulianDate.now();
       const analysisTime = JulianDate.addHours(
         originalTime,
@@ -235,87 +232,91 @@ describe("Sunlight", () => {
         new JulianDate(),
       );
 
+      const from = new Cartesian3(0, 0, 0);
+      sunlight.setTargetPoint(from, false, 3);
+
       viewer.clock.currentTime = originalTime;
 
-      sunlight.analyze(new Cartesian3(0, 0, 0), analysisTime);
+      await sunlight.analyze(from, analysisTime);
 
       // Time should be restored
       expect(viewer.clock.currentTime).toEqual(originalTime);
-      expect(viewer.scene.render).toHaveBeenCalledTimes(2); // Once for analysis, once for restore
+      expect(viewer.scene.render).toHaveBeenCalledTimes(3); // setTargetPoint, analysis, restore
     });
   });
 
   describe("object exclusion", () => {
-    it("should pass objectsToExclude to picking", () => {
+    it("should pass objectsToExclude to picking", async () => {
       const from = new Cartesian3(100, 100, 0);
       const time = JulianDate.now();
       const excludeObjects = [new Entity(), new Entity()];
 
-      sunlight.analyze(from, time, { objectsToExclude: excludeObjects });
+      sunlight.setTargetPoint(from, false, 3);
+
+      await sunlight.analyze(from, time, { objectsToExclude: excludeObjects });
 
       // Should combine debug entity IDs with objectsToExclude
       expect(mockPickFromRay).toHaveBeenCalledWith(
         expect.any(Ray),
         expect.arrayContaining(excludeObjects),
-        2,
+        0.1,
       );
     });
   });
 
   describe("cleanup", () => {
-    it("should clear debug entities", () => {
-      // Add some debug entity IDs
-      const debugId1 = "debug-entity-1";
-      const debugId2 = "debug-entity-2";
-      sunlight["_debugEntityIds"] = [debugId1, debugId2];
+    it("should clear debug objects", () => {
+      // Add some debug objects
+      const obj1 = {};
+      const obj2 = {};
+      sunlight["_objectsToExclude"] = [obj1, obj2];
 
       sunlight.clear();
 
-      expect(viewer.entities.removeById).toHaveBeenCalledWith(debugId1);
-      expect(viewer.entities.removeById).toHaveBeenCalledWith(debugId2);
-      expect(sunlight["_debugEntityIds"]).toEqual([]);
+      expect(sunlight["_objectsToExclude"]).toEqual([]);
     });
 
-    it("should clean up point entity", () => {
-      const pointEntityId = "test-point-entity";
-      sunlight["_pointEntityId"] = pointEntityId;
-
-      vi.spyOn(viewer.entities, "getById").mockReturnValue(new Entity());
-
+    it("should clean up polylines and points", () => {
       sunlight.clear();
 
-      expect(viewer.entities.removeById).toHaveBeenCalledWith(pointEntityId);
+      // Polylines and points should be empty after clear
+      expect(sunlight["_polylines"]?.length).toBe(0);
+      expect(sunlight["_points"]?.values.length).toBe(0);
     });
   });
 
   describe("error boundary", () => {
     it("should use custom error boundary size", () => {
       const from = new Cartesian3(100, 100, 0);
-      const time = JulianDate.now();
       const customErrorBoundary = 10;
 
-      sunlight.analyze(from, time, { errorBoundary: customErrorBoundary });
+      sunlight.setTargetPoint(from, false, customErrorBoundary);
 
-      // Point entity should be created with custom pixel size
+      // Ellipsoid entity should be created with custom radius
       const addCalls = vi.mocked(viewer.entities.add).mock.calls;
-      const targetPointCall = addCalls[0];
+      const targetPointCall = addCalls[addCalls.length - 1];
       const targetEntity = targetPointCall[0] as Entity;
-      expect(targetEntity.point?.pixelSize?.getValue()).toBe(
-        customErrorBoundary,
+      expect(targetEntity.ellipsoid?.radii?.getValue()).toEqual(
+        new Cartesian3(
+          customErrorBoundary,
+          customErrorBoundary,
+          customErrorBoundary,
+        ),
       );
     });
 
     it("should use default error boundary when not specified", () => {
       const from = new Cartesian3(100, 100, 0);
-      const time = JulianDate.now();
 
-      sunlight.analyze(from, time);
+      sunlight.setTargetPoint(from, false);
 
-      // Should use default size of 5
+      // Should use default size of 3
       const addCalls = vi.mocked(viewer.entities.add).mock.calls;
-      const targetPointCall = addCalls[0];
+      const targetPointCall = addCalls[addCalls.length - 1];
       const targetEntity = targetPointCall[0] as Entity;
-      expect(targetEntity.point?.pixelSize?.getValue()).toBe(5);
+      expect(targetEntity.ellipsoid?.radii?.getValue()).toEqual(
+        new Cartesian3(3, 3, 3),
+      );
     });
   });
 });
