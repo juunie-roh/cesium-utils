@@ -31,15 +31,13 @@ class Sunlight {
   private _pointEntityId?: string;
   private _objectsToExclude: any[] = [];
   // Debugging Objects
-  private _polylines: PolylineCollection;
-  private _points: EntityCollection;
+  private _polylinesInstance?: PolylineCollection;
+  private _pointsInstance?: EntityCollection;
 
   constructor(viewer: Viewer) {
     // @ts-expect-error Accessing internal APIs
     this._uniformState = viewer.scene.context.uniformState;
     this._viewer = viewer;
-    this._polylines = viewer.scene.primitives.add(new PolylineCollection());
-    this._points = new EntityCollection();
     viewer.entities.add(this._points);
   }
 
@@ -56,6 +54,24 @@ class Sunlight {
   /** Whether sunlight analysis is currently in progress. */
   get isAnalyzing(): boolean {
     return this._analyzing;
+  }
+  /** Lazy initialization on access */
+  private get _polylines(): PolylineCollection {
+    if (!this._polylinesInstance) {
+      this._polylinesInstance = new PolylineCollection();
+      this._viewer.scene.primitives.add(this._polylinesInstance);
+    }
+
+    return this._polylinesInstance;
+  }
+  /** Lazy initialization on access */
+  private get _points(): EntityCollection {
+    if (!this._pointsInstance) {
+      this._pointsInstance = new EntityCollection();
+      this._viewer.entities.add(this._pointsInstance);
+    }
+
+    return this._pointsInstance;
   }
 
   /**
@@ -148,13 +164,14 @@ class Sunlight {
   /**
    * Create an ellipsoid entity for ray collision detection to complement cesium's native click event accuracy
    * @param at where to create the entity
-   * @param show whether to show point entity
-   * @param errorBoundary size of the point entity for error tolerance
+   * @param show whether to show ellipsoid entity
+   * @param size radius of the ellipsoid entity for error tolerance
+   * @param color color of the ellipsoid entity
    */
   setTargetPoint(
     at: Cartesian3,
     show?: boolean,
-    errorBoundary?: number,
+    size: number = 3,
     color: Color = Color.LIMEGREEN.withAlpha(0.8),
   ): Entity {
     if (this._pointEntityId) {
@@ -162,12 +179,11 @@ class Sunlight {
     }
 
     // Generate new point entity with error boundary size
-    const r = errorBoundary ?? 3;
-    const e = this._viewer.entities.add(
+    const ellipsoid = this._viewer.entities.add(
       new Entity({
         ellipsoid: {
           show,
-          radii: new Cartesian3(r, r, r),
+          radii: new Cartesian3(size, size, size),
           material: show ? color : undefined,
           fill: true,
         },
@@ -175,13 +191,13 @@ class Sunlight {
         id: Sunlight.DETECTION_ELLIPSOID_ID,
       }),
     );
-    // tracking entity id
-    this._pointEntityId = e.id;
+    // register tracking entity id
+    this._pointEntityId = ellipsoid.id;
 
     // Wait for entity to be processed and rendered
     this._viewer.scene.render();
 
-    return e;
+    return ellipsoid;
   }
 
   private async _analyzeSingleTime(
@@ -278,8 +294,6 @@ namespace Sunlight {
   export interface AnalyzeOptions {
     /** List of objects to exclude from ray pick */
     objectsToExclude?: any[];
-    /** size of the point entity for error tolerance */
-    errorBoundary?: number;
     /** Whether to show sunlight paths */
     debugShowRays?: boolean;
     /** Whether to show points */
@@ -290,7 +304,7 @@ namespace Sunlight {
     /** ISO time string */
     timestamp: string;
     /** Whether the sunlight has reached */
-    result: boolean | any;
+    result: boolean;
   }
 }
 
