@@ -8,6 +8,7 @@ export default defineConfig({
     "src/collection/index.ts",
     "src/highlight/index.ts",
     "src/terrain/index.ts",
+    "src/terrain/dev/index.ts",
     "src/dev/index.ts",
     "src/viewer/index.ts",
     "src/experimental/index.ts",

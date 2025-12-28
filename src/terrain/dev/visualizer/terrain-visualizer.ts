@@ -6,8 +6,9 @@ import {
   Viewer,
 } from "cesium";
 
-import HybridImageryProvider from "@/dev/terrain/visualizer/hybrid-imagery-provider.js";
-import HybridTerrainProvider from "@/terrain/hybrid-terrain-provider.js";
+import HybridTerrainProvider from "@/terrain//hybrid-terrain-provider.js";
+
+import HybridImageryProvider from "./hybrid-imagery-provider.js";
 
 /**
  * @class

@@ -12,7 +12,7 @@ vi.mock("@/viewer/sync-camera.js", () => ({
 
 // Mock Cesium
 vi.mock("cesium", () => {
-  return import("../../__mocks__/cesium.js");
+  return import("../__mocks__/cesium.js");
 });
 
 describe("cloneViewer", () => {
