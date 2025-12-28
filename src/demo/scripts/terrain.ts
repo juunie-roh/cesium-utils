@@ -1,6 +1,6 @@
 import * as Cesium from "cesium";
 
-import { TerrainVisualizer } from "@/dev/index.js";
+import { TerrainVisualizer } from "@/terrain/dev/index.js";
 import type { TerrainRegion } from "@/terrain/index.js";
 import { HybridTerrainProvider } from "@/terrain/index.js";
 

@@ -66,6 +66,11 @@
       "import": "./dist/terrain/index.js",
       "require": "./dist/terrain/index.cjs"
     },
+    "./terrain/dev": {
+      "types": "./dist/terrain/dev/index.d.ts",
+      "import": "./dist/terrain/dev/index.js",
+      "require": "./dist/terrain/dev/index.cjs"
+    },
     "./dev": {
       "types": "./dist/dev/index.d.ts",
       "import": "./dist/dev/index.js",
