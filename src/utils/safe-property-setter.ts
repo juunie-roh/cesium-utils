@@ -153,6 +153,8 @@ export function safeSetProperty<T extends object>(
   }
 
   // All checks passed - set the property
+  // lgtm[js/prototype-polluting-assignment]
+  // CodeQL false positive: finalKey is validated by isDangerousProperty() above
   current[finalKey] = value;
 
   return {
