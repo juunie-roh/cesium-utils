@@ -1,8 +1,8 @@
-// import { createRequire } from "module";
+import { createRequire } from "module";
 import { describe, expect, test } from "vitest";
 
 // Vitest 4.x: Convert to ESM with createRequire to test CommonJS compatibility
-// const require = createRequire(import.meta.url);
+const require = createRequire(import.meta.url);
 
 const Cesium = require("cesium");
 const main = require("../../../dist/index.cjs");
