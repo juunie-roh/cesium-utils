@@ -19,6 +19,7 @@ export default defineConfig({
   format: ["cjs", "esm"],
   minify: true,
   target: "esnext",
+  external: ["cesium"], // Already handled by listing on peerDependencies
   outExtension({ format }) {
     return {
       js: format === "cjs" ? ".cjs" : ".js",

@@ -9,7 +9,13 @@
 
 import { execSync } from "child_process";
 
-const CESIUM_VERSIONS_TO_TEST = ["1.132.0", "1.133.0", "1.133.1"];
+const CESIUM_VERSIONS_TO_TEST = [
+  "1.132.0",
+  "1.133.0",
+  "1.134.0",
+  "1.135.0",
+  "1.136.0",
+];
 
 async function testCesiumVersion(version) {
   console.log(`\n🧪 Testing Cesium ${version}...`);
@@ -43,7 +49,6 @@ async function findMinimumVersion() {
 
     if (isCompatible && !minVersion) {
       minVersion = version;
-      break;
     }
   }
 
