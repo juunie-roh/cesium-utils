@@ -106,7 +106,7 @@
     "node": ">=20.0.0"
   },
   "peerDependencies": {
-    "cesium": "^1.133.0"
+    "cesium": ">=1.133.0"
   },
   "packageManager": "pnpm@10.27.0",
   "publishConfig": {
@@ -126,10 +126,10 @@
     "@commitlint/types": "^20.2.0",
     "@eslint/js": "^9.39.2",
     "@types/node": "^25.0.3",
-    "@typescript-eslint/eslint-plugin": "^8.51.0",
-    "@typescript-eslint/parser": "^8.51.0",
+    "@typescript-eslint/eslint-plugin": "^8.52.0",
+    "@typescript-eslint/parser": "^8.52.0",
     "@vitest/coverage-v8": "^4.0.16",
-    "cesium": "^1.136.0",
+    "cesium": "^1.137.0",
     "eslint": "^9.39.2",
     "eslint-plugin-jsdoc": "^61.5.0",
     "eslint-plugin-prettier": "^5.5.4",
