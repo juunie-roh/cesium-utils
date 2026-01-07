@@ -1,6 +1,7 @@
 import {
   Cartesian3,
   Clock,
+  Color,
   Entity,
   EntityCollection,
   JulianDate,
@@ -106,7 +107,45 @@ describe("Sunlight", () => {
     });
   });
 
+  describe("setTargetPoint", () => {
+    it("should set detection ellipsoid", () => {
+      const at = new Cartesian3(100, 100, 0);
+      const entity = sunlight.setTargetPoint(at);
+      const ellipsoid = sunlight["_pointEntityId"];
+      expect(entity.id).toEqual(ellipsoid);
+    });
+
+    it("should remove the previously set ellipsoid", () => {
+      const at = new Cartesian3(100, 100, 0);
+      sunlight.setTargetPoint(at, undefined, 5);
+      sunlight.setTargetPoint(at, undefined, 10);
+      expect(viewer.entities.removeById).toHaveBeenCalled();
+    });
+
+    it("should set color property according to the show status", () => {
+      const at = new Cartesian3(100, 100, 0);
+      const showFalse = sunlight.setTargetPoint(at);
+      expect(showFalse.ellipsoid?.material).toBeUndefined();
+
+      const showTrue = sunlight.setTargetPoint(at, true);
+      expect(showTrue.ellipsoid?.material).toBeDefined();
+
+      const color = Color.WHITE;
+      const withColor = sunlight.setTargetPoint(at, true, 5, color);
+      expect(
+        color.equals(withColor.ellipsoid?.material.getValue().color),
+      ).toBeTruthy();
+    });
+  });
+
   describe("analyze - single time", () => {
+    it("should throw error if the detection ellipsoid has not been set", async () => {
+      const from = new Cartesian3(100, 100, 0);
+      const at = JulianDate.now();
+
+      await expect(sunlight.analyze(from, at)).rejects.toThrowError();
+    });
+
     it("should perform single time sunlight analysis", async () => {
       const from = new Cartesian3(100, 100, 0);
       const time = JulianDate.now();
@@ -177,6 +216,20 @@ describe("Sunlight", () => {
 
       // Debug ray should be added to _objectsToExclude
       expect(sunlight["_objectsToExclude"].length).toBeGreaterThan(0);
+    });
+
+    it("should return false for undefined picked result", async () => {
+      mockPickFromRay.mockImplementation(() => {
+        return;
+      });
+
+      const from = new Cartesian3(100, 100, 0);
+      const time = JulianDate.now();
+
+      sunlight.setTargetPoint(from, false, 3);
+
+      const result = await sunlight.analyze(from, time);
+      expect(result.result).toBe(false);
     });
   });
 
@@ -318,5 +371,14 @@ describe("Sunlight", () => {
         new Cartesian3(3, 3, 3),
       );
     });
+  });
+});
+
+describe("Sunlight namespace", () => {
+  it("should have expected properties", () => {
+    // Test that namespace properties exist
+    expect(Sunlight).toBeDefined();
+    expect(Sunlight.DETECTION_ELLIPSOID_ID).toBeDefined();
+    expect(typeof Sunlight).toBe("function"); // If Sunlight is also a class
   });
 });

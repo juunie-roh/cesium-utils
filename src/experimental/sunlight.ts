@@ -290,7 +290,7 @@ namespace Sunlight {
     /** ISO time string */
     timestamp: string;
     /** Whether the sunlight has reached */
-    result: boolean | any;
+    result: boolean;
   }
 }
 
