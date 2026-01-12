@@ -108,7 +108,7 @@
   "peerDependencies": {
     "cesium": ">=1.133.0"
   },
-  "packageManager": "pnpm@10.27.0",
+  "packageManager": "pnpm@10.28.0",
   "publishConfig": {
     "access": "public"
   },
@@ -131,7 +131,7 @@
     "@vitest/coverage-v8": "^4.0.16",
     "cesium": "^1.137.0",
     "eslint": "^9.39.2",
-    "eslint-plugin-jsdoc": "^61.7.1",
+    "eslint-plugin-jsdoc": "^62.0.0",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-unused-imports": "^4.3.0",
@@ -139,7 +139,7 @@
     "jsdom": "^27.4.0",
     "rimraf": "^6.1.2",
     "tsup": "^8.5.1",
-    "typedoc": "^0.28.15",
+    "typedoc": "^0.28.16",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vitest": "^4.0.16"
