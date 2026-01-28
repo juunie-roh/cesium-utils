@@ -108,7 +108,7 @@
   "peerDependencies": {
     "cesium": ">=1.133.0"
   },
-  "packageManager": "pnpm@10.28.0",
+  "packageManager": "pnpm@10.28.2",
   "publishConfig": {
     "access": "public"
   },
@@ -126,8 +126,8 @@
     "@commitlint/types": "^20.3.1",
     "@eslint/js": "^9.39.2",
     "@types/node": "^25.0.10",
-    "@typescript-eslint/eslint-plugin": "^8.53.1",
-    "@typescript-eslint/parser": "^8.53.1",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
     "@vitest/coverage-v8": "^4.0.18",
     "cesium": "^1.137.0",
     "eslint": "^9.39.2",
@@ -146,7 +146,8 @@
   },
   "pnpm": {
     "overrides": {
-      "tmp": "^0.2.4"
+      "tmp": ">=0.2.4",
+      "lodash": ">=4.17.23"
     }
   }
 }
