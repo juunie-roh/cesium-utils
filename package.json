@@ -108,7 +108,7 @@
   "peerDependencies": {
     "cesium": ">=1.133.0"
   },
-  "packageManager": "pnpm@10.30.1",
+  "packageManager": "pnpm@10.30.3",
   "publishConfig": {
     "access": "public"
   },
