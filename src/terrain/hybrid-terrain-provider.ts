@@ -308,6 +308,7 @@ namespace HybridTerrainProvider {
         const [xMin, xMax] = Array.isArray(tileRange.x)
           ? tileRange.x
           : [tileRange.x, tileRange.x];
+
         const [yMin, yMax] = Array.isArray(tileRange.y)
           ? tileRange.y
           : [tileRange.y, tileRange.y];
