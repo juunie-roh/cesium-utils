@@ -37,6 +37,7 @@ jobs:
   release-and-publish:
     needs: wait-for-ci
     runs-on: ubuntu-latest
+    environment: Publish Environment
     permissions:
       contents: write
       id-token: write
@@ -90,9 +91,8 @@ jobs:
         run: pnpm build
       
       - name: Publish to NPM registry
-        run: pnpm publish --no-git-checks
+        run: pnpm publish --no-git-checks --provenance --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           HUSKY: 0
 
   deploy:
