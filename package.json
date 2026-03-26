@@ -108,7 +108,7 @@
   "peerDependencies": {
     "cesium": ">=1.133.0"
   },
-  "packageManager": "pnpm@10.32.1",
+  "packageManager": "pnpm@10.33.0",
   "publishConfig": {
     "access": "public"
   },
@@ -124,25 +124,25 @@
     "@commitlint/cz-commitlint": "^20.5.0",
     "@commitlint/format": "^20.5.0",
     "@commitlint/types": "^20.5.0",
-    "@eslint/js": "^9.39.4",
+    "@eslint/js": "^10.0.1",
     "@types/node": "^25.5.0",
-    "@typescript-eslint/eslint-plugin": "^8.57.1",
-    "@typescript-eslint/parser": "^8.57.1",
-    "@vitest/coverage-v8": "^4.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.57.2",
+    "@typescript-eslint/parser": "^8.57.2",
+    "@vitest/coverage-v8": "^4.1.1",
     "cesium": "^1.139.1",
     "eslint": "^10.1.0",
-    "eslint-plugin-jsdoc": "^62.8.0",
+    "eslint-plugin-jsdoc": "^62.8.1",
     "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-unused-imports": "^4.4.1",
     "husky": "^9.1.7",
-    "jsdom": "^28.1.0",
+    "jsdom": "^29.0.1",
     "rimraf": "^6.1.3",
     "tsup": "^8.5.1",
-    "typedoc": "^0.28.17",
+    "typedoc": "^0.28.18",
     "typescript": "^5.9.3",
-    "vite": "^7.3.1",
-    "vitest": "^4.1.0"
+    "vite": "^8.0.2",
+    "vitest": "^4.1.1"
   },
   "pnpm": {
     "overrides": {
