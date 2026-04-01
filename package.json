@@ -47,44 +47,84 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "require": "./dist/index.cjs",
-      "default": "./dist/index.js"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./collection": {
-      "types": "./dist/collection/index.d.ts",
-      "import": "./dist/collection/index.js",
-      "require": "./dist/collection/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/collection/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/collection/index.cjs"
+      }
     },
     "./highlight": {
-      "types": "./dist/highlight/index.d.ts",
-      "import": "./dist/highlight/index.js",
-      "require": "./dist/highlight/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/highlight/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/highlight/index.cjs"
+      }
     },
     "./terrain": {
-      "types": "./dist/terrain/index.d.ts",
-      "import": "./dist/terrain/index.js",
-      "require": "./dist/terrain/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/terrain/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/terrain/index.cjs"
+      }
     },
     "./terrain/dev": {
-      "types": "./dist/terrain/dev/index.d.ts",
-      "import": "./dist/terrain/dev/index.js",
-      "require": "./dist/terrain/dev/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/terrain/dev/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/terrain/dev/index.cjs"
+      }
     },
     "./dev": {
-      "types": "./dist/dev/index.d.ts",
-      "import": "./dist/dev/index.js",
-      "require": "./dist/dev/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/dev/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/dev/index.cjs"
+      }
     },
     "./experimental": {
-      "types": "./dist/experimental/index.d.ts",
-      "import": "./dist/experimental/index.js",
-      "require": "./dist/experimental/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/experimental/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/experimental/index.cjs"
+      }
     },
     "./viewer": {
-      "types": "./dist/viewer/index.d.ts",
-      "import": "./dist/viewer/index.js",
-      "require": "./dist/viewer/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/viewer/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/viewer/index.cjs"
+      }
     }
   },
   "scripts": {

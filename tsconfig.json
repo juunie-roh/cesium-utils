@@ -20,7 +20,7 @@
     "declarationMap": true,
     "resolveJsonModule": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "paths": {
       "@/*": ["./src/*"],
     }
