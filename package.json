@@ -128,6 +128,8 @@
     }
   },
   "scripts": {
+    "attw": "pnpx @arethetypeswrong/cli --pack --ignore-rules 'no-resolution'",
+    "attw:quiet": "pnpx @arethetypeswrong/cli --pack --quiet --ignore-rules 'no-resolution'",
     "build": "tsup",
     "build:dev": "tsup --watch",
     "check-types": "tsc -p ./tsconfig.json --noEmit",
@@ -137,7 +139,7 @@
     "prebuild": "pnpm clean",
     "prepare": "husky",
     "prepublishOnly": "pnpm lint",
-    "test": "vitest run",
+    "test": "vitest run --silent passed-only",
     "test:watch": "vitest watch --coverage",
     "test:cesium": "node scripts/test-cesium-versions.js",
     "dev": "pnpm vite"
