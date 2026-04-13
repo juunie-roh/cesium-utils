@@ -78,8 +78,9 @@ describe("HybridTerrainProvider", () => {
       expect(hybrid.credit).toBe(defaultProvider.credit);
     });
 
-    it("should correctly get errorEvent from default provider", () => {
-      expect(hybrid.errorEvent).toBe(defaultProvider.errorEvent);
+    it("should have its own errorEvent that forwards from providers", () => {
+      expect(hybrid.errorEvent).toBeDefined();
+      expect(hybrid.errorEvent).not.toBe(defaultProvider.errorEvent);
     });
 
     it("should correctly get hasWaterMask from default provider", () => {
@@ -102,10 +103,42 @@ describe("HybridTerrainProvider", () => {
   });
 
   describe("getLevelMaximumGeometricError", () => {
-    it("should pass through to default provider", () => {
-      const spy = vi.spyOn(defaultProvider, "getLevelMaximumGeometricError");
+    it("should query the default provider and all region providers", () => {
+      const defaultSpy = vi.spyOn(
+        defaultProvider,
+        "getLevelMaximumGeometricError",
+      );
+      const regionSpy = vi.spyOn(
+        tileRegion.provider,
+        "getLevelMaximumGeometricError",
+      );
       hybrid.getLevelMaximumGeometricError(5);
-      expect(spy).toHaveBeenCalledWith(5);
+      expect(defaultSpy).toHaveBeenCalledWith(5);
+      expect(regionSpy).toHaveBeenCalledWith(5);
+    });
+
+    it("should return the maximum error across all providers", () => {
+      vi.spyOn(
+        defaultProvider,
+        "getLevelMaximumGeometricError",
+      ).mockReturnValue(100);
+      vi.spyOn(
+        tileRegion.provider,
+        "getLevelMaximumGeometricError",
+      ).mockReturnValue(500);
+      expect(hybrid.getLevelMaximumGeometricError(5)).toBe(500);
+    });
+
+    it("should return the default provider's error when it is the maximum", () => {
+      vi.spyOn(
+        defaultProvider,
+        "getLevelMaximumGeometricError",
+      ).mockReturnValue(1000);
+      vi.spyOn(
+        tileRegion.provider,
+        "getLevelMaximumGeometricError",
+      ).mockReturnValue(500);
+      expect(hybrid.getLevelMaximumGeometricError(5)).toBe(1000);
     });
   });
 
