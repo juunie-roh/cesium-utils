@@ -1,12 +1,11 @@
 import type {
-  Credit,
   Request,
   TerrainData,
   TerrainProvider,
   TileAvailability,
   TilingScheme,
 } from "cesium";
-import { EllipsoidTerrainProvider } from "cesium";
+import { Credit, EllipsoidTerrainProvider, Event as CesiumEvent } from "cesium";
 
 /**
  * @class
@@ -41,6 +40,11 @@ class HybridTerrainProvider implements TerrainProvider {
   private _tilingScheme: TilingScheme;
   private _ready: boolean = false;
   private _availability?: TileAvailability;
+  private _errorEvent: CesiumEvent<TerrainProvider.ErrorEvent>;
+  private _removeEventListeners: CesiumEvent.RemoveCallback[];
+  private _hasWaterMask: boolean;
+  private _hasVertexNormals: boolean;
+  private _credit?: Credit;
 
   /**
    * Creates a new `HybridTerrainProvider` instance.
@@ -54,6 +58,55 @@ class HybridTerrainProvider implements TerrainProvider {
     this._tilingScheme = options.defaultProvider.tilingScheme;
     this._regions = options.regions || [];
     this._availability = options.defaultProvider.availability;
+
+    this._hasWaterMask =
+      this._defaultProvider.hasWaterMask ||
+      this._regions.some((r) => r.provider.hasWaterMask);
+    this._hasVertexNormals =
+      this._defaultProvider.hasVertexNormals ||
+      this._regions.some((r) => r.provider.hasVertexNormals);
+
+    if (options.credit) {
+      this._credit =
+        typeof options.credit === "string"
+          ? new Credit(options.credit)
+          : options.credit;
+    } else {
+      this._credit = this._defaultProvider.credit;
+    }
+
+    this._errorEvent = new CesiumEvent();
+    // add error event listeners
+    // to forward the registered providers' errors
+    this._removeEventListeners = [];
+    const seen = new Set<TerrainProvider>();
+
+    for (const region of this._regions) {
+      if (seen.has(region.provider)) continue;
+      seen.add(region.provider);
+      this._removeEventListeners.push(
+        region.provider.errorEvent.addEventListener((err) => {
+          this._errorEvent.raiseEvent(err);
+        }),
+      );
+    }
+
+    if (!seen.has(this._defaultProvider)) {
+      this._removeEventListeners.push(
+        this._defaultProvider.errorEvent.addEventListener((err) => {
+          this._errorEvent.raiseEvent(err);
+        }),
+      );
+    }
+
+    if (!seen.has(this._fallbackProvider)) {
+      this._removeEventListeners.push(
+        this._fallbackProvider.errorEvent.addEventListener((err) => {
+          this._errorEvent.raiseEvent(err);
+        }),
+      );
+    }
+
     this._ready = true;
   }
 
@@ -105,7 +158,7 @@ class HybridTerrainProvider implements TerrainProvider {
    * the source of the terrain.
    */
   get credit(): Credit {
-    return this._defaultProvider?.credit;
+    return this._credit as Credit;
   }
 
   /**
@@ -113,8 +166,8 @@ class HybridTerrainProvider implements TerrainProvider {
    * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
    * are passed an instance of `TileProviderError`.
    */
-  get errorEvent(): any {
-    return this._defaultProvider.errorEvent;
+  get errorEvent(): CesiumEvent {
+    return this._errorEvent;
   }
 
   /**
@@ -123,12 +176,12 @@ class HybridTerrainProvider implements TerrainProvider {
    * as a reflective surface with animated waves.
    */
   get hasWaterMask(): boolean {
-    return this._defaultProvider.hasWaterMask;
+    return this._hasWaterMask;
   }
 
   /** Gets a value indicating whether or not the requested tiles include vertex normals. */
   get hasVertexNormals(): boolean {
-    return this._defaultProvider.hasVertexNormals;
+    return this._hasVertexNormals;
   }
 
   /**
@@ -143,16 +196,30 @@ class HybridTerrainProvider implements TerrainProvider {
     y: number,
     level: number,
   ): Promise<void> | undefined {
+    for (const region of this._regions) {
+      if (HybridTerrainProvider.TerrainRegion.contains(region, x, y, level)) {
+        return region.provider.loadTileDataAvailability(x, y, level);
+      }
+    }
     return this._defaultProvider.loadTileDataAvailability(x, y, level);
   }
 
   /**
-   * Gets the maximum geometric error allowed in a tile at a given level.
+   * Gets the maximum geometric error allowed in a tile at a given level, taken as the
+   * worst case across the default provider and all region providers. Because the hybrid
+   * provider's coverage is a composition of multiple sources, the reported error reflects
+   * the highest error any source could contribute at this level, ensuring the LOD system
+   * refines conservatively enough for all sources.
    * @param level - The tile level for which to get the maximum geometric error.
-   * @returns The maximum geometric error.
+   * @returns The maximum geometric error across all providers.
    */
   getLevelMaximumGeometricError(level: number): number {
-    return this._defaultProvider.getLevelMaximumGeometricError(level);
+    let max = this._defaultProvider.getLevelMaximumGeometricError(level);
+    for (const region of this._regions) {
+      const error = region.provider.getLevelMaximumGeometricError(level);
+      if (error > max) max = error;
+    }
+    return max;
   }
 
   /**
@@ -210,6 +277,20 @@ class HybridTerrainProvider implements TerrainProvider {
     // Fall back to default provider
     return this._defaultProvider.getTileDataAvailable(x, y, level);
   }
+
+  /**
+   * Cleans up resources used in the `HybridTerrainProvider`.
+   *
+   * This method only releases additional resources used to instantiate the `HybridTerrainProvider`.
+   */
+  destroy(): void {
+    // execute remove callbacks
+    for (const remove of this._removeEventListeners) {
+      remove();
+    }
+    this._removeEventListeners.length = 0;
+    this._ready = false;
+  }
 }
 
 /**
@@ -225,6 +306,8 @@ namespace HybridTerrainProvider {
     defaultProvider: TerrainProvider;
     /** Optional fallback provider when data is not available from default provider. @default EllipsoidTerrainProvider */
     fallbackProvider?: TerrainProvider;
+    /** A credit for the data source, which is displayed on the canvas. */
+    credit?: Credit | string;
   }
 
   /**

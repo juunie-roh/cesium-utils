@@ -16,6 +16,7 @@ const CESIUM_VERSIONS_TO_TEST = [
   "1.135.0",
   "1.136.0",
   "1.137.0",
+  "1.140.0",
 ];
 
 async function testCesiumVersion(version) {
