@@ -1,4 +1,9 @@
-import { EllipsoidTerrainProvider, Request, TerrainProvider } from "cesium";
+import {
+  Credit,
+  EllipsoidTerrainProvider,
+  Request,
+  TerrainProvider,
+} from "cesium";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import HybridTerrainProvider from "@/terrain/hybrid-terrain-provider.js";
@@ -74,8 +79,9 @@ describe("HybridTerrainProvider", () => {
   });
 
   describe("property getters", () => {
-    it("should correctly get credit from default provider", () => {
-      expect(hybrid.credit).toBe(defaultProvider.credit);
+    it("should aggregate credits from all registered providers", () => {
+      expect(hybrid.credit).toBeInstanceOf(Credit);
+      expect(hybrid.credit).not.toBe(defaultProvider.credit);
     });
 
     it("should have its own errorEvent that forwards from providers", () => {
