@@ -44,7 +44,6 @@ class HybridTerrainProvider implements TerrainProvider {
   private _removeEventListeners: CesiumEvent.RemoveCallback[];
   private _hasWaterMask: boolean;
   private _hasVertexNormals: boolean;
-  private _credit?: Credit;
 
   /**
    * Creates a new `HybridTerrainProvider` instance.
@@ -65,15 +64,6 @@ class HybridTerrainProvider implements TerrainProvider {
     this._hasVertexNormals =
       this._defaultProvider.hasVertexNormals ||
       this._regions.some((r) => r.provider.hasVertexNormals);
-
-    if (options.credit) {
-      this._credit =
-        typeof options.credit === "string"
-          ? new Credit(options.credit)
-          : options.credit;
-    } else {
-      this._credit = this._defaultProvider.credit;
-    }
 
     this._errorEvent = new CesiumEvent();
     // add error event listeners
@@ -154,11 +144,24 @@ class HybridTerrainProvider implements TerrainProvider {
   }
 
   /**
-   * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
+   * Gets all the credits to display from registered providers when
+   * this terrain provider is active. Typically this is used to credit
    * the source of the terrain.
    */
   get credit(): Credit {
-    return this._credit as Credit;
+    const seen = new Set<TerrainProvider>();
+    const parts: string[] = [];
+    for (const region of this._regions) {
+      if (seen.has(region.provider)) continue;
+      seen.add(region.provider);
+      const html = region.provider.credit?.html;
+      if (html) parts.push(html);
+    }
+    if (!seen.has(this._defaultProvider)) {
+      const html = this._defaultProvider.credit?.html;
+      if (html) parts.push(html);
+    }
+    return new Credit(parts.join(" "));
   }
 
   /**
@@ -166,7 +169,7 @@ class HybridTerrainProvider implements TerrainProvider {
    * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
    * are passed an instance of `TileProviderError`.
    */
-  get errorEvent(): CesiumEvent {
+  get errorEvent(): CesiumEvent<TerrainProvider.ErrorEvent> {
     return this._errorEvent;
   }
 
@@ -306,8 +309,6 @@ namespace HybridTerrainProvider {
     defaultProvider: TerrainProvider;
     /** Optional fallback provider when data is not available from default provider. @default EllipsoidTerrainProvider */
     fallbackProvider?: TerrainProvider;
-    /** A credit for the data source, which is displayed on the canvas. */
-    credit?: Credit | string;
   }
 
   /**
