@@ -5,6 +5,7 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "lib": ["ESNext", "DOM"],
+    "types": ["node"],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
