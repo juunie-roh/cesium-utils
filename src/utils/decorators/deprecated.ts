@@ -12,7 +12,7 @@ function Deprecated({
   once = true,
   includeStack = false,
   message,
-}: Deprecated.Options): unknown {
+}: Deprecated.Options): any {
   return (target: unknown, context: DecoratorContext) => {
     const { label } = message;
     const { kind } = context;
@@ -102,18 +102,15 @@ namespace Deprecated {
    */
   const shown = new Set<string>();
 
+  /**
+   * Adds a label to show deprecation warning.
+   */
   export function add(label: string): void {
     shown.add(label);
   }
 
   /**
    * Clears all shown warning labels.
-   * Useful for testing or when you want to reset the warning state.
-   *
-   * @example
-   * ```typescript
-   * Deprecated.clear();
-   * ```
    */
   export function clear(): void {
     shown.clear();
