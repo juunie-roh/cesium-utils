@@ -7,6 +7,8 @@ import type {
 } from "cesium";
 import { Credit, EllipsoidTerrainProvider, Event as CesiumEvent } from "cesium";
 
+import Deprecated from "@/utils/decorators/deprecated.js";
+
 /**
  * @class
  * Provides terrain by delegating requests to different terrain providers
@@ -36,6 +38,16 @@ import { Credit, EllipsoidTerrainProvider, Event as CesiumEvent } from "cesium";
 class HybridTerrainProvider implements TerrainProvider {
   private _regions: HybridTerrainProvider.TerrainRegion[];
   private _defaultProvider: TerrainProvider;
+  /**
+   * @deprecated This will be removed in 0.5.0.
+   */
+  @Deprecated({
+    message: {
+      label: "_fallbackProvider",
+      since: "0.4.6",
+      removedIn: "0.5.0",
+    },
+  })
   private _fallbackProvider: TerrainProvider;
   private _tilingScheme: TilingScheme;
   private _ready: boolean = false;
@@ -88,7 +100,7 @@ class HybridTerrainProvider implements TerrainProvider {
         }),
       );
     }
-
+    // @deprecated, remove in 0.5.0.
     if (!seen.has(this._fallbackProvider)) {
       this._removeEventListeners.push(
         this._fallbackProvider.errorEvent.addEventListener((err) => {
@@ -137,8 +149,15 @@ class HybridTerrainProvider implements TerrainProvider {
   }
 
   /**
-   * Gets the fallback terrain provider.
+   * @deprecated
    */
+  @Deprecated({
+    message: {
+      label: "_fallbackProvider",
+      since: "0.4.6",
+      removedIn: "0.5.0",
+    },
+  })
   get fallbackProvider(): TerrainProvider {
     return this._fallbackProvider;
   }
@@ -200,7 +219,7 @@ class HybridTerrainProvider implements TerrainProvider {
     level: number,
   ): Promise<void> | undefined {
     for (const region of this._regions) {
-      if (HybridTerrainProvider.TerrainRegion.contains(region, x, y, level)) {
+      if (HybridTerrainProvider.regionContainsTile(region, x, y, level)) {
         return region.provider.loadTileDataAvailability(x, y, level);
       }
     }
@@ -243,7 +262,7 @@ class HybridTerrainProvider implements TerrainProvider {
 
     // Check regions for a match
     for (const region of this._regions) {
-      if (HybridTerrainProvider.TerrainRegion.contains(region, x, y, level)) {
+      if (HybridTerrainProvider.regionContainsTile(region, x, y, level)) {
         return region.provider.requestTileGeometry(x, y, level, request);
       }
     }
@@ -272,7 +291,7 @@ class HybridTerrainProvider implements TerrainProvider {
     // If any terrain region contains this tile, data is available
     // The region definition itself is the source of truth
     for (const region of this._regions) {
-      if (HybridTerrainProvider.TerrainRegion.contains(region, x, y, level)) {
+      if (HybridTerrainProvider.regionContainsTile(region, x, y, level)) {
         return true; // Region contains tile, so data is available
       }
     }
@@ -307,7 +326,12 @@ namespace HybridTerrainProvider {
     regions?: TerrainRegion[];
     /** Default provider to use outside of specified terrain regions. */
     defaultProvider: TerrainProvider;
-    /** Optional fallback provider when data is not available from default provider. @default EllipsoidTerrainProvider */
+    /**
+     * Optional fallback provider when data is not available from default provider.
+     *
+     * @default EllipsoidTerrainProvider
+     * @deprecated
+     */
     fallbackProvider?: TerrainProvider;
   }
 
@@ -361,17 +385,54 @@ namespace HybridTerrainProvider {
   }
 
   /**
+   * Checks if a terrain region contains the specified tile.
+   * @param region The terrain region to check
+   * @param x The X coordinate of the tile
+   * @param y The Y coordinate of the tile
+   * @param level The zoom level of the tile
+   * @returns True if the region contains the tile, false otherwise
+   */
+  export function regionContainsTile(
+    region: HybridTerrainProvider.TerrainRegion,
+    x: number,
+    y: number,
+    level: number,
+  ): boolean {
+    // Check level constraints if specified
+    if (region.levels && !region.levels.includes(level)) {
+      return false;
+    }
+
+    // Tile-coordinate based bounds
+    if (region.tiles) {
+      const tileRange = region.tiles.get(level);
+      if (!tileRange) return false;
+
+      const [xMin, xMax] = Array.isArray(tileRange.x)
+        ? tileRange.x
+        : [tileRange.x, tileRange.x];
+
+      const [yMin, yMax] = Array.isArray(tileRange.y)
+        ? tileRange.y
+        : [tileRange.y, tileRange.y];
+
+      return x >= xMin && x <= xMax && y >= yMin && y <= yMax;
+    }
+
+    return false;
+  }
+
+  /**
    * @namespace
    * Utility functions for working with TerrainRegion objects.
+   *
+   * @deprecated Since 0.4.6, removed in 0.5.0, due to the usage of nested namespace.
    */
   export namespace TerrainRegion {
     /**
      * Checks if a terrain region contains the specified tile.
-     * @param region The terrain region to check
-     * @param x The X coordinate of the tile
-     * @param y The Y coordinate of the tile
-     * @param level The zoom level of the tile
-     * @returns True if the region contains the tile, false otherwise
+     *
+     * @deprecated Since 0.4.6, removed in 0.5.0. Use {@link HybridTerrainProvider.regionContainsTile} instead.
      */
     export function contains(
       region: HybridTerrainProvider.TerrainRegion,
