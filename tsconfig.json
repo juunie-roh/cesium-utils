@@ -6,6 +6,7 @@
     "moduleResolution": "nodenext",
     "lib": ["ESNext", "DOM"],
     "types": ["node"],
+    "ignoreDeprecations": "6.0",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
