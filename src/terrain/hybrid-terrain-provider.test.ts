@@ -21,18 +21,15 @@ const createTileRegion = (): TerrainRegion => {
 
 describe("HybridTerrainProvider", () => {
   let defaultProvider: TerrainProvider;
-  let fallbackProvider: TerrainProvider;
   let tileRegion: TerrainRegion;
   let hybrid: HybridTerrainProvider;
 
   beforeEach(() => {
     defaultProvider = new EllipsoidTerrainProvider();
-    fallbackProvider = new EllipsoidTerrainProvider();
     tileRegion = createTileRegion();
     hybrid = new HybridTerrainProvider({
       regions: [tileRegion],
       defaultProvider,
-      fallbackProvider,
     });
   });
 
@@ -49,23 +46,17 @@ describe("HybridTerrainProvider", () => {
 
       expect(defaultHybrid).toBeInstanceOf(HybridTerrainProvider);
       expect(defaultHybrid.tilingScheme).toBe(defaultProvider.tilingScheme);
-      expect(defaultHybrid.fallbackProvider).toBeInstanceOf(
-        EllipsoidTerrainProvider,
-      );
       expect(defaultHybrid.ready).toBe(true);
     });
 
     it("should create new instance with provided values", () => {
       const provider = new EllipsoidTerrainProvider();
-      const fallback = new EllipsoidTerrainProvider();
       const t = new HybridTerrainProvider({
         regions: [tileRegion],
         defaultProvider: provider,
-        fallbackProvider: fallback,
       });
 
       expect(t.defaultProvider).toBe(provider);
-      expect(t.fallbackProvider).toBe(fallback);
     });
 
     it("should create instance without regions", () => {
@@ -159,7 +150,7 @@ describe("HybridTerrainProvider", () => {
   describe("getTileDataAvailable", () => {
     it("should return true if any region contains the tile", () => {
       // Mock region contains method to return true
-      vi.spyOn(HybridTerrainProvider.TerrainRegion, "contains").mockReturnValue(
+      vi.spyOn(HybridTerrainProvider, "regionContainsTile").mockReturnValue(
         true,
       );
       const providerSpy = vi.spyOn(defaultProvider, "getTileDataAvailable");
@@ -172,7 +163,7 @@ describe("HybridTerrainProvider", () => {
     });
 
     it("should fall back to default provider if no region contains the tile", () => {
-      vi.spyOn(HybridTerrainProvider.TerrainRegion, "contains").mockReturnValue(
+      vi.spyOn(HybridTerrainProvider, "regionContainsTile").mockReturnValue(
         false,
       );
       const providerSpy = vi
@@ -191,11 +182,10 @@ describe("HybridTerrainProvider", () => {
       const hybridWithMultipleRegions = new HybridTerrainProvider({
         regions: [tileRegion, secondRegion],
         defaultProvider,
-        fallbackProvider,
       });
 
       // Mock only first region to contain the tile
-      vi.spyOn(HybridTerrainProvider.TerrainRegion, "contains")
+      vi.spyOn(HybridTerrainProvider, "regionContainsTile")
         .mockReturnValueOnce(true) // First region contains tile
         .mockReturnValueOnce(false); // Second region doesn't
 
@@ -218,11 +208,10 @@ describe("HybridTerrainProvider", () => {
       const hybridWithMultipleRegions = new HybridTerrainProvider({
         regions: [tileRegion, secondRegion],
         defaultProvider,
-        fallbackProvider,
       });
 
       // Mock both regions to NOT contain the tile
-      vi.spyOn(HybridTerrainProvider.TerrainRegion, "contains").mockReturnValue(
+      vi.spyOn(HybridTerrainProvider, "regionContainsTile").mockReturnValue(
         false,
       );
 
@@ -249,7 +238,7 @@ describe("HybridTerrainProvider", () => {
 
     it("should use region provider if tile is within a region", () => {
       vi.spyOn(hybrid, "getTileDataAvailable").mockReturnValue(true);
-      vi.spyOn(HybridTerrainProvider.TerrainRegion, "contains").mockReturnValue(
+      vi.spyOn(HybridTerrainProvider, "regionContainsTile").mockReturnValue(
         true,
       );
       const regionRequestSpy = vi.spyOn(
@@ -260,20 +249,15 @@ describe("HybridTerrainProvider", () => {
         defaultProvider,
         "requestTileGeometry",
       );
-      const fallbackProviderSpy = vi.spyOn(
-        fallbackProvider,
-        "requestTileGeometry",
-      );
 
       hybrid.requestTileGeometry(0, 0, 0);
 
       expect(regionRequestSpy).toHaveBeenCalledWith(0, 0, 0, undefined);
       expect(defaultProviderSpy).not.toHaveBeenCalled();
-      expect(fallbackProviderSpy).not.toHaveBeenCalled();
     });
 
     it("should use default provider if tile is available and no region contains it", () => {
-      vi.spyOn(HybridTerrainProvider.TerrainRegion, "contains").mockReturnValue(
+      vi.spyOn(HybridTerrainProvider, "regionContainsTile").mockReturnValue(
         false,
       );
       const availableSpy = vi
@@ -283,45 +267,17 @@ describe("HybridTerrainProvider", () => {
         defaultProvider,
         "requestTileGeometry",
       );
-      const fallbackProviderSpy = vi.spyOn(
-        fallbackProvider,
-        "requestTileGeometry",
-      );
 
       hybrid.requestTileGeometry(0, 0, 0);
 
       expect(availableSpy).toHaveBeenCalledWith(0, 0, 0);
       expect(defaultProviderSpy).toHaveBeenCalledWith(0, 0, 0, undefined);
-      expect(fallbackProviderSpy).not.toHaveBeenCalled();
-    });
-
-    it("should use fallback provider if default provider does not have tile available", () => {
-      vi.spyOn(HybridTerrainProvider.TerrainRegion, "contains").mockReturnValue(
-        false,
-      );
-      const availableSpy = vi
-        .spyOn(defaultProvider, "getTileDataAvailable")
-        .mockReturnValue(false);
-      const defaultProviderSpy = vi.spyOn(
-        defaultProvider,
-        "requestTileGeometry",
-      );
-      const fallbackProviderSpy = vi.spyOn(
-        fallbackProvider,
-        "requestTileGeometry",
-      );
-
-      hybrid.requestTileGeometry(0, 0, 0);
-
-      expect(availableSpy).toHaveBeenCalledWith(0, 0, 0);
-      expect(defaultProviderSpy).not.toHaveBeenCalled();
-      expect(fallbackProviderSpy).toHaveBeenCalledWith(0, 0, 0, undefined);
     });
 
     it("should pass the request parameter to the appropriate provider", () => {
       const request = new Request();
       vi.spyOn(hybrid, "getTileDataAvailable").mockReturnValue(true);
-      vi.spyOn(HybridTerrainProvider.TerrainRegion, "contains").mockReturnValue(
+      vi.spyOn(HybridTerrainProvider, "regionContainsTile").mockReturnValue(
         true,
       );
       const regionRequestSpy = vi.spyOn(
@@ -371,18 +327,18 @@ describe("HybridTerrainProvider", () => {
           tiles: tileRanges,
         };
 
+        expect(HybridTerrainProvider.regionContainsTile(region, 5, 5, 5)).toBe(
+          true,
+        );
         expect(
-          HybridTerrainProvider.TerrainRegion.contains(region, 5, 5, 5),
-        ).toBe(true);
-        expect(
-          HybridTerrainProvider.TerrainRegion.contains(region, 15, 15, 5),
+          HybridTerrainProvider.regionContainsTile(region, 15, 15, 5),
         ).toBe(false);
         expect(
-          HybridTerrainProvider.TerrainRegion.contains(region, 15, 15, 6),
+          HybridTerrainProvider.regionContainsTile(region, 15, 15, 6),
         ).toBe(true); // level 6 has larger range
-        expect(
-          HybridTerrainProvider.TerrainRegion.contains(region, 5, 5, 7),
-        ).toBe(false); // level 7 not defined
+        expect(HybridTerrainProvider.regionContainsTile(region, 5, 5, 7)).toBe(
+          false,
+        ); // level 7 not defined
       });
 
       it("should check level constraints", () => {
@@ -396,15 +352,15 @@ describe("HybridTerrainProvider", () => {
           levels: [5, 6], // only allow levels 5 and 6
         };
 
+        expect(HybridTerrainProvider.regionContainsTile(region, 5, 5, 5)).toBe(
+          true,
+        );
         expect(
-          HybridTerrainProvider.TerrainRegion.contains(region, 5, 5, 5),
+          HybridTerrainProvider.regionContainsTile(region, 15, 15, 6),
         ).toBe(true);
-        expect(
-          HybridTerrainProvider.TerrainRegion.contains(region, 15, 15, 6),
-        ).toBe(true);
-        expect(
-          HybridTerrainProvider.TerrainRegion.contains(region, 5, 5, 7),
-        ).toBe(false); // level not in constraints
+        expect(HybridTerrainProvider.regionContainsTile(region, 5, 5, 7)).toBe(
+          false,
+        ); // level not in constraints
       });
     });
   });

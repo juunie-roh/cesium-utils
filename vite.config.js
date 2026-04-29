@@ -2,7 +2,6 @@ import path from "path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  base: "./",
   publicDir: path.resolve(__dirname, "src/demo/public"),
   build: {
     rollupOptions: {
@@ -19,6 +18,9 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  oxc: {
+    decorator: { legacy: true },
   },
   test: {
     include: ["src/**/*.(test|spec).*"],

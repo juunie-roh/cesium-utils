@@ -38,16 +38,7 @@ import Deprecated from "@/utils/decorators/deprecated.js";
 class HybridTerrainProvider implements TerrainProvider {
   private _regions: HybridTerrainProvider.TerrainRegion[];
   private _defaultProvider: TerrainProvider;
-  /**
-   * @deprecated This will be removed in 0.5.0.
-   */
-  @Deprecated({
-    message: {
-      label: "_fallbackProvider",
-      since: "0.4.6",
-      removedIn: "0.5.0",
-    },
-  })
+  /** @deprecated This will be removed in 0.5.0. */
   private _fallbackProvider: TerrainProvider;
   private _tilingScheme: TilingScheme;
   private _ready: boolean = false;
@@ -426,13 +417,13 @@ namespace HybridTerrainProvider {
    * @namespace
    * Utility functions for working with TerrainRegion objects.
    *
-   * @deprecated Since 0.4.6, removed in 0.5.0, due to the usage of nested namespace.
+   * @deprecated This will be removed in 0.5.0, due to the usage of nested namespace.
    */
   export namespace TerrainRegion {
     /**
      * Checks if a terrain region contains the specified tile.
      *
-     * @deprecated Since 0.4.6, removed in 0.5.0. Use {@link HybridTerrainProvider.regionContainsTile} instead.
+     * @deprecated This will be removed in 0.5.0. Use {@link HybridTerrainProvider.regionContainsTile} instead.
      */
     export function contains(
       region: HybridTerrainProvider.TerrainRegion,
