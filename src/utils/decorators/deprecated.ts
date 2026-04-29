@@ -3,90 +3,74 @@ import Logger from "../logger.js";
 const logger = Logger.get();
 
 /**
- * Decorator that emits a deprecation warning when the decorated member is accessed.
+ * Decorator that emits a deprecation warning when the decorated class or method is defined
+ * (i.e., at module load time, not at call time).
  *
- * Supports both legacy TypeScript decorators (`experimentalDecorators`) and
- * the TC39 standard decorator API (used when calling the function directly in tests).
+ * Warnings respect the `once` option.
  */
 function Deprecated({
   once = true,
   includeStack = false,
   message,
 }: Deprecated.Options): any {
-  return (
-    target: any,
-    keyOrContext?: any,
-    descriptor?: PropertyDescriptor,
-  ): any => {
+  return (target: unknown, context: DecoratorContext) => {
     const { label } = message;
+    const { kind } = context;
 
     function warn(): void {
-      if (!once || !Deprecated.has(label)) {
+      const hasShown = Deprecated.has(label);
+
+      if (!once || !hasShown) {
         logger.warn(deprecationMessage(message));
+
         if (includeStack) {
           console.trace("Deprecation stack trace:");
         }
+
         Deprecated.add(label);
       }
     }
 
-    // Legacy decorator API — called by TypeScript when experimentalDecorators is true
-    const key = keyOrContext as string | symbol | undefined;
+    if (kind === "class") {
+      return function (this: any, ...args: any[]) {
+        warn();
+        return new (target as any)(...args);
+      } as any;
+    }
 
-    // Class decorator
-    if (key === undefined) {
-      return class extends target {
-        constructor(...args: any[]) {
-          warn();
-          super(...args);
-        }
+    if (kind === "field") {
+      return function (this: any, initialValue: any) {
+        warn();
+        return initialValue;
       };
     }
 
-    // Property/field decorator — warn at class-definition time
-    if (descriptor === undefined) {
+    if (kind === "accessor") {
+      return {
+        get(this: any) {
+          warn();
+          return (
+            target as ClassAccessorDecoratorTarget<unknown, unknown>
+          ).get.call(this);
+        },
+        set(this: any, value: any) {
+          warn();
+          (target as ClassAccessorDecoratorTarget<unknown, unknown>).set.call(
+            this,
+            value,
+          );
+        },
+        init(this: any, initialValue: any) {
+          warn();
+          return initialValue;
+        },
+      };
+    }
+
+    return function (this: any, ...args: any[]) {
       warn();
-      return;
-    }
-
-    // Getter (and optionally setter) decorator
-    if (descriptor.get) {
-      const originalGet = descriptor.get;
-      descriptor.get = function (this: any) {
-        warn();
-        return originalGet.call(this);
-      };
-      if (descriptor.set) {
-        const originalSet = descriptor.set;
-        descriptor.set = function (this: any, value: any) {
-          warn();
-          originalSet.call(this, value);
-        };
-      }
-      return descriptor;
-    }
-
-    // Setter-only decorator
-    if (descriptor.set) {
-      const original = descriptor.set;
-      descriptor.set = function (this: any, value: any) {
-        warn();
-        original.call(this, value);
-      };
-      return descriptor;
-    }
-
-    // Method decorator
-    if (typeof descriptor.value === "function") {
-      const original = descriptor.value;
-      descriptor.value = function (this: any, ...args: any[]) {
-        warn();
-        return original.apply(this, args);
-      };
-      return descriptor;
-    }
-
-    return descriptor;
+      return (target as Function).apply(this, args);
+    };
   };
 }
 

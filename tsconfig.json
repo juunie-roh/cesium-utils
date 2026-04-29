@@ -6,7 +6,7 @@
     "moduleResolution": "nodenext",
     "lib": ["ESNext", "DOM"],
     "types": ["node"],
-    "experimentalDecorators": true,
+    "experimentalDecorators": false,
     "ignoreDeprecations": "6.0",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -25,7 +25,7 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
-      "@/*": ["./src/*"],
+      "@/*": ["./src/*"]
     }
   },
   "include": ["**/*.ts", "**/*.*js"],
