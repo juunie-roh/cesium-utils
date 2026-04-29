@@ -39,6 +39,13 @@ class HybridTerrainProvider implements TerrainProvider {
   private _regions: HybridTerrainProvider.TerrainRegion[];
   private _defaultProvider: TerrainProvider;
   /** @deprecated This will be removed in 0.5.0. */
+  @Deprecated({
+    message: {
+      label: "_fallbackProvider",
+      since: "0.4.6",
+      removedIn: "0.5.0",
+    },
+  })
   private _fallbackProvider: TerrainProvider;
   private _tilingScheme: TilingScheme;
   private _ready: boolean = false;
