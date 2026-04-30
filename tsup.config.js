@@ -16,6 +16,7 @@ export default defineConfig([
     ],
     esbuildOptions(options) {
       options.platform = "neutral";
+      options.supported = { decorators: false };
     },
     format: ["cjs", "esm"],
     minify: true,

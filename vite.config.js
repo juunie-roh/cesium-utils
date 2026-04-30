@@ -19,9 +19,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  oxc: {
-    decorator: { legacy: true },
-  },
   test: {
     include: ["src/**/*.(test|spec).*"],
     exclude: ["**/node_modules/**", "**/docs/**", "dist"],
