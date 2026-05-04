@@ -1,5 +1,6 @@
 import {
   Camera as CCamera,
+  Cesium3DTileFeature as CCesium3DTileFeature,
   Clock as CClock,
   EntityCollection as CEntityCollection,
   ImageryLayerCollection as CImageryLayerCollection,
@@ -151,6 +152,10 @@ const createMockViewer = (overrides?: Partial<CViewer>) =>
     overrides,
   );
 
+// Creates a real Cesium3DTileFeature instance without required constructor args
+const createMockCesium3DTileFeature = (): CCesium3DTileFeature =>
+  new (CCesium3DTileFeature as unknown as new () => CCesium3DTileFeature)();
+
 // Mock terrain providers
 const createMockTerrainProvider = (overrides?: CTerrainProvider) =>
   createMock(
@@ -218,6 +223,7 @@ export {
   Color,
   createCloneable,
   createMockCamera,
+  createMockCesium3DTileFeature,
   createMockClock,
   createMockEntities,
   createMockImageryLayers,

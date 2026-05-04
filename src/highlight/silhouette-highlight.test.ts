@@ -1,5 +1,5 @@
+import type { Cesium3DTileFeature } from "cesium";
 import {
-  Cesium3DTileFeature,
   Color,
   ConstantProperty,
   Entity,
@@ -10,7 +10,10 @@ import {
 } from "cesium";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createMockViewer } from "@/__mocks__/cesium.js";
+import {
+  createMockCesium3DTileFeature,
+  createMockViewer,
+} from "@/__mocks__/cesium.js";
 import type { Highlight } from "@/highlight/index.js";
 import SilhouetteHighlight from "@/highlight/silhouette-highlight.js";
 
@@ -47,7 +50,7 @@ describe("Silhouette Highlight", () => {
       let object: Cesium3DTileFeature;
 
       beforeEach(() => {
-        object = new Cesium3DTileFeature();
+        object = createMockCesium3DTileFeature();
       });
 
       it("should highlight a Cesium3DTileFeature with default color", () => {
@@ -90,7 +93,7 @@ describe("Silhouette Highlight", () => {
         highlight.show(object, { color: firstColor });
         expect(highlight["_silhouette"].uniforms.color).toEqual(firstColor);
 
-        const anotherFeature = new Cesium3DTileFeature();
+        const anotherFeature = createMockCesium3DTileFeature();
         highlight.show(anotherFeature, { color: secondColor });
         expect(highlight["_silhouette"].uniforms.color).toEqual(secondColor);
       });
@@ -124,8 +127,8 @@ describe("Silhouette Highlight", () => {
   describe("hide", () => {
     describe("with Cesium3DTileFeature", () => {
       it("should remove the highlight", () => {
-        const feature1 = new Cesium3DTileFeature();
-        const feature2 = new Cesium3DTileFeature();
+        const feature1 = createMockCesium3DTileFeature();
+        const feature2 = createMockCesium3DTileFeature();
         highlight.show(feature1);
         highlight.show(feature2);
 
@@ -153,7 +156,7 @@ describe("Silhouette Highlight", () => {
 
   describe("destroy", () => {
     it("should clean up the instances", () => {
-      const feature = new Cesium3DTileFeature();
+      const feature = createMockCesium3DTileFeature();
       const entity = new Entity({ model: new ModelGraphics() });
 
       highlight.show(feature);
@@ -198,7 +201,7 @@ describe("Silhouette Highlight", () => {
     });
 
     it("should return early when showing same object with same options", () => {
-      const feature = new Cesium3DTileFeature();
+      const feature = createMockCesium3DTileFeature();
       const options = { color: Color.BLUE };
 
       // First call - should proceed normally
@@ -217,8 +220,8 @@ describe("Silhouette Highlight", () => {
 
   describe("_clearHighlights method", () => {
     it("should clear silhouette selection when features are present", () => {
-      const feature1 = new Cesium3DTileFeature();
-      const feature2 = new Cesium3DTileFeature();
+      const feature1 = createMockCesium3DTileFeature();
+      const feature2 = createMockCesium3DTileFeature();
 
       // Add features to selection
       highlight["_silhouette"].selected.push(feature1, feature2);
@@ -257,7 +260,7 @@ describe("Silhouette Highlight", () => {
     });
 
     it("should clear both silhouette and entity highlights simultaneously", () => {
-      const feature = new Cesium3DTileFeature();
+      const feature = createMockCesium3DTileFeature();
       const entity = new Entity({ model: new ModelGraphics() });
 
       // Set up both types of highlights
@@ -349,7 +352,7 @@ describe("Silhouette Highlight", () => {
 
   describe("error handling and recovery", () => {
     it("should reset tracking variables on error in Cesium3DTileFeature path", () => {
-      const feature = new Cesium3DTileFeature();
+      const feature = createMockCesium3DTileFeature();
       const consoleSpy = vi
         .spyOn(console, "error")
         .mockImplementation(() => {});
@@ -403,7 +406,7 @@ describe("Silhouette Highlight", () => {
 
   describe("options storage and retrieval", () => {
     it("should store undefined options as undefined", () => {
-      const feature = new Cesium3DTileFeature();
+      const feature = createMockCesium3DTileFeature();
 
       highlight.show(feature);
 
@@ -411,7 +414,7 @@ describe("Silhouette Highlight", () => {
     });
 
     it("should store options as a copy", () => {
-      const feature = new Cesium3DTileFeature();
+      const feature = createMockCesium3DTileFeature();
       const originalOptions = { color: Color.RED, width: 3 };
 
       highlight.show(feature, originalOptions);
@@ -422,7 +425,7 @@ describe("Silhouette Highlight", () => {
     });
 
     it("should not mutate original options object", () => {
-      const feature = new Cesium3DTileFeature();
+      const feature = createMockCesium3DTileFeature();
       const originalOptions = { color: Color.RED, width: 3 };
       const optionsCopy = { ...originalOptions };
 
@@ -434,7 +437,7 @@ describe("Silhouette Highlight", () => {
 
   describe("updated hide method", () => {
     it("should clear tracking variables in addition to highlights", () => {
-      const feature = new Cesium3DTileFeature();
+      const feature = createMockCesium3DTileFeature();
 
       highlight.show(feature, { color: Color.BLUE });
       expect(highlight.currentObject).toBe(feature);
@@ -450,7 +453,7 @@ describe("Silhouette Highlight", () => {
     });
 
     it("should be safe to call multiple times", () => {
-      const feature = new Cesium3DTileFeature();
+      const feature = createMockCesium3DTileFeature();
 
       highlight.show(feature);
 
@@ -466,7 +469,7 @@ describe("Silhouette Highlight", () => {
 
   describe("updated destroy method", () => {
     it("should call hide method first", () => {
-      const feature = new Cesium3DTileFeature();
+      const feature = createMockCesium3DTileFeature();
       highlight.show(feature);
 
       const hideSpy = vi.spyOn(highlight, "hide");
@@ -477,7 +480,7 @@ describe("Silhouette Highlight", () => {
     });
 
     it("should ensure tracking variables are cleared after hide", () => {
-      const feature = new Cesium3DTileFeature();
+      const feature = createMockCesium3DTileFeature();
       highlight.show(feature);
 
       highlight.destroy();
@@ -487,7 +490,7 @@ describe("Silhouette Highlight", () => {
     });
 
     it("should remove composite stage and clear tracking", () => {
-      const feature = new Cesium3DTileFeature();
+      const feature = createMockCesium3DTileFeature();
       highlight.show(feature);
 
       expect(highlight.currentObject).toBe(feature);
@@ -504,7 +507,7 @@ describe("Silhouette Highlight", () => {
 
   describe("currentObject getter", () => {
     it("should return the currently highlighted object", () => {
-      const feature = new Cesium3DTileFeature();
+      const feature = createMockCesium3DTileFeature();
       const entity = new Entity({ model: new ModelGraphics() });
 
       expect(highlight.currentObject).toBeUndefined();

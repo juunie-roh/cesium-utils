@@ -1,5 +1,5 @@
+import type { Cesium3DTileFeature } from "cesium";
 import {
-  Cesium3DTileFeature,
   Color,
   Entity,
   GroundPrimitive,
@@ -10,7 +10,11 @@ import {
 } from "cesium";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createMockScene, createMockViewer } from "@/__mocks__/cesium.js";
+import {
+  createMockCesium3DTileFeature,
+  createMockScene,
+  createMockViewer,
+} from "@/__mocks__/cesium.js";
 import Highlight from "@/highlight/highlight.js";
 
 describe("Highlight", () => {
@@ -136,7 +140,7 @@ describe("Highlight", () => {
       mockEntity = new Entity();
       mockGroundPrimitive = new GroundPrimitive();
       mockModelGraphics = new ModelGraphics();
-      mockCesium3DTileFeature = new Cesium3DTileFeature();
+      mockCesium3DTileFeature = createMockCesium3DTileFeature();
     });
 
     it("should route Entity to surface highlight", () => {
@@ -316,7 +320,7 @@ describe("Highlight", () => {
       const entity = new Entity();
       const entityWithModel = new Entity({ model: new ModelGraphics() });
       const groundPrimitive = new GroundPrimitive();
-      const cesium3DTileFeature = new Cesium3DTileFeature();
+      const cesium3DTileFeature = createMockCesium3DTileFeature();
 
       // Test direct entity
       expect(highlight["_getObject"](entity)).toBe(entity);
@@ -450,7 +454,7 @@ describe("Highlight", () => {
 
     it("should handle switching between different object types", () => {
       const entity = new Entity();
-      const cesium3DTileFeature = new Cesium3DTileFeature();
+      const cesium3DTileFeature = createMockCesium3DTileFeature();
 
       const surfaceShowSpy = vi.spyOn(highlight["_surface"], "show");
       const silhouetteShowSpy = vi.spyOn(highlight["_silhouette"], "show");
