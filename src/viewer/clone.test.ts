@@ -1,8 +1,8 @@
 // src/__tests__/viewer/clone.test.ts
-import { TerrainProvider } from "cesium";
+import type { TerrainProvider } from "cesium";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createMockViewer, Viewer } from "@/__mocks__/cesium.js";
+import { createMockViewer } from "@/__mocks__/cesium.js";
 import { cloneViewer, syncCamera } from "@/viewer/index.js";
 
 // Mock dependencies
@@ -10,10 +10,15 @@ vi.mock("@/viewer/sync-camera.js", () => ({
   syncCamera: vi.fn(),
 }));
 
-// Mock Cesium
-vi.mock("cesium", () => {
-  return import("../__mocks__/cesium.js");
-});
+// Hoist MockViewer so it's available inside the vi.mock factory
+const MockViewer = vi.hoisted(() => vi.fn());
+
+// Provide a minimal mock for cesium — clone.ts only uses Viewer from it.
+// Avoid importing __mocks__/cesium.ts here: that file imports from "cesium"
+// at module-level, which would create a circular dependency and hang forever.
+vi.mock("cesium", () => ({
+  Viewer: MockViewer,
+}));
 
 describe("cloneViewer", () => {
   let mockSource: any;
@@ -47,7 +52,7 @@ describe("cloneViewer", () => {
 
     // Vitest 4.x: Use mockImplementation for constructors
     // Return the mockDestination to ensure reference equality
-    Viewer.mockImplementation(function (this: any) {
+    MockViewer.mockImplementation(function (this: any) {
       Object.assign(this, mockDestination);
       return mockDestination;
     });
@@ -58,7 +63,7 @@ describe("cloneViewer", () => {
 
     const result = cloneViewer(mockSource, containerElement);
 
-    expect(Viewer).toHaveBeenCalledWith(containerElement, {
+    expect(MockViewer).toHaveBeenCalledWith(containerElement, {
       baseLayerPicker: true,
       geocoder: true,
       homeButton: true,
@@ -91,7 +96,7 @@ describe("cloneViewer", () => {
 
     cloneViewer(mockSource, "container", customOptions);
 
-    expect(Viewer).toHaveBeenCalledWith(
+    expect(MockViewer).toHaveBeenCalledWith(
       "container",
       expect.objectContaining({
         baseLayerPicker: false,
