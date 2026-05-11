@@ -58,7 +58,7 @@ jobs:
           cache: 'pnpm'
           
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm ci
       
       - name: Get package version
         id: package-version
@@ -127,7 +127,7 @@ jobs:
           node-version: 24
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: ci
       - name: Generate documentation
         run: pnpm typedoc
       - name: Setup Pages
