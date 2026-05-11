@@ -1,0 +1,8 @@
+allowBuilds:
+  esbuild: true
+  protobufjs: true
+
+overrides:
+  tmp: ">=0.2.4"
+  lodash: ">=4.17.24"
+  minimatch: ">=10.2.1"
