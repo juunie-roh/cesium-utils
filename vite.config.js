@@ -25,7 +25,13 @@ export default defineConfig({
     environment: "jsdom",
     coverage: {
       include: ["src/**"],
-      exclude: ["**/index.*", "src/demo/**", "**/__mocks__/**", "dist"],
+      exclude: [
+        "**/index.*",
+        "src/demo/**",
+        "**/__mocks__/**",
+        "dist",
+        "**/*.md",
+      ],
     },
   },
 });
