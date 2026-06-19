@@ -150,7 +150,7 @@
   "peerDependencies": {
     "cesium": ">=1.133.0"
   },
-  "packageManager": "pnpm@11.5.3",
+  "packageManager": "pnpm@11.8.0",
   "publishConfig": {
     "access": "public"
   },
@@ -167,13 +167,13 @@
     "@commitlint/format": "^21.0.1",
     "@commitlint/types": "^21.0.1",
     "@eslint/js": "^10.0.1",
-    "@types/node": "^25.9.2",
-    "@typescript-eslint/eslint-plugin": "^8.61.0",
-    "@typescript-eslint/parser": "^8.61.0",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@types/node": "^25.9.3",
+    "@typescript-eslint/eslint-plugin": "^8.61.1",
+    "@typescript-eslint/parser": "^8.61.1",
+    "@vitest/coverage-v8": "^4.1.9",
     "cesium": "^1.142.0",
-    "eslint": "^10.4.1",
-    "eslint-plugin-jsdoc": "^63.0.2",
+    "eslint": "^10.5.0",
+    "eslint-plugin-jsdoc": "^63.0.6",
     "eslint-plugin-prettier": "^5.5.6",
     "eslint-plugin-simple-import-sort": "^13.0.0",
     "eslint-plugin-unused-imports": "^4.4.1",
@@ -184,6 +184,6 @@
     "typedoc": "^0.28.19",
     "typescript": "^6.0.3",
     "vite": "^7.3.5",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.9"
   }
 }
