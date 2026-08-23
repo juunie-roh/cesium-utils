@@ -1,14 +1,13 @@
 name: Release and Publish
 
 on:
-  # This workflow triggers only when CHANGELOG.md or package.json changes on main branch.
-  # It waits for CI to pass before proceeding with release.
-  push:
+  # This workflow triggers exactly when the changesets release PR (always
+  # opened from branch changeset-release/<base-branch>) is merged into main -
+  # i.e. only after that PR has been manually approved and merged.
+  pull_request:
+    types: [closed]
     branches:
       - main
-    paths:
-      - 'CHANGELOG.md'
-      - 'package.json'
   workflow_dispatch:
 
 jobs:
@@ -23,14 +22,19 @@ jobs:
     permissions:
       contents: read
       actions: read  # Required to check CI workflow status
-    if: contains(github.event.head_commit.message, 'Release version update')
+    # Only proceed for a manual run, or the merge (not just close) of the
+    # changesets release PR specifically - never any other PR into main.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+       github.event.pull_request.head.ref == 'changeset-release/main')
     steps:
       - name: Wait for CI workflow to complete
         uses: fountainhead/action-wait-for-check@v1.2.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           checkName: ci-success
-          ref: ${{ github.sha }}
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
           intervalSeconds: 10
           timeoutSeconds: 600
 
@@ -45,8 +49,11 @@ jobs:
       - name: Checkout code repository
         uses: actions/checkout@v7
         with:
+          # pull_request events default to a synthetic test-merge commit;
+          # pin explicitly to the commit that actually landed on main.
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
           fetch-depth: 0
-          
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v6.0.10
 
@@ -119,6 +126,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
       - name: Setup pnpm
         uses: pnpm/action-setup@v6.0.10
       - name: Setup Node.js
