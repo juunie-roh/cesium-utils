@@ -127,7 +127,7 @@ jobs:
           node-version: 24
           cache: 'pnpm'
       - name: Install dependencies
-        run: ci
+        run: pnpm ci
       - name: Generate documentation
         run: pnpm typedoc
       - name: Setup Pages

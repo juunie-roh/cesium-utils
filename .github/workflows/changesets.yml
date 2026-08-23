@@ -50,9 +50,9 @@ jobs:
         id: changesets
         uses: changesets/action@v2
         with:
-          commit: "ci: Release version update"
-          title: "Release version update"
-          publish: "pnpm build"
+          commit-message: "ci: Release version update"
+          pr-title: "Release version update"
+          publish-script: "pnpm build"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HUSKY: 0

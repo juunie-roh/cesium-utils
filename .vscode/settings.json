@@ -11,6 +11,7 @@
     "commitlint",
     "Czml",
     "geospatial",
+    "Gltf",
     "nodenext",
     "Tileset",
     "topojson",
@@ -27,7 +28,7 @@
     "**/node_modules": true,
     "**/.pnp.*": true
   },
-  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
   "[css]": {
     "editor.suggest.insertMode": "replace",
     "editor.defaultFormatter": "esbenp.prettier-vscode",
