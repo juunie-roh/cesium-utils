@@ -12,6 +12,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createMockCesium3DTileFeature,
+  createMockModel,
   createMockViewer,
 } from "@/__mocks__/cesium.js";
 import type { Highlight } from "@/highlight/index.js";
@@ -124,6 +125,27 @@ describe("Silhouette Highlight", () => {
     });
   });
 
+  describe("show with Model", () => {
+    it("should highlight a standalone Model with default color", () => {
+      const model = createMockModel();
+      highlight.show(model);
+
+      expect(highlight["_model"]).toBe(model);
+      expect(model.silhouetteColor).toEqual(highlight.color);
+      expect(model.silhouetteSize).toEqual(2);
+    });
+
+    it("should highlight a standalone Model with custom options", () => {
+      const model = createMockModel();
+      const color = Color.BLUE;
+      const width = 10;
+      highlight.show(model, { color, width });
+
+      expect(model.silhouetteColor).toEqual(color);
+      expect(model.silhouetteSize).toEqual(width);
+    });
+  });
+
   describe("hide", () => {
     describe("with Cesium3DTileFeature", () => {
       it("should remove the highlight", () => {
@@ -150,6 +172,19 @@ describe("Silhouette Highlight", () => {
         );
         expect(entity.model?.silhouetteSize?.getValue()).toEqual(0.0);
         expect(highlight["_entity"]).toBeUndefined();
+      });
+    });
+
+    describe("with Model", () => {
+      it("should restore the model's silhouette properties", () => {
+        const model = createMockModel();
+        highlight.show(model);
+
+        highlight.hide();
+
+        expect(model.silhouetteColor).toEqual(Color.TRANSPARENT);
+        expect(model.silhouetteSize).toEqual(0.0);
+        expect(highlight["_model"]).toBeUndefined();
       });
     });
   });

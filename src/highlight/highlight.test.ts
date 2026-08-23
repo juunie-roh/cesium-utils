@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createMockCesium3DTileFeature,
+  createMockModel,
   createMockScene,
   createMockViewer,
 } from "@/__mocks__/cesium.js";
@@ -186,6 +187,40 @@ describe("Highlight", () => {
       });
     });
 
+    it("should route a standalone Model to silhouette highlight", () => {
+      const model = createMockModel();
+      const silhouetteShowSpy = vi.spyOn(highlight["_silhouette"], "show");
+      const color = Color.YELLOW;
+
+      highlight.show(model, { color });
+
+      expect(silhouetteShowSpy).toHaveBeenCalledWith(model, { color });
+    });
+
+    it("should handle picked object with primitive as a Model", () => {
+      const model = createMockModel();
+      const pickedObject = { primitive: model } as Highlight.Picked;
+      const silhouetteShowSpy = vi.spyOn(highlight["_silhouette"], "show");
+
+      highlight.show(pickedObject);
+
+      expect(silhouetteShowSpy).toHaveBeenCalledWith(model, {
+        color: highlight.color,
+      });
+    });
+
+    it("should handle picked object with detail.model as a Model", () => {
+      const model = createMockModel();
+      const pickedObject = { detail: { model } } as Highlight.Picked;
+      const silhouetteShowSpy = vi.spyOn(highlight["_silhouette"], "show");
+
+      highlight.show(pickedObject);
+
+      expect(silhouetteShowSpy).toHaveBeenCalledWith(model, {
+        color: highlight.color,
+      });
+    });
+
     it("should handle entity with model property", () => {
       const entityWithModel = new Entity({
         model: mockModelGraphics,
@@ -348,6 +383,16 @@ describe("Highlight", () => {
       expect(highlight["_getObject"]({ primitive: groundPrimitive })).toBe(
         groundPrimitive,
       );
+
+      // Test direct Model
+      const model = createMockModel();
+      expect(highlight["_getObject"](model)).toBe(model);
+
+      // Test picked object with primitive as a Model
+      expect(highlight["_getObject"]({ primitive: model })).toBe(model);
+
+      // Test picked object with detail.model
+      expect(highlight["_getObject"]({ detail: { model } })).toBe(model);
 
       // Test undefined
       expect(

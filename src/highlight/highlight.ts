@@ -1,10 +1,11 @@
-import type { Cesium3DTileset, Model, Primitive, Viewer } from "cesium";
+import type { Cesium3DTileset, Primitive, Viewer } from "cesium";
 import {
   Cesium3DTileFeature,
   Color,
   defined,
   Entity,
   GroundPrimitive,
+  Model,
 } from "cesium";
 
 import SilhouetteHighlight from "./silhouette-highlight.js";
@@ -113,6 +114,8 @@ class Highlight {
     if (!defined(object)) return;
     if (object instanceof Cesium3DTileFeature) {
       return this._silhouette.show(object, options);
+    } else if (object instanceof Model) {
+      return this._silhouette.show(object, options);
     } else if (object instanceof Entity && object.model) {
       return this._silhouette.show(object, options);
     }
@@ -122,15 +125,18 @@ class Highlight {
 
   private _getObject(
     picked: Highlight.Picked,
-  ): Entity | GroundPrimitive | Cesium3DTileFeature | undefined {
+  ): Entity | GroundPrimitive | Model | Cesium3DTileFeature | undefined {
     if (!defined(picked)) return;
 
     if (picked instanceof Entity) return picked;
     if (picked instanceof Cesium3DTileFeature) return picked;
     if (picked instanceof GroundPrimitive) return picked;
+    if (picked instanceof Model) return picked;
 
     if (picked.id instanceof Entity) return picked.id;
     if (picked.primitive instanceof GroundPrimitive) return picked.primitive;
+    if (picked.primitive instanceof Model) return picked.primitive;
+    if (picked.detail?.model instanceof Model) return picked.detail.model;
   }
 
   /**
@@ -172,6 +178,7 @@ namespace Highlight {
     | Entity
     | Cesium3DTileFeature
     | GroundPrimitive
+    | Model
     | PickedObject;
 }
 

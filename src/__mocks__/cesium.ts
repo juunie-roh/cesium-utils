@@ -4,6 +4,7 @@ import {
   Clock as CClock,
   EntityCollection as CEntityCollection,
   ImageryLayerCollection as CImageryLayerCollection,
+  Model as CModel,
   Scene as CScene,
   TerrainProvider as CTerrainProvider,
   Viewer as CViewer,
@@ -156,6 +157,10 @@ const createMockViewer = (overrides?: Partial<CViewer>) =>
 const createMockCesium3DTileFeature = (): CCesium3DTileFeature =>
   new (CCesium3DTileFeature as unknown as new () => CCesium3DTileFeature)();
 
+// Creates a real Model instance without running its constructor, since Model
+// requires a loader/resource that isn't relevant to instanceof-based routing tests
+const createMockModel = (): CModel => Object.create(CModel.prototype);
+
 // Mock terrain providers
 const createMockTerrainProvider = (overrides?: CTerrainProvider) =>
   createMock(
@@ -227,6 +232,7 @@ export {
   createMockClock,
   createMockEntities,
   createMockImageryLayers,
+  createMockModel,
   createMockScene,
   createMockTerrainProvider,
   createMockViewer,

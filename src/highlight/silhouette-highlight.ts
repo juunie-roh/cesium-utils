@@ -1,5 +1,4 @@
 import type {
-  Entity,
   PostProcessStage,
   PostProcessStageCollection,
   PostProcessStageComposite,
@@ -10,6 +9,8 @@ import {
   Color,
   ConstantProperty,
   defined,
+  Entity,
+  Model,
   PostProcessStageLibrary,
 } from "cesium";
 
@@ -21,7 +22,8 @@ import Highlight from "./highlight.js";
  *
  * **Supported Object Types:**
  * - `Entity` with model graphics. (adjustable outline width)
- * - `Cesium3DTileset` instances. (fixed outline width)
+ * - `Model` instances, standalone or picked from a tileset. (adjustable outline width)
+ * - `Cesium3DTileFeature` instances. (fixed outline width)
  *
  * Currently supports outline style only.
  *
@@ -43,7 +45,8 @@ export default class SilhouetteHighlight implements Highlight.Base {
   private _composite: PostProcessStageComposite;
   private _stages: PostProcessStageCollection;
   private _entity?: Entity;
-  private _currentObject: Cesium3DTileFeature | Entity | undefined;
+  private _model?: Model;
+  private _currentObject: Cesium3DTileFeature | Entity | Model | undefined;
   private _currentOptions: Highlight.Options | undefined;
 
   /**
@@ -74,12 +77,12 @@ export default class SilhouetteHighlight implements Highlight.Base {
   }
 
   /** Gets the currently highlighted object */
-  get currentObject(): Cesium3DTileFeature | Entity | undefined {
+  get currentObject(): Cesium3DTileFeature | Entity | Model | undefined {
     return this._currentObject;
   }
 
   /**
-   * Highlights a picked `Cesium3DTileset` by updating silhouette composite.
+   * Highlights a picked `Cesium3DTileFeature` by updating silhouette composite.
    * @param object The object to be highlighted.
    * @param options Optional style for the highlight.
    */
@@ -90,7 +93,16 @@ export default class SilhouetteHighlight implements Highlight.Base {
    * @param options Optional style for the highlight.
    */
   show(object: Entity, options?: Highlight.Options): void;
-  show(object: Cesium3DTileFeature | Entity, options?: Highlight.Options) {
+  /**
+   * Highlights a standalone `Model` by updating its silhouette properties.
+   * @param object The object to be highlighted.
+   * @param options Optional style for the highlight.
+   */
+  show(object: Model, options?: Highlight.Options): void;
+  show(
+    object: Cesium3DTileFeature | Entity | Model,
+    options?: Highlight.Options,
+  ) {
     if (!defined(object)) return;
 
     // Check if we're highlighting the same object with the same options
@@ -109,6 +121,10 @@ export default class SilhouetteHighlight implements Highlight.Base {
       if (object instanceof Cesium3DTileFeature) {
         this._silhouette.uniforms.color = options?.color || this._color;
         this._silhouette.selected.push(object);
+      } else if (object instanceof Model) {
+        this._model = object;
+        object.silhouetteSize = options?.width || 2;
+        object.silhouetteColor = options?.color || this._color;
       } else {
         if (!object.model) return;
         this._entity = object;
@@ -186,6 +202,13 @@ export default class SilhouetteHighlight implements Highlight.Base {
       );
       this._entity.model.silhouetteSize = new ConstantProperty(0.0);
       this._entity = undefined;
+    }
+
+    // Clear standalone model highlight
+    if (this._model) {
+      this._model.silhouetteColor = Color.TRANSPARENT;
+      this._model.silhouetteSize = 0.0;
+      this._model = undefined;
     }
   }
 }

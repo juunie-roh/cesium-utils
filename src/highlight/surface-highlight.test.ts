@@ -1,4 +1,6 @@
 import {
+  ArcType,
+  BillboardGraphics,
   Cartesian3,
   ClassificationType,
   Color,
@@ -6,6 +8,8 @@ import {
   GeometryInstance,
   GroundPrimitive,
   HeightReference,
+  LabelGraphics,
+  PointGraphics,
   PolygonGraphics,
   PolygonHierarchy,
   PolylineGraphics,
@@ -84,6 +88,17 @@ describe("Highlight", () => {
 
     it("should return undefined when the entity has no supported geometry", () => {
       expect(surface.show(new Entity())).toBeUndefined();
+    });
+
+    it("should highlight an entity with only point graphics", () => {
+      surface["_update"] = vi.fn();
+      const entity = new Entity({
+        position: new Cartesian3(1, 2, 3),
+        point: new PointGraphics(),
+      });
+
+      expect(surface.show(entity)).toBeDefined();
+      expect(surface["_update"]).toBeCalledWith(entity, undefined);
     });
 
     it("should log an error and return undefined when update fails", () => {
@@ -221,6 +236,84 @@ describe("Highlight", () => {
         expect(surface.entity.polyline).toBeDefined();
         expect(surface.entity.polyline).toBeInstanceOf(PolylineGraphics);
         expect(surface.entity.polyline?.width?.getValue()).toBe(5); // Original width + 2
+      });
+
+      it("should preserve a non-ground-clamped polyline instead of forcing it onto the ground", () => {
+        const positions = [
+          new Cartesian3(1, 2, 3),
+          new Cartesian3(4, 5, 6),
+          new Cartesian3(7, 8, 9),
+        ];
+
+        const sourceEntity = new Entity({
+          polyline: new PolylineGraphics({
+            positions,
+            width: 3,
+            clampToGround: false,
+            arcType: ArcType.NONE,
+          }),
+        });
+
+        surface["_update"](sourceEntity, { color: Color.RED });
+
+        expect(surface.entity.polyline?.clampToGround?.getValue()).toBe(false);
+        expect(surface.entity.polyline?.arcType?.getValue()).toBe(ArcType.NONE);
+      });
+    });
+
+    describe("with point", () => {
+      it("should update with a ring marker at the entity's position", () => {
+        const position = new Cartesian3(1, 2, 3);
+        const sourceEntity = new Entity({
+          position,
+          point: new PointGraphics({ pixelSize: 8 }),
+        });
+
+        const color = Color.RED;
+        surface["_update"](sourceEntity, { color, width: 2 });
+
+        expect(surface.entity.point).toBeDefined();
+        expect(surface.entity.point).toBeInstanceOf(PointGraphics);
+        expect(surface.entity.position?.getValue()).toEqual(position);
+        expect(surface.entity.point?.color?.getValue()).toEqual(
+          Color.TRANSPARENT,
+        );
+        expect(surface.entity.point?.outlineColor?.getValue()).toEqual(color);
+        expect(surface.entity.point?.pixelSize?.getValue()).toBe(8 + 2 * 2);
+      });
+    });
+
+    describe("with billboard", () => {
+      it("should update with a ring marker at the entity's position", () => {
+        const position = new Cartesian3(1, 2, 3);
+        const sourceEntity = new Entity({
+          position,
+          billboard: new BillboardGraphics({ image: "test.png" }),
+        });
+
+        const color = Color.BLUE;
+        surface["_update"](sourceEntity, { color });
+
+        expect(surface.entity.point).toBeDefined();
+        expect(surface.entity.position?.getValue()).toEqual(position);
+        expect(surface.entity.point?.outlineColor?.getValue()).toEqual(color);
+      });
+    });
+
+    describe("with label", () => {
+      it("should update with a ring marker at the entity's position", () => {
+        const position = new Cartesian3(1, 2, 3);
+        const sourceEntity = new Entity({
+          position,
+          label: new LabelGraphics({ text: "test" }),
+        });
+
+        const color = Color.GREEN;
+        surface["_update"](sourceEntity, { color });
+
+        expect(surface.entity.point).toBeDefined();
+        expect(surface.entity.position?.getValue()).toEqual(position);
+        expect(surface.entity.point?.outlineColor?.getValue()).toEqual(color);
       });
     });
 
