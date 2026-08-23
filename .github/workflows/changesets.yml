@@ -17,8 +17,8 @@ jobs:
       contents: write
       pull-requests: write
     outputs:
-      has_changes: ${{ steps.changesets.outputs.hasChangesets }}
-      pr_number: ${{ steps.changesets.outputs.pullRequestNumber }}
+      has_changes: ${{ steps.changesets.outputs.has-changesets }}
+      pr_number: ${{ steps.changesets.outputs.pr-number }}
     steps:
       - name: Checkout code repository
         uses: actions/checkout@v7
@@ -58,12 +58,12 @@ jobs:
           HUSKY: 0
       
       - name: Generate documentation for PR
-        if: steps.changesets.outputs.hasChangesets == 'true'
+        if: steps.changesets.outputs.has-changesets == 'true'
         run: |
-          echo "Changesets created a PR #${{ steps.changesets.outputs.pullRequestNumber }}"
-          
+          echo "Changesets created a PR #${{ steps.changesets.outputs.pr-number }}"
+
           # Get the branch name that changesets created
-          CHANGESET_BRANCH=$(gh pr view ${{ steps.changesets.outputs.pullRequestNumber }} --json headRefName -q .headRefName)
+          CHANGESET_BRANCH=$(gh pr view ${{ steps.changesets.outputs.pr-number }} --json headRefName -q .headRefName)
           echo "Changesets branch: $CHANGESET_BRANCH"
           
           # Checkout that branch
